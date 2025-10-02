@@ -352,7 +352,11 @@ function Invoke-UICustomizations {
 
         # Configurer l'explorateur de fichiers
         if ($Options.ContainsKey("ShowFileExtensions") -or $Options.ContainsKey("ShowHiddenFiles") -or $Options.ContainsKey("ShowFullPath")) {
-            if (Set-FileExplorerOptions -ShowFileExtensions ($Options.ShowFileExtensions ?? $true) -ShowHiddenFiles ($Options.ShowHiddenFiles ?? $false) -ShowFullPath ($Options.ShowFullPath ?? $true)) {
+            $showExt = if ($Options.ContainsKey("ShowFileExtensions")) { $Options.ShowFileExtensions } else { $true }
+            $showHidden = if ($Options.ContainsKey("ShowHiddenFiles")) { $Options.ShowHiddenFiles } else { $false }
+            $showFullPath = if ($Options.ContainsKey("ShowFullPath")) { $Options.ShowFullPath } else { $true }
+
+            if (Set-FileExplorerOptions -ShowFileExtensions $showExt -ShowHiddenFiles $showHidden -ShowFullPath $showFullPath) {
                 $results.Success += "FileExplorer"
             } else {
                 $results.Failed += "FileExplorer"
@@ -361,7 +365,12 @@ function Invoke-UICustomizations {
 
         # Configurer les icônes du bureau
         if ($Options.ContainsKey("ShowThisPC") -or $Options.ContainsKey("ShowRecycleBin")) {
-            if (Set-DesktopIcons -ShowThisPC ($Options.ShowThisPC ?? $true) -ShowRecycleBin ($Options.ShowRecycleBin ?? $true) -ShowUserFolder ($Options.ShowUserFolder ?? $false) -ShowNetwork ($Options.ShowNetwork ?? $false)) {
+            $showPC = if ($Options.ContainsKey("ShowThisPC")) { $Options.ShowThisPC } else { $true }
+            $showRecycle = if ($Options.ContainsKey("ShowRecycleBin")) { $Options.ShowRecycleBin } else { $true }
+            $showUser = if ($Options.ContainsKey("ShowUserFolder")) { $Options.ShowUserFolder } else { $false }
+            $showNet = if ($Options.ContainsKey("ShowNetwork")) { $Options.ShowNetwork } else { $false }
+
+            if (Set-DesktopIcons -ShowThisPC $showPC -ShowRecycleBin $showRecycle -ShowUserFolder $showUser -ShowNetwork $showNet) {
                 $results.Success += "DesktopIcons"
             } else {
                 $results.Failed += "DesktopIcons"
