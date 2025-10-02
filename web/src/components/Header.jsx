@@ -29,7 +29,7 @@ const Header = () => {
           {/* Actions */}
           <div className="flex items-center space-x-4">
             <a
-              href="https://github.com/anthropics/claude-code"
+              href="https://github.com/BluuArtiis-FR/PostBoot/blob/main/AIDE.md"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"

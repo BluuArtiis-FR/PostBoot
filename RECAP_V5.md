@@ -442,7 +442,7 @@ Le projet est structuré pour faciliter les contributions :
 - **Documentation** : Tous les fichiers .md dans le projet
 - **Logs** : `docker-compose logs -f api`
 - **Issues** : À créer sur le repository Git
-- **Email** : it@tenorsolutions.com
+- **Email** : si@tenorsolutions.com
 
 ---
 

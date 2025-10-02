@@ -204,7 +204,7 @@ git push origin feature/nouvelle-fonctionnalite
 
 ## 📞 Support
 
-**Email** : it@tenorsolutions.com
+**Email** : si@tenorsolutions.com
 **Documentation** : `\\tenor.local\data\Déploiement\SI\PostBootSetup\`
 
 ---

@@ -480,7 +480,7 @@ tests/
 
 - **Documentation complète** : Voir [ARCHITECTURE.md](ARCHITECTURE.md)
 - **Issues** : Créer une issue sur le dépôt Git
-- **Email** : it@tenorsolutions.com
+- **Email** : si@tenorsolutions.com
 - **Site web** : https://tenorsolutions.com
 
 ## Licence

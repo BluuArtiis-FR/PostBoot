@@ -22,7 +22,7 @@ const Footer = () => {
               <Github className="w-5 h-5" />
             </a>
             <a
-              href="mailto:it@tenorsolutions.com"
+              href="mailto:si@tenorsolutions.com"
               className="text-gray-600 hover:text-primary-600 transition-colors"
             >
               <Mail className="w-5 h-5" />

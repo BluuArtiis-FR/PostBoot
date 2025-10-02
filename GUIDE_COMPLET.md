@@ -781,6 +781,6 @@ Tu disposes maintenant d'une architecture complète, modulaire et évolutive pou
 **Besoin d'aide ?**
 - 📖 Documentation : Tous les fichiers .md
 - 💬 Issues : Sur le repository Git
-- 📧 Email : it@tenorsolutions.com
+- 📧 Email : si@tenorsolutions.com
 
 **Bon développement ! 🚀**

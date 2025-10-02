@@ -322,7 +322,7 @@ certbot --nginx -d votredomaine.com
 
 - **Documentation** : [README_v5.md](README_v5.md)
 - **Architecture** : [ARCHITECTURE.md](ARCHITECTURE.md)
-- **Email** : it@tenorsolutions.com
+- **Email** : si@tenorsolutions.com
 
 ---
 
