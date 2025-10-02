@@ -92,10 +92,19 @@ class ScriptGenerator:
             filepath = MODULES_DIR / f"{module_name}.psm1"
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
-                # Retirer les lignes Export-ModuleMember car le code sera inline
-                lines = [line for line in content.split('\n')
-                        if not line.strip().startswith('Export-ModuleMember')]
-                return '\n'.join(lines)
+
+                # Retirer le bloc Export-ModuleMember complet car le code sera inline
+                # Pattern: depuis "# Export des fonctions" jusqu'à la parenthèse fermante
+                import re
+                # Supprime depuis le commentaire Export jusqu'à la ligne avec juste ")"
+                content = re.sub(
+                    r'#\s*Export des fonctions.*?\n.*?Export-ModuleMember.*?\n(?:.*?\n)*?\)',
+                    '',
+                    content,
+                    flags=re.DOTALL
+                )
+
+                return content
         except Exception as e:
             logger.error(f"Erreur chargement module {module_name}: {e}")
             return ""
