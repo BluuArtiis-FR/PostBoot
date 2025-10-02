@@ -1,0 +1,321 @@
+{
+  "version": "5.0",
+  "lastUpdate": "2025-10-01",
+  "company": {
+    "name": "Tenor Data Solutions",
+    "domain": "tenorsolutions.local",
+    "email": "it@tenorsolutions.com"
+  },
+  "master": [
+    {
+      "name": "Microsoft Office 365",
+      "winget": "Microsoft.Office",
+      "size": "3 GB",
+      "category": "Bureautique",
+      "required": true
+    },
+    {
+      "name": "Microsoft Teams",
+      "winget": "Microsoft.Teams",
+      "size": "150 MB",
+      "category": "Communication",
+      "required": true
+    },
+    {
+      "name": "Notepad++",
+      "winget": "Notepad++.Notepad++",
+      "size": "8 MB",
+      "category": "Editeur",
+      "required": true
+    },
+    {
+      "name": "Visual Studio Code",
+      "winget": "Microsoft.VisualStudioCode",
+      "size": "85 MB",
+      "category": "Editeur",
+      "required": true
+    },
+    {
+      "name": "Greenshot",
+      "winget": "Greenshot.Greenshot",
+      "size": "3 MB",
+      "category": "Capture",
+      "required": true
+    },
+    {
+      "name": "VPN Stormshield",
+      "url": "https://vpn.stormshield.eu/download/Stormshield_SSLVPN_Client_4.0.10_fr_x64.msi",
+      "size": "40 MB",
+      "category": "VPN",
+      "required": true
+    },
+    {
+      "name": "Microsoft PowerToys",
+      "winget": "Microsoft.PowerToys",
+      "size": "25 MB",
+      "category": "Utilitaires",
+      "required": true
+    },
+    {
+      "name": "PDF Gear",
+      "winget": "PDFGear.PDFGear",
+      "size": "150 MB",
+      "category": "PDF",
+      "required": true
+    },
+    {
+      "name": "Winget",
+      "winget": "Microsoft.AppInstaller",
+      "size": "5 MB",
+      "category": "Gestionnaire",
+      "required": true
+    },
+    {
+      "name": "Microsoft OneDrive Entreprise",
+      "winget": "Microsoft.OneDrive",
+      "size": "100 MB",
+      "category": "Cloud",
+      "required": true
+    },
+    {
+      "name": "7-Zip",
+      "winget": "7zip.7zip",
+      "size": "2 MB",
+      "category": "Compression",
+      "required": true
+    }
+  ],
+  "profiles": {
+    "DEV_DOTNET": {
+      "name": "Développeur .NET",
+      "description": "Outils de développement .NET",
+      "apps": [
+        {
+          "name": "Git",
+          "winget": "Git.Git",
+          "size": "45 MB"
+        },
+        {
+          "name": "SQL Server Management Studio",
+          "winget": "Microsoft.SQLServerManagementStudio",
+          "size": "600 MB"
+        },
+        {
+          "name": "DBeaver",
+          "winget": "dbeaver.dbeaver",
+          "size": "110 MB"
+        },
+        {
+          "name": "Postman",
+          "winget": "Postman.Postman",
+          "size": "180 MB"
+        },
+        {
+          "name": "Python",
+          "winget": "Python.Python.3.12",
+          "size": "25 MB"
+        },
+        {
+          "name": "Node.js",
+          "winget": "OpenJS.NodeJS",
+          "size": "50 MB"
+        }
+      ]
+    },
+    "DEV_WINDEV": {
+      "name": "Développeur WinDev",
+      "description": "Outils de développement WinDev",
+      "apps": [
+        {
+          "name": "Git",
+          "winget": "Git.Git",
+          "size": "45 MB"
+        },
+        {
+          "name": "SQL Server Management Studio",
+          "winget": "Microsoft.SQLServerManagementStudio",
+          "size": "600 MB"
+        },
+        {
+          "name": "DBeaver",
+          "winget": "dbeaver.dbeaver",
+          "size": "110 MB"
+        },
+        {
+          "name": "Postman",
+          "winget": "Postman.Postman",
+          "size": "180 MB"
+        },
+        {
+          "name": "FileZilla",
+          "winget": "FileZilla.FileZilla",
+          "size": "15 MB"
+        },
+        {
+          "name": "eCarAdmin",
+          "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
+          "size": "50 MB"
+        },
+        {
+          "name": "EDI Translator",
+          "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
+          "size": "30 MB"
+        },
+        {
+          "name": "Gestion Temps",
+          "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
+          "size": "40 MB"
+        }
+      ]
+    },
+    "TENOR": {
+      "name": "TENOR",
+      "description": "Outils métier Tenor",
+      "apps": [
+        {
+          "name": "eCarAdmin",
+          "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
+          "size": "50 MB"
+        },
+        {
+          "name": "EDI Translator",
+          "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
+          "size": "30 MB"
+        },
+        {
+          "name": "TeamViewer",
+          "winget": "TeamViewer.TeamViewer",
+          "size": "45 MB"
+        },
+        {
+          "name": "Java JRE",
+          "winget": "Oracle.JavaRuntimeEnvironment",
+          "size": "70 MB"
+        },
+        {
+          "name": "Gestion Temps",
+          "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
+          "size": "40 MB"
+        }
+      ]
+    },
+    "SI": {
+      "name": "Système d'Information",
+      "description": "Outils d'administration système",
+      "apps": [
+        {
+          "name": "Git",
+          "winget": "Git.Git",
+          "size": "45 MB"
+        },
+        {
+          "name": "Wireshark",
+          "winget": "WiresharkFoundation.Wireshark",
+          "size": "65 MB"
+        },
+        {
+          "name": "Nmap",
+          "winget": "Insecure.Nmap",
+          "size": "25 MB"
+        },
+        {
+          "name": "Docker Desktop",
+          "winget": "Docker.DockerDesktop",
+          "size": "500 MB"
+        },
+        {
+          "name": "PowerShell Core",
+          "winget": "Microsoft.PowerShell",
+          "size": "100 MB"
+        },
+        {
+          "name": "Python",
+          "winget": "Python.Python.3.12",
+          "size": "25 MB"
+        },
+        {
+          "name": "HashiCorp Terraform",
+          "winget": "Hashicorp.Terraform",
+          "size": "50 MB"
+        },
+        {
+          "name": "Advanced IP Scanner",
+          "winget": "Famatech.AdvancedIPScanner",
+          "size": "15 MB"
+        },
+        {
+          "name": "Fortinet VPN Client",
+          "url": "https://filestore.fortinet.com/forticlient/downloads/FortiClientVPN.exe",
+          "size": "25 MB"
+        },
+        {
+          "name": "AWS CLI",
+          "winget": "Amazon.AWSCLI",
+          "size": "40 MB"
+        },
+        {
+          "name": "RSAT Active Directory",
+          "winget": "Microsoft.RSAT.ActiveDirectory",
+          "size": "20 MB"
+        },
+        {
+          "name": "RSAT DNS",
+          "winget": "Microsoft.RSAT.DNS",
+          "size": "10 MB"
+        },
+        {
+          "name": "RSAT Group Policy",
+          "winget": "Microsoft.RSAT.GroupPolicy",
+          "size": "15 MB"
+        },
+        {
+          "name": "RSAT DHCP",
+          "winget": "Microsoft.RSAT.DHCP",
+          "size": "10 MB"
+        },
+        {
+          "name": "eCarAdmin",
+          "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
+          "size": "50 MB"
+        },
+        {
+          "name": "SQL Server Management Studio",
+          "winget": "Microsoft.SQLServerManagementStudio",
+          "size": "600 MB"
+        },
+        {
+          "name": "DBeaver",
+          "winget": "dbeaver.dbeaver",
+          "size": "110 MB"
+        },
+        {
+          "name": "Burp Suite Community Edition",
+          "winget": "PortSwigger.BurpSuite.Community",
+          "size": "300 MB"
+        }
+      ]
+    }
+  },
+  "optional": [
+    {
+      "name": "VLC Media Player",
+      "winget": "VideoLAN.VLC",
+      "size": "40 MB"
+    },
+    {
+      "name": "Firefox",
+      "winget": "Mozilla.Firefox",
+      "size": "60 MB"
+    },
+    {
+      "name": "Google Chrome",
+      "winget": "Google.Chrome",
+      "size": "80 MB"
+    },
+    {
+      "name": "PeaZip",
+      "winget": "Giorgiotani.Peazip",
+      "size": "10 MB"
+    }
+  ]
+}

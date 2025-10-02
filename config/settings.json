@@ -1,0 +1,200 @@
+{
+  "version": "5.0",
+  "modules": {
+    "debloat": {
+      "name": "Debloat Windows",
+      "module": "Debloat-Windows",
+      "function": "Invoke-WindowsDebloat",
+      "description": "Suppression des applications préinstallées et désactivation de la télémétrie",
+      "required": true,
+      "enabled": true,
+      "category": "system"
+    },
+    "performance": {
+      "name": "Optimisations de performance",
+      "module": "Optimize-Performance",
+      "function": "Invoke-PerformanceOptimizations",
+      "description": "Améliore les performances système globales",
+      "required": false,
+      "recommended": true,
+      "enabled": true,
+      "category": "performance",
+      "options": {
+        "VisualEffects": {
+          "name": "Désactiver effets visuels",
+          "description": "Améliore les performances graphiques",
+          "enabled": false,
+          "recommended": false
+        },
+        "PageFile": {
+          "name": "Optimiser fichier d'échange",
+          "description": "Configure la taille optimale du pagefile",
+          "enabled": true,
+          "recommended": true
+        },
+        "StartupPrograms": {
+          "name": "Désactiver programmes au démarrage",
+          "description": "Accélère le temps de boot",
+          "enabled": true,
+          "recommended": true
+        },
+        "Network": {
+          "name": "Optimiser paramètres réseau",
+          "description": "Améliore latence et débit réseau",
+          "enabled": false,
+          "recommended": false
+        },
+        "PowerPlan": {
+          "name": "Plan d'alimentation haute performance",
+          "description": "Active les performances maximales du CPU",
+          "enabled": true,
+          "recommended": true
+        }
+      }
+    },
+    "ui": {
+      "name": "Personnalisation interface",
+      "module": "Customize-UI",
+      "function": "Invoke-UICustomizations",
+      "description": "Personnalise l'apparence et le comportement de Windows",
+      "required": false,
+      "recommended": false,
+      "enabled": false,
+      "category": "customization",
+      "options": {
+        "DarkMode": {
+          "name": "Mode sombre",
+          "description": "Active le thème sombre système et applications",
+          "enabled": true,
+          "value": true
+        },
+        "TaskbarPosition": {
+          "name": "Position barre des tâches",
+          "description": "Définit la position de la barre des tâches",
+          "enabled": false,
+          "value": "Bottom",
+          "choices": ["Bottom", "Left", "Right", "Top"]
+        },
+        "ShowFileExtensions": {
+          "name": "Afficher extensions fichiers",
+          "description": "Affiche les extensions dans l'explorateur",
+          "enabled": true,
+          "value": true
+        },
+        "ShowHiddenFiles": {
+          "name": "Afficher fichiers cachés",
+          "description": "Affiche les fichiers et dossiers cachés",
+          "enabled": false,
+          "value": false
+        },
+        "ShowFullPath": {
+          "name": "Afficher chemin complet",
+          "description": "Affiche le chemin complet dans l'explorateur",
+          "enabled": true,
+          "value": true
+        },
+        "ShowThisPC": {
+          "name": "Icône Ce PC",
+          "description": "Affiche l'icône Ce PC sur le bureau",
+          "enabled": true,
+          "value": true
+        },
+        "ShowRecycleBin": {
+          "name": "Icône Corbeille",
+          "description": "Affiche l'icône Corbeille sur le bureau",
+          "enabled": true,
+          "value": true
+        },
+        "ThemeColor": {
+          "name": "Couleur de thème",
+          "description": "Couleur d'accentuation Windows",
+          "enabled": false,
+          "value": "0078D7"
+        },
+        "RestartExplorer": {
+          "name": "Redémarrer explorateur",
+          "description": "Redémarre l'explorateur pour appliquer les changements",
+          "enabled": true,
+          "value": true
+        }
+      }
+    }
+  },
+  "legacy_optimizations": {
+    "performance": [
+      {
+        "name": "Désactiver l'hibernation",
+        "command": "powercfg -h off",
+        "description": "Libère l'espace disque",
+        "enabled": true
+      },
+      {
+        "name": "Désactiver Windows Search",
+        "registry": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\WSearch",
+        "value": "Start",
+        "data": 4,
+        "description": "Réduit l'utilisation CPU",
+        "enabled": false
+      }
+    ],
+    "privacy": [
+      {
+        "name": "Désactiver la télémétrie",
+        "registry": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection",
+        "value": "AllowTelemetry",
+        "data": 0,
+        "description": "Protection de la vie privée",
+        "enabled": true
+      },
+      {
+        "name": "Désactiver Cortana",
+        "registry": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+        "value": "AllowCortana",
+        "data": 0,
+        "description": "Désactive l'assistant vocal",
+        "enabled": true
+      }
+    ],
+    "ui": [
+      {
+        "name": "Mode sombre",
+        "registry": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        "value": "AppsUseLightTheme",
+        "data": 0,
+        "description": "Active le thème sombre",
+        "enabled": true
+      },
+      {
+        "name": "Afficher les extensions",
+        "registry": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        "value": "HideFileExt",
+        "data": 0,
+        "description": "Sécurité des fichiers",
+        "enabled": true
+      }
+    ]
+  },
+  "enterprise": {
+    "wallpaper": {
+      "enabled": true,
+      "path": "assets\\tenor-wallpaper.jpg",
+      "style": "Fill"
+    },
+    "signature": {
+      "enabled": true,
+      "company": "Tenor Data Solutions",
+      "website": "www.tenorsolutions.com",
+      "phone": "+33 X XX XX XX XX"
+    },
+    "environment": {
+      "TENOR_DOMAIN": "tenorsolutions.local",
+      "TENOR_SUPPORT": "it@tenorsolutions.com"
+    }
+  },
+  "logs": {
+    "localPath": "data\\logs",
+    "networkPath": "\\\\tenor.local\\data\\Déploiement\\SI\\Autre logiciels\\logs deploiement\\",
+    "maxSizeMB": 10,
+    "keepDays": 30
+  }
+}

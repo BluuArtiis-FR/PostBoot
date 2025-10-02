@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostBootSetup v4.0 - Tenor Data Solutions</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .profiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .profile {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile:hover {
+            transform: translateY(-5px);
+            border-color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+        }
+
+        .profile.selected {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.2);
+        }
+
+        .profile-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .profile h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .profile p {
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .apps-preview {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .apps-preview.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .app-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .app-item h4 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .app-item span {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #f59e0b, #fbbf24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .progress.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #10b981, #34d399);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .summary {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .summary.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-success { color: #10b981; }
+        .stat-failed { color: #ef4444; }
+        .stat-time { color: #fbbf24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PostBootSetup v4.0</h1>
+            <p>Tenor Data Solutions - Installation automatisée</p>
+        </div>
+
+        <div class="profiles" id="profiles">
+            <div class="profile" data-profile="DEV">
+                <div class="profile-icon">💻</div>
+                <h3>Développeur</h3>
+                <p>Visual Studio Code, Git, SQL Server, DBeaver, Postman</p>
+            </div>
+
+            <div class="profile" data-profile="SUPPORT">
+                <div class="profile-icon">🎧</div>
+                <h3>Projet & Support</h3>
+                <p>eCarAdmin, EDI Translator, TeamViewer, Java</p>
+            </div>
+
+            <div class="profile" data-profile="SI">
+                <div class="profile-icon">🛡️</div>
+                <h3>Système d'Information</h3>
+                <p>Wireshark, Nmap, Docker, PowerShell, Python</p>
+            </div>
+        </div>
+
+        <div class="apps-preview" id="appsPreview">
+            <h3>🚀 Applications qui seront installées :</h3>
+            <div class="apps-grid" id="appsGrid">
+                <!-- Rempli par JavaScript -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startInstallation()" disabled>
+                Démarrer l'installation
+            </button>
+        </div>
+
+        <div class="progress" id="progress">
+            <h3>Installation en cours...</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="currentApp">Préparation...</p>
+            <div class="log" id="log"></div>
+        </div>
+
+        <div class="summary" id="summary">
+            <h2>✅ Installation terminée !</h2>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number stat-success" id="successCount">0</div>
+                    <div>Réussies</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number stat-failed" id="failedCount">0</div>
+                    <div>Échouées</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number stat-time" id="duration">0:00</div>
+                    <div>Durée</div>
+                </div>
+            </div>
+            <p>📧 Support : it@tenorsolutions.com</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

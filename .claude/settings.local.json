@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pwsh:*)",
+      "Bash(powershell -Command \"Get-Content ''''PostBootSetup.ps1'''' | Select-String -Pattern ''''[{}]'''' -Context 0,0\")",
+      "Bash(powershell:*)",
+      "Bash(move:*)",
+      "Bash(move PostBootSetup_Fixed.ps1 PostBootSetup.ps1)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

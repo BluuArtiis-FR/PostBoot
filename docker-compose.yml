@@ -1,0 +1,68 @@
+# PostBootSetup v5.0 - Docker Compose Configuration
+# Note: version field is deprecated in Compose v2, removed for compatibility
+
+services:
+  # API de génération de scripts
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: postboot-generator-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      # Monter les fichiers de configuration en lecture seule
+      - ./config:/app/config:ro
+      - ./modules:/app/modules:ro
+      - ./templates:/app/templates:ro
+      # Monter le dossier de génération en lecture-écriture
+      - ./generated:/app/generated
+      # Logs persistants
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      - MAX_APPS_PER_SCRIPT=50
+      - MAX_SCRIPT_SIZE_MB=10
+      - GENERATION_TIMEOUT_SECONDS=60
+      - CACHE_RETENTION_HOURS=24
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - postboot-network
+
+  # Serveur web React + Nginx pour l'interface frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: postboot-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8443:443"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - postboot-network
+
+networks:
+  postboot-network:
+    driver: bridge
+
+volumes:
+  generated_files:
+    driver: local
+  logs_data:
+    driver: local

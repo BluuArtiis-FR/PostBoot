@@ -1,0 +1,101 @@
+# PostBootSetup v5.0 - Git Ignore
+
+# Fichiers générés
+generated/
+*.ps1
+*.exe
+!PostBootSetup.ps1
+!PostBootSetup_v5.ps1
+generated_test_script.ps1
+
+# Logs
+logs/
+*.log
+generator.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environnements virtuels
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# Docker
+.dockerignore
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Fichiers de test temporaires
+test_*.ps1
+test_output/
+
+# Données sensibles
+secrets/
+certificates/
+*.key
+*.pem
+*.crt
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Backup
+*.bak
+*.backup
+*~
+
+# Node (si interface web utilise npm)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build frontend
+web/dist/
+web/build/
+
+# Variables d'environnement
+web/.env
+web/.env.local
+web/.env.production

@@ -1,0 +1,69 @@
+{
+  "profile_name": "DEV Custom",
+  "description": "Configuration de test pour profil développeur personnalisé",
+  "apps": {
+    "master": [
+      {
+        "name": "Microsoft Office 365",
+        "winget": "Microsoft.Office",
+        "size": "3 GB",
+        "category": "Bureautique"
+      },
+      {
+        "name": "Microsoft Teams",
+        "winget": "Microsoft.Teams",
+        "size": "150 MB",
+        "category": "Communication"
+      },
+      {
+        "name": "Notepad++",
+        "winget": "Notepad++.Notepad++",
+        "size": "8 MB",
+        "category": "Editeur"
+      }
+    ],
+    "profile": [
+      {
+        "name": "Visual Studio Code",
+        "winget": "Microsoft.VisualStudioCode",
+        "size": "85 MB",
+        "category": "Développement"
+      },
+      {
+        "name": "Git",
+        "winget": "Git.Git",
+        "size": "45 MB",
+        "category": "Développement"
+      },
+      {
+        "name": "Postman",
+        "winget": "Postman.Postman",
+        "size": "180 MB",
+        "category": "Développement"
+      }
+    ]
+  },
+  "modules": [
+    "debloat",
+    "performance",
+    "ui"
+  ],
+  "debloat_required": true,
+  "performance_options": {
+    "VisualEffects": false,
+    "PageFile": true,
+    "StartupPrograms": true,
+    "Network": false,
+    "PowerPlan": true
+  },
+  "ui_options": {
+    "DarkMode": true,
+    "TaskbarPosition": "Bottom",
+    "ShowFileExtensions": true,
+    "ShowHiddenFiles": false,
+    "ShowFullPath": true,
+    "ShowThisPC": true,
+    "ShowRecycleBin": true,
+    "RestartExplorer": true
+  }
+}

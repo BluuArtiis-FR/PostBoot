@@ -1,0 +1,11 @@
+# PostBootSetup Generator API - Dépendances Python
+
+# Framework web
+Flask==3.0.0
+flask-cors==4.0.0
+
+# Serveur WSGI production
+gunicorn==21.2.0
+
+# Utilitaires
+python-dotenv==1.0.0

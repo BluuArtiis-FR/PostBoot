@@ -1,0 +1,76 @@
+# PostBootSetup v5.0 - Docker Compose Production
+# Déploiement derrière reverse proxy (Nginx/Traefik)
+
+services:
+  # API de génération de scripts
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: postboot-api
+    restart: unless-stopped
+    expose:
+      - "5000"
+    volumes:
+      # Monter les fichiers de configuration en lecture seule
+      - ./config:/app/config:ro
+      - ./modules:/app/modules:ro
+      - ./templates:/app/templates:ro
+      # Monter le dossier de génération en lecture-écriture
+      - ./generated:/app/generated
+      # Logs persistants
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      - MAX_APPS_PER_SCRIPT=50
+      - MAX_SCRIPT_SIZE_MB=10
+      - GENERATION_TIMEOUT_SECONDS=60
+      - CACHE_RETENTION_HOURS=24
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - postboot-network
+
+  # Serveur web React + Nginx pour l'interface frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://postboot.tenorsolutions.com/api
+    container_name: postboot-web
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - postboot-network
+    labels:
+      # Labels pour Traefik (si utilisé)
+      - "traefik.enable=true"
+      - "traefik.http.routers.postboot.rule=Host(`postboot.tenorsolutions.com`)"
+      - "traefik.http.routers.postboot.entrypoints=websecure"
+      - "traefik.http.routers.postboot.tls.certresolver=letsencrypt"
+      - "traefik.http.services.postboot.loadbalancer.server.port=80"
+
+networks:
+  postboot-network:
+    driver: bridge
+
+volumes:
+  generated_files:
+    driver: local
+  logs_data:
+    driver: local
