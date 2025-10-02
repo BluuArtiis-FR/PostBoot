@@ -6,6 +6,7 @@ generated/
 *.exe
 !PostBootSetup.ps1
 !PostBootSetup_v5.ps1
+!ValidateScript.ps1
 generated_test_script.ps1
 
 # Logs
