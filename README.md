@@ -1,218 +1,415 @@
-# PostBootSetup v5.0
+<div align="center">
 
-**Générateur de scripts d'installation et configuration Windows - Tenor Data Solutions**
+# 🚀 PostBootSetup v5.0
 
-Interface web moderne pour créer des scripts PowerShell personnalisés d'installation d'applications et d'optimisation Windows.
+**Générateur de Scripts d'Installation et Configuration Windows**
+
+[![Version](https://img.shields.io/badge/version-5.0-blue.svg)](https://github.com/BluuArtiis-FR/PostBoot)
+[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
+[![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
+[![License](https://img.shields.io/badge/license-Internal-red.svg)](LICENSE)
+
+*Interface web moderne pour créer des scripts PowerShell personnalisés d'installation d'applications et d'optimisation Windows*
+
+[🎯 Démarrage Rapide](#-démarrage-rapide) •
+[📖 Documentation](#-documentation) •
+[🏗️ Architecture](#️-architecture) •
+[🛠️ Utilisation](#️-utilisation) •
+[🤝 Contribution](#-contribution)
+
+![PostBootSetup Banner](assets/screenshot.png)
+
+</div>
 
 ---
 
-## 🚀 Démarrage Rapide
+## 📋 Table des Matières
+
+- [🎯 Démarrage Rapide](#-démarrage-rapide)
+- [✨ Fonctionnalités](#-fonctionnalités)
+- [🏗️ Architecture](#️-architecture)
+- [📖 Documentation](#-documentation)
+- [🛠️ Utilisation](#️-utilisation)
+- [🎨 Profils Disponibles](#-profils-disponibles)
+- [🔧 Configuration](#-configuration)
+- [🧪 Tests & Validation](#-tests--validation)
+- [🤝 Contribution](#-contribution)
+- [📞 Support](#-support)
+
+---
+
+## 🎯 Démarrage Rapide
 
 ### Prérequis
-- Docker & Docker Compose
-- Debian 12 (pour production) ou Windows 10+ (pour développement)
 
-### Développement (Local)
+- **Docker** 20.10+ & **Docker Compose** 2.0+
+- **Windows 10+** ou **Debian 12** (production)
+- **Git** (pour clonage du dépôt)
+
+### Installation en 3 étapes
 
 ```bash
-# Cloner le projet
-git clone <repo-url>
-cd PostBootSetup
+# 1. Cloner le projet
+git clone https://github.com/BluuArtiis-FR/PostBoot.git
+cd PostBoot
 
-# Lancer l'application
+# 2. Lancer l'application
 docker-compose up -d
 
-# Accès
+# 3. Accéder à l'interface
 # Frontend: http://localhost:8080
 # API: http://localhost:5000
 ```
 
-### Production (Debian 12)
+### Vérification santé
 
 ```bash
-# Utiliser le fichier docker-compose de production
-docker-compose -f docker-compose.prod.yml up -d
+# Vérifier que les conteneurs sont démarrés
+docker ps
 
-# L'application sera accessible via votre reverse proxy
-# URL: https://postboot.tenorsolutions.com
+# Tester l'API
+curl http://localhost:5000/api/health
+
+# Consulter les logs
+docker-compose logs -f
 ```
 
 ---
 
-## 📋 Architecture 3 Espaces
+## ✨ Fonctionnalités
 
-PostBootSetup v5.0 propose une architecture modulaire en 3 espaces :
+<table>
+<tr>
+<td width="33%">
 
-### 1️⃣ **Installation**
-- Sélection de profil (DEV .NET, DEV WinDev, TENOR, SI, Personnalisé)
-- Sélection d'applications parmi 40+ apps disponibles
-- 11 applications Master (obligatoires)
-- Applications par profil
-- Applications optionnelles
+### 🎯 **Installation**
+- 40+ applications disponibles
+- 5 profils prédéfinis
+- Sélection personnalisée
+- 11 apps Master obligatoires
 
-### 2️⃣ **Optimisations**
-- **Debloat Windows** (obligatoire) : Suppression bloatware et apps inutiles
-- **Performance** (optionnel) : PageFile, PowerPlan, StartupPrograms, Network, VisualEffects
-- **UI** (optionnel) : DarkMode, Extensions de fichiers, Fichiers cachés, etc.
+</td>
+<td width="33%">
 
-### 3️⃣ **Diagnostic**
-- Rapport HTML détaillé de l'état système
-- Liste des applications installées
-- État des optimisations appliquées
+### ⚡ **Optimisations**
+- Debloat Windows (obligatoire)
+- Optimisations Performance
+- Personnalisation UI
+- Compatible PS 5.1+
+
+</td>
+<td width="33%">
+
+### 📊 **Diagnostic**
+- Rapport HTML détaillé
+- État système complet
 - Détection de problèmes
+- Export JSON
+
+</td>
+</tr>
+</table>
+
+### Architecture 3 Espaces
+
+```mermaid
+graph LR
+    A[1️⃣ Installation] --> B[2️⃣ Optimisations]
+    B --> C[3️⃣ Diagnostic]
+    C --> D[Script PowerShell]
+```
+
+1. **Installation** : Sélection profil + applications
+2. **Optimisations** : Debloat, Performance, UI
+3. **Diagnostic** : Rapport HTML de l'état système
 
 ---
 
-## 🎯 Profils Disponibles
+## 🏗️ Architecture
 
-| Profil | Description | Applications clés |
-|--------|-------------|-------------------|
-| **DEV .NET** | Développeur .NET | Visual Studio, SQL Server, Git, Postman, Python, Node.js |
-| **DEV WinDev** | Développeur WinDev | WinDev, SQL Server, Git, eCarAdmin, EDI, Gestion Temps |
-| **TENOR** | Projet & Support | eCarAdmin, EDI Translator, Gestion Temps |
-| **SI** | Admin Système | Git, SSMS, DBeaver, Wireshark, Nmap, Burp Suite |
-| **Personnalisé** | Sur mesure | Sélection manuelle de toutes les apps |
+### Stack Technique
 
----
+| Composant | Technologie | Version |
+|-----------|-------------|---------|
+| **Frontend** | React + Vite | 18.3.1 |
+| **UI Framework** | Tailwind CSS | 3.4.17 |
+| **Backend** | Flask (Python) | 3.11 |
+| **Scripts** | PowerShell | 5.1+ |
+| **Conteneurs** | Docker Compose | 2.0+ |
+| **Proxy** | Nginx | Latest |
 
-## 🛠️ Stack Technique
-
-- **Frontend**: React 18 + Vite + Tailwind CSS
-- **Backend**: Flask (Python 3.11)
-- **Conteneurisation**: Docker + Docker Compose
-- **Reverse Proxy**: Nginx (compatible Traefik)
-- **Scripts**: PowerShell 5.1+
-
----
-
-## 📁 Structure du Projet
+### Structure du Projet
 
 ```
 PostBootSetup/
-├── web/                    # Frontend React
+├── 📁 web/                  # Frontend React
 │   ├── src/
-│   │   ├── pages/         # Pages (Home, Installation, Optimizations, etc.)
-│   │   ├── components/    # Composants réutilisables
-│   │   ├── context/       # State management (Context API)
-│   │   └── services/      # API calls
-│   ├── Dockerfile
-│   └── package.json
+│   │   ├── pages/          # Pages (Home, Installation, Optimizations)
+│   │   ├── components/     # Composants réutilisables
+│   │   ├── context/        # State management (Context API)
+│   │   └── services/       # API calls
+│   └── Dockerfile
 │
-├── generator/              # Backend Flask
-│   └── app.py             # API principale
+├── 📁 generator/            # Backend Flask
+│   └── app.py              # API principale de génération
 │
-├── config/                 # Configuration
-│   ├── apps.json          # Catalogue d'applications
-│   └── settings.json      # Paramètres d'optimisation
+├── 📁 config/               # Configuration
+│   ├── apps.json           # Catalogue 40+ applications
+│   ├── settings.json       # Paramètres optimisations
+│   └── profiles/           # Profils prédéfinis
 │
-├── modules/                # Modules PowerShell
-│   ├── Debloat-Windows.ps1
-│   ├── Optimize-Performance.ps1
-│   └── Customize-UI.ps1
+├── 📁 modules/              # Modules PowerShell
+│   ├── Debloat-Windows.psm1
+│   ├── Optimize-Performance.psm1
+│   └── Customize-UI.psm1
 │
-├── templates/              # Templates PowerShell
-│   └── main_template.ps1
+├── 📁 templates/            # Templates PowerShell
+│   └── main_template.ps1   # Template principal
 │
-├── docker-compose.yml      # Développement
-├── docker-compose.prod.yml # Production
-└── README.md
+├── 📁 docs/                 # Documentation
+│   ├── USER_GUIDE.md       # Guide utilisateur
+│   ├── DEVELOPER.md        # Guide développeur
+│   └── API.md              # Documentation API
+│
+├── 📁 generated/            # Scripts générés (gitignored)
+├── 📁 logs/                 # Logs application
+│
+├── docker-compose.yml       # Dev local
+├── docker-compose.prod.yml  # Production
+├── ValidateScript.ps1       # Validation PowerShell
+└── README.md               # Ce fichier
 ```
+
+Voir [STRUCTURE.md](STRUCTURE.md) pour une description détaillée.
+
+---
+
+## 📖 Documentation
+
+### 📚 Guides Utilisateur
+
+| Document | Description |
+|----------|-------------|
+| [🚀 Guide Utilisateur](docs/USER_GUIDE.md) | Utilisation de l'interface web |
+| [💻 Guide Développeur](docs/DEVELOPER.md) | Architecture & développement |
+| [🔌 Documentation API](docs/API.md) | Endpoints et intégrations |
+| [🎯 Profils & Optimisations](PROFILS_ET_OPTIMISATIONS.md) | Catalogue complet |
+
+### 🏗️ Documentation Technique
+
+| Document | Description |
+|----------|-------------|
+| [📐 Architecture](ARCHITECTURE.md) | Architecture détaillée du système |
+| [🚢 Déploiement](DEPLOIEMENT.md) | Guide de déploiement production |
+| [🐧 Déploiement Debian 12](DEPLOIEMENT_DEBIAN12.md) | Spécifique Debian |
+| [📝 Changelog](CHANGELOG.md) | Historique des versions |
+| [🆘 Aide](AIDE.md) | FAQ et dépannage |
+
+---
+
+## 🛠️ Utilisation
+
+### Interface Web
+
+1. **Accéder** à http://localhost:8080
+2. **Sélectionner** un profil ou créer une configuration personnalisée
+3. **Choisir** les applications à installer
+4. **Configurer** les optimisations (Debloat, Performance, UI)
+5. **Générer** le script PowerShell
+6. **Télécharger** et exécuter sur la machine cible
+
+### API REST
+
+```bash
+# Générer un script via l'API
+curl -X POST http://localhost:5000/api/generate \
+  -H "Content-Type: application/json" \
+  -d @config/profiles/tenor.json \
+  --output PostBootSetup_Generated.ps1
+
+# Valider le script généré
+powershell -ExecutionPolicy Bypass -File ValidateScript.ps1 -ScriptPath "PostBootSetup_Generated.ps1"
+```
+
+### Exécution du Script
+
+```powershell
+# Sur la machine cible Windows
+# Exécuter en tant qu'Administrateur
+
+.\PostBootSetup_Generated.ps1
+
+# Mode silencieux
+.\PostBootSetup_Generated.ps1 -Silent
+
+# Sans optimisations Debloat
+.\PostBootSetup_Generated.ps1 -NoDebloat
+```
+
+---
+
+## 🎨 Profils Disponibles
+
+| Profil | Description | Applications clés | Use Case |
+|--------|-------------|-------------------|----------|
+| **💻 DEV .NET** | Développeur .NET | Visual Studio, SQL Server, Git, Postman, Python | Développement .NET/C# |
+| **🎯 DEV WinDev** | Développeur WinDev | WinDev, SQL Server, Git, Apps métier | Développement WinDev |
+| **🏢 TENOR** | Projet & Support | eCarAdmin, EDI, Gestion Temps | Postes TENOR |
+| **🔧 SI** | Admin Système | Git, SSMS, DBeaver, Wireshark, Nmap | Administration système |
+| **⚙️ Personnalisé** | Sur mesure | Sélection manuelle | Configuration spécifique |
+
+Voir [PROFILS_ET_OPTIMISATIONS.md](PROFILS_ET_OPTIMISATIONS.md) pour le catalogue complet.
 
 ---
 
 ## 🔧 Configuration
 
-### Variables d'environnement (Production)
+### Variables d'environnement
 
-Copier `.env.example` vers `.env` dans `web/` :
-
+#### Développement Local
 ```bash
+# Aucune configuration requise
+# L'API est accessible sur http://localhost:5000
+```
+
+#### Production
+```bash
+# web/.env
 VITE_API_URL=https://postboot.tenorsolutions.com/api
 ```
 
-### Reverse Proxy (Nginx)
+### Personnalisation
 
-Exemple de configuration Nginx :
+#### Ajouter une Application
 
-```nginx
-server {
-    listen 80;
-    server_name postboot.tenorsolutions.com;
+Éditer `config/apps.json`:
 
-    location / {
-        proxy_pass http://localhost:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+```json
+{
+  "name": "MonApp",
+  "category": "dev",
+  "command": "winget install --id MonApp.ID -e --accept-package-agreements --accept-source-agreements",
+  "description": "Description de l'application"
+}
+```
 
-    location /api {
-        proxy_pass http://localhost:5000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+#### Ajouter un Profil
+
+Créer `config/profiles/mon-profil.json`:
+
+```json
+{
+  "profile_name": "Mon Profil",
+  "description": "Description du profil",
+  "apps": {
+    "master": [...],
+    "profile": [...]
+  }
 }
 ```
 
 ---
 
-## 📚 Documentation
+## 🧪 Tests & Validation
 
-- [DEPLOIEMENT.md](DEPLOIEMENT.md) - Guide de déploiement Debian 12
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture technique détaillée
-- [PROFILS_ET_OPTIMISATIONS.md](PROFILS_ET_OPTIMISATIONS.md) - Catalogue des profils et optimisations
-- [CHANGELOG.md](CHANGELOG.md) - Historique des versions
+### Validation des Scripts
 
----
+```powershell
+# Valider la syntaxe PowerShell
+.\ValidateScript.ps1 -ScriptPath ".\generated\script.ps1"
+```
 
-## 🧪 Tests
+### Tests Unitaires
 
 ```bash
-# Tester l'API
-curl http://localhost:5000/api/health
+# Backend (Python)
+cd generator
+pytest tests/
 
-# Tester le frontend
-curl http://localhost:8080
+# Frontend (React)
+cd web
+npm run test
+```
 
-# Logs
-docker-compose logs -f api
-docker-compose logs -f web
+### Tests d'Intégration
+
+```bash
+# Tester la génération complète
+curl -X POST http://localhost:5000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"profile":"tenor","modules":["debloat","performance"]}' \
+  --output test.ps1
+
+# Valider
+powershell -File ValidateScript.ps1 -ScriptPath "test.ps1"
 ```
 
 ---
 
 ## 🤝 Contribution
 
-Ce projet est maintenu par l'équipe SI de Tenor Data Solutions.
-
 ### Workflow Git
 
 ```bash
-# Créer une branche feature
-git checkout -b feature/nouvelle-fonctionnalite
+# 1. Créer une branche feature
+git checkout -b feature/ma-fonctionnalite
 
-# Commit
+# 2. Développer et tester
+
+# 3. Commit (conventional commits)
 git add .
-git commit -m "feat: description de la fonctionnalité"
+git commit -m "feat: ajout de ma fonctionnalité"
 
-# Push
-git push origin feature/nouvelle-fonctionnalite
+# 4. Push
+git push origin feature/ma-fonctionnalite
 
-# Créer une Pull Request
+# 5. Créer une Pull Request sur GitHub
 ```
+
+### Conventions de Commit
+
+- `feat:` Nouvelle fonctionnalité
+- `fix:` Correction de bug
+- `docs:` Documentation
+- `refactor:` Refactoring
+- `chore:` Tâches maintenance
+- `test:` Tests
+
+Voir [CONTRIBUTING.md](docs/CONTRIBUTING.md) pour plus de détails.
 
 ---
 
 ## 📞 Support
 
-**Email** : si@tenorsolutions.com
-**Documentation** : `\\tenor.local\data\Déploiement\SI\PostBootSetup\`
+### Contact
+
+- **Email Support** : [si@tenorsolutions.com](mailto:si@tenorsolutions.com)
+- **Documentation Interne** : `\\tenor.local\data\Déploiement\SI\PostBootSetup\`
+- **GitHub Issues** : [Créer un ticket](https://github.com/BluuArtiis-FR/PostBoot/issues)
+
+### Liens Utiles
+
+- [🆘 FAQ & Dépannage](AIDE.md)
+- [📖 Documentation Complète](docs/)
+- [📝 Changelog](CHANGELOG.md)
+- [🏗️ Architecture](ARCHITECTURE.md)
 
 ---
 
 ## 📝 License
 
-© 2025 Tenor Data Solutions - Usage interne uniquement
+**© 2025 Tenor Data Solutions**
+
+Usage interne uniquement. Tous droits réservés.
 
 ---
 
-*PostBootSetup v5.0 - Interface web de génération de scripts Windows*
+<div align="center">
+
+**PostBootSetup v5.0** - *Simplifiez vos installations Windows*
+
+Made with ❤️ by Tenor Data Solutions SI Team
+
+[⬆ Retour en haut](#-postbootsetup-v50)
+
+</div>
