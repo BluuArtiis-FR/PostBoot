@@ -415,7 +415,9 @@ function Install-CustomApp {
             modules_calls.append(f"""
     # Optimisations de performance
     Write-ScriptLog "======== OPTIMISATIONS PERFORMANCE ========" -Level INFO
-    $perfOptions = '{perf_json}' | ConvertFrom-Json | ConvertTo-Json -Depth 10 | ConvertFrom-Json -AsHashtable
+    $perfOptionsJson = '{perf_json}' | ConvertFrom-Json
+    $perfOptions = @{{}}
+    $perfOptionsJson.PSObject.Properties | ForEach-Object {{ $perfOptions[$_.Name] = $_.Value }}
     Invoke-PerformanceOptimizations -Options $perfOptions
 """)
 
@@ -425,7 +427,9 @@ function Install-CustomApp {
             modules_calls.append(f"""
     # Personnalisation interface
     Write-ScriptLog "======== PERSONNALISATION UI ========" -Level INFO
-    $uiOptions = '{ui_json}' | ConvertFrom-Json | ConvertTo-Json -Depth 10 | ConvertFrom-Json -AsHashtable
+    $uiOptionsJson = '{ui_json}' | ConvertFrom-Json
+    $uiOptions = @{{}}
+    $uiOptionsJson.PSObject.Properties | ForEach-Object {{ $uiOptions[$_.Name] = $_.Value }}
     Invoke-UICustomizations -Options $uiOptions
 """)
 
@@ -761,6 +765,8 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
 
     # Construire la liste des modules actifs
     modules = []
+    modules_config = user_config.get('modules', {})
+
     if 'optimizations' in script_types:
         # Debloat est toujours inclus
         modules.append('debloat')
@@ -768,8 +774,6 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
         # Gérer deux formats de config modules:
         # Format 1 (array): modules: ["debloat", "performance", "ui"]
         # Format 2 (object): modules: { performance: { enabled: true }, ui: { enabled: true } }
-
-        modules_config = user_config.get('modules', {})
 
         # Si modules est un tableau (format API direct)
         if isinstance(modules_config, list):
@@ -888,7 +892,7 @@ def generate():
             script_path,
             as_attachment=True,
             download_name=script_filename,
-            mimetype='text/plain'
+            mimetype='text/plain; charset=utf-8'
         )
 
     except ValueError as e:
@@ -917,7 +921,7 @@ def generate_script():
         script_path = GENERATED_DIR / script_filename
 
         # Sauvegarder le script
-        with open(script_path, 'w', encoding='utf-8') as f:
+        with open(script_path, 'w', encoding='utf-8-sig') as f:
             f.write(script_content)
 
         logger.info(f"✓ Script généré: {script_filename} ({len(script_content)} chars)")
@@ -966,7 +970,7 @@ def generate_executable():
         exe_path = GENERATED_DIR / exe_filename
 
         # Sauvegarder le script temporaire
-        with open(ps1_path, 'w', encoding='utf-8') as f:
+        with open(ps1_path, 'w', encoding='utf-8-sig') as f:
             f.write(script_content)
 
         # Compiler en EXE
@@ -1024,7 +1028,7 @@ def download_file(script_id):
             file_path,
             as_attachment=True,
             download_name=file_path.name,
-            mimetype='application/octet-stream'
+            mimetype='text/plain; charset=utf-8'
         )
 
     except Exception as e:
