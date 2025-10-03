@@ -390,6 +390,7 @@ Voir [CONTRIBUTING.md](docs/CONTRIBUTING.md) pour plus de détails.
 ### Liens Utiles
 
 - [🆘 FAQ & Dépannage](AIDE.md)
+- [🔧 Guide de Dépannage](docs/TROUBLESHOOTING.md)
 - [📖 Documentation Complète](docs/)
 - [📝 Changelog](CHANGELOG.md)
 - [🏗️ Architecture](ARCHITECTURE.md)
