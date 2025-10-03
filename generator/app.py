@@ -743,16 +743,32 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
         # Debloat est toujours inclus
         modules.append('debloat')
 
-        # Performance si activé
-        if user_config.get('modules', {}).get('performance', {}).get('enabled', False):
-            modules.append('performance')
+        # Gérer deux formats de config modules:
+        # Format 1 (array): modules: ["debloat", "performance", "ui"]
+        # Format 2 (object): modules: { performance: { enabled: true }, ui: { enabled: true } }
 
-        # UI si activé
-        if user_config.get('modules', {}).get('ui', {}).get('enabled', False):
-            modules.append('ui')
+        modules_config = user_config.get('modules', {})
+
+        # Si modules est un tableau (format API direct)
+        if isinstance(modules_config, list):
+            if 'performance' in modules_config:
+                modules.append('performance')
+            if 'ui' in modules_config:
+                modules.append('ui')
+        # Si modules est un objet (format interface web)
+        elif isinstance(modules_config, dict):
+            # Performance si activé
+            if modules_config.get('performance', {}).get('enabled', False):
+                modules.append('performance')
+            # UI si activé
+            if modules_config.get('ui', {}).get('enabled', False):
+                modules.append('ui')
 
     # Options de performance
-    perf_module = user_config.get('modules', {}).get('performance', {})
+    perf_module = {}
+    if isinstance(modules_config, dict):
+        perf_module = modules_config.get('performance', {})
+
     performance_options = {
         'PageFile': perf_module.get('PageFile', False),
         'PowerPlan': perf_module.get('PowerPlan', False),
@@ -762,7 +778,10 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
     } if 'performance' in modules else {}
 
     # Options UI
-    ui_module = user_config.get('modules', {}).get('ui', {})
+    ui_module = {}
+    if isinstance(modules_config, dict):
+        ui_module = modules_config.get('ui', {})
+
     ui_options = {
         'DarkMode': ui_module.get('DarkMode', False),
         'ShowFileExtensions': ui_module.get('ShowFileExtensions', False),
