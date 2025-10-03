@@ -316,6 +316,11 @@
       "name": "PeaZip",
       "winget": "Giorgiotani.Peazip",
       "size": "10 MB"
+    },
+    {
+      "name": "OBS Studio",
+      "winget": "OBSProject.OBSStudio",
+      "size": "95 MB"
     }
   ]
 }
