@@ -321,19 +321,41 @@ function Install-CustomApp {
         }
 
         $tempPath = Join-Path $env:TEMP $fileName
-        Invoke-WebRequest -Uri $App.url -OutFile $tempPath -UseBasicParsing
+
+        # Télécharger avec gestion des erreurs SSL
+        try {
+            # Désactiver temporairement la vérification SSL si nécessaire
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $webClient = New-Object System.Net.WebClient
+            $webClient.DownloadFile($App.url, $tempPath)
+        } catch {
+            # Fallback avec Invoke-WebRequest (PowerShell 5.1 compatible)
+            Invoke-WebRequest -Uri $App.url -OutFile $tempPath -UseBasicParsing -ErrorAction Stop
+        }
+
+        if (-not (Test-Path $tempPath)) {
+            throw "Fichier non téléchargé"
+        }
 
         $installArgs = if ($App.installArgs) { $App.installArgs }
                        elseif ($tempPath -match '\\.msi$') { '/qn /norestart' }
                        else { '/S' }
 
-        Start-Process -FilePath $tempPath -ArgumentList $installArgs -Wait -NoNewWindow
+        Write-ScriptLog "Installation de $($App.name)..." -Level INFO
+        $process = Start-Process -FilePath $tempPath -ArgumentList $installArgs -Wait -NoNewWindow -PassThru
+
         Remove-Item $tempPath -ErrorAction SilentlyContinue
 
-        Write-ScriptLog "✓ $($App.name) installé" -Level SUCCESS
-        return $true
+        if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
+            Write-ScriptLog "✓ $($App.name) installé" -Level SUCCESS
+            return $true
+        } else {
+            Write-ScriptLog "✗ $($App.name) - Code erreur: $($process.ExitCode)" -Level ERROR
+            return $false
+        }
     } catch {
         Write-ScriptLog "✗ Erreur $($App.name): $_" -Level ERROR
+        Write-ScriptLog "→ Installation manuelle requise: $($App.url)" -Level WARNING
         return $false
     }
 }

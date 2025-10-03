@@ -45,9 +45,12 @@
     {
       "name": "VPN Stormshield",
       "url": "https://vpn.stormshield.eu/download/Stormshield_SSLVPN_Client_4.0.10_fr_x64.msi",
+      "manualUrl": "https://vpn.stormshield.eu/",
       "size": "40 MB",
       "category": "VPN",
-      "required": true
+      "required": true,
+      "installArgs": "/qn /norestart REBOOT=ReallySuppress",
+      "note": "Si le téléchargement automatique échoue, télécharger manuellement depuis https://vpn.stormshield.eu/"
     },
     {
       "name": "Microsoft PowerToys",
