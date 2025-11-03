@@ -1,0 +1,15 @@
+{
+  "computerName": "TEST-UI",
+  "profile_name": "UI Only",
+  "apps": {
+    "master": ["Chrome", "7zip", "Adobe Acrobat Reader", "VLC", "Teams", "Outlook", "Word", "Excel", "PowerPoint", "OneNote", "OneDrive"],
+    "profile": []
+  },
+  "modules": ["debloat", "ui"],
+  "ui": {
+    "taskbarPosition": "Top",
+    "darkMode": false,
+    "ShowFileExtensions": false,
+    "ShowHiddenFiles": false
+  }
+}

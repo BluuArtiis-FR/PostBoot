@@ -1,0 +1,17 @@
+{
+  "computerName": "TEST-SI",
+  "profile_name": "SI",
+  "apps": {
+    "master": ["Chrome", "7zip", "Adobe Acrobat Reader", "VLC", "Teams", "Outlook", "Word", "Excel", "PowerPoint", "OneNote", "OneDrive"],
+    "profile": ["Git", "SSMS", "DBeaver", "Wireshark", "Nmap", "Burp Suite", "PuTTY", "WinSCP"]
+  },
+  "modules": ["debloat", "performance", "ui"],
+  "performance": {
+    "visualEffects": false,
+    "powerPlan": "High performance"
+  },
+  "ui": {
+    "darkMode": true,
+    "ShowFileExtensions": true
+  }
+}

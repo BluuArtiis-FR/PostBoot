@@ -1,0 +1,20 @@
+{
+  "computerName": "TEST-FULL",
+  "profile_name": "Configuration Complete",
+  "apps": {
+    "master": ["Chrome", "7zip", "Adobe Acrobat Reader", "VLC", "Teams", "Outlook", "Word", "Excel", "PowerPoint", "OneNote", "OneDrive"],
+    "profile": ["Git", "VS Code", "Python", "Node.js"]
+  },
+  "modules": ["debloat", "performance", "ui"],
+  "performance": {
+    "visualEffects": true,
+    "pageFile": true,
+    "powerPlan": "High performance"
+  },
+  "ui": {
+    "taskbarPosition": "Bottom",
+    "darkMode": true,
+    "ShowFileExtensions": true,
+    "ShowHiddenFiles": false
+  }
+}

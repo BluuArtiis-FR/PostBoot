@@ -1,0 +1,16 @@
+{
+  "computerName": "TEST-DEV-NET",
+  "profile_name": "DEV .NET",
+  "apps": {
+    "master": ["Chrome", "7zip", "Adobe Acrobat Reader", "VLC", "Teams", "Outlook", "Word", "Excel", "PowerPoint", "OneNote", "OneDrive"],
+    "profile": ["Visual Studio 2022", "SQL Server 2022 Express", "SSMS", "Git", "Postman", "Python", "Node.js", "VS Code"]
+  },
+  "modules": ["debloat", "performance"],
+  "performance": {
+    "visualEffects": true,
+    "pageFile": true,
+    "startupPrograms": true,
+    "network": true,
+    "powerPlan": "High performance"
+  }
+}

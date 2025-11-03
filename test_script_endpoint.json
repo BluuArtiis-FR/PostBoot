@@ -1,0 +1,20 @@
+{
+  "profile_name": "Test Perf UI",
+  "apps": {
+    "master": [
+      {"name": "Google Chrome", "winget": "Google.Chrome"}
+    ],
+    "profile": []
+  },
+  "modules": ["debloat", "performance", "ui"],
+  "performance_options": {
+    "DisableTelemetry": true,
+    "OptimizeStartup": true,
+    "DisableHibernation": false
+  },
+  "ui_options": {
+    "ShowFileExtensions": true,
+    "ShowHiddenFiles": false,
+    "DarkMode": true
+  }
+}
