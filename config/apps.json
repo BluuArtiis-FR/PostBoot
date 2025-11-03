@@ -36,11 +36,12 @@
       "required": true
     },
     {
-      "name": "Greenshot",
-      "winget": "Greenshot.Greenshot",
-      "size": "3 MB",
-      "category": "Capture",
-      "required": true
+      "name": "Flameshot",
+      "winget": "Flameshot.Flameshot",
+      "size": "15 MB",
+      "category": "Capture d'écran",
+      "required": true,
+      "description": "Outil de capture d'écran puissant et open-source"
     },
     {
       "name": "VPN Stormshield",
@@ -91,210 +92,250 @@
   "profiles": {
     "DEV_DOTNET": {
       "name": "Développeur .NET",
-      "description": "Outils de développement .NET",
+      "description": "Environnement complet pour développement .NET/C#",
       "apps": [
         {
           "name": "Git",
           "winget": "Git.Git",
-          "size": "45 MB"
+          "size": "45 MB",
+          "category": "Gestion de versions",
+          "description": "Contrôle de version distribué"
         },
         {
           "name": "SQL Server Management Studio",
           "winget": "Microsoft.SQLServerManagementStudio",
-          "size": "600 MB"
+          "size": "600 MB",
+          "category": "Base de données",
+          "description": "Administration SQL Server"
         },
         {
           "name": "DBeaver",
           "winget": "dbeaver.dbeaver",
-          "size": "110 MB"
+          "size": "110 MB",
+          "category": "Base de données",
+          "description": "Client universel de base de données"
         },
         {
           "name": "Postman",
           "winget": "Postman.Postman",
-          "size": "180 MB"
+          "size": "180 MB",
+          "category": "API Testing",
+          "description": "Test et documentation d'APIs REST"
         },
         {
           "name": "Python",
           "winget": "Python.Python.3.12",
-          "size": "25 MB"
+          "size": "25 MB",
+          "category": "Runtime",
+          "description": "Langage de programmation Python"
         },
         {
           "name": "Node.js",
           "winget": "OpenJS.NodeJS",
-          "size": "50 MB"
+          "size": "50 MB",
+          "category": "Runtime",
+          "description": "Runtime JavaScript pour backend"
         }
       ]
     },
     "DEV_WINDEV": {
       "name": "Développeur WinDev",
-      "description": "Outils de développement WinDev",
+      "description": "Outils de développement WinDev et applications métier",
       "apps": [
         {
           "name": "Git",
           "winget": "Git.Git",
-          "size": "45 MB"
+          "size": "45 MB",
+          "category": "Gestion de versions",
+          "description": "Contrôle de version distribué"
         },
         {
           "name": "SQL Server Management Studio",
           "winget": "Microsoft.SQLServerManagementStudio",
-          "size": "600 MB"
+          "size": "600 MB",
+          "category": "Base de données",
+          "description": "Administration SQL Server"
         },
         {
           "name": "DBeaver",
           "winget": "dbeaver.dbeaver",
-          "size": "110 MB"
+          "size": "110 MB",
+          "category": "Base de données",
+          "description": "Client universel de base de données"
         },
         {
           "name": "Postman",
           "winget": "Postman.Postman",
-          "size": "180 MB"
+          "size": "180 MB",
+          "category": "API Testing",
+          "description": "Test et documentation d'APIs"
         },
         {
           "name": "FileZilla",
           "winget": "FileZilla.FileZilla",
-          "size": "15 MB"
+          "size": "15 MB",
+          "category": "FTP",
+          "description": "Client FTP/SFTP"
         },
         {
           "name": "eCarAdmin",
           "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
-          "size": "50 MB"
+          "size": "50 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion administrative des véhicules"
         },
         {
           "name": "EDI Translator",
           "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
-          "size": "30 MB"
+          "size": "30 MB",
+          "category": "Métier TENOR",
+          "description": "Traduction et gestion des messages EDI"
         },
         {
           "name": "Gestion Temps",
           "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
-          "size": "40 MB"
+          "size": "40 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion des temps et activités"
         }
       ]
     },
     "TENOR": {
       "name": "TENOR",
-      "description": "Outils métier Tenor",
+      "description": "Outils métier Tenor - Support et Projet",
       "apps": [
         {
           "name": "eCarAdmin",
           "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
-          "size": "50 MB"
+          "size": "50 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion administrative des véhicules"
         },
         {
           "name": "EDI Translator",
           "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
-          "size": "30 MB"
-        },
-        {
-          "name": "TeamViewer",
-          "winget": "TeamViewer.TeamViewer",
-          "size": "45 MB"
-        },
-        {
-          "name": "Java JRE",
-          "winget": "Oracle.JavaRuntimeEnvironment",
-          "size": "70 MB"
+          "size": "30 MB",
+          "category": "Métier TENOR",
+          "description": "Traduction et gestion des messages EDI"
         },
         {
           "name": "Gestion Temps",
           "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
-          "size": "40 MB"
+          "size": "40 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion des temps et activités"
+        },
+        {
+          "name": "R2 EDI Viewer",
+          "url": "https://r2ediviewer.de/download/R2EDIViewer_Setup.exe",
+          "size": "12 MB",
+          "category": "EDI",
+          "description": "Visualiseur de fichiers EDI (EDIFACT, X12, XML)",
+          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+        },
+        {
+          "name": "TeamViewer",
+          "winget": "TeamViewer.TeamViewer",
+          "size": "45 MB",
+          "category": "Support distant",
+          "description": "Support technique à distance"
+        },
+        {
+          "name": "Java JRE",
+          "winget": "Oracle.JavaRuntimeEnvironment",
+          "size": "70 MB",
+          "category": "Runtime",
+          "description": "Java Runtime Environment (requis pour applications métier)"
         }
       ]
     },
     "SI": {
       "name": "Système d'Information",
-      "description": "Outils d'administration système",
+      "description": "Outils d'administration système et infrastructure",
       "apps": [
         {
           "name": "Git",
           "winget": "Git.Git",
-          "size": "45 MB"
-        },
-        {
-          "name": "Wireshark",
-          "winget": "WiresharkFoundation.Wireshark",
-          "size": "65 MB"
-        },
-        {
-          "name": "Nmap",
-          "winget": "Insecure.Nmap",
-          "size": "25 MB"
-        },
-        {
-          "name": "Docker Desktop",
-          "winget": "Docker.DockerDesktop",
-          "size": "500 MB"
-        },
-        {
-          "name": "PowerShell Core",
-          "winget": "Microsoft.PowerShell",
-          "size": "100 MB"
-        },
-        {
-          "name": "Python",
-          "winget": "Python.Python.3.12",
-          "size": "25 MB"
-        },
-        {
-          "name": "HashiCorp Terraform",
-          "winget": "Hashicorp.Terraform",
-          "size": "50 MB"
-        },
-        {
-          "name": "Advanced IP Scanner",
-          "winget": "Famatech.AdvancedIPScanner",
-          "size": "15 MB"
-        },
-        {
-          "name": "Fortinet VPN Client",
-          "url": "https://filestore.fortinet.com/forticlient/downloads/FortiClientVPN.exe",
-          "size": "25 MB"
-        },
-        {
-          "name": "AWS CLI",
-          "winget": "Amazon.AWSCLI",
-          "size": "40 MB"
-        },
-        {
-          "name": "RSAT Active Directory",
-          "winget": "Microsoft.RSAT.ActiveDirectory",
-          "size": "20 MB"
-        },
-        {
-          "name": "RSAT DNS",
-          "winget": "Microsoft.RSAT.DNS",
-          "size": "10 MB"
-        },
-        {
-          "name": "RSAT Group Policy",
-          "winget": "Microsoft.RSAT.GroupPolicy",
-          "size": "15 MB"
-        },
-        {
-          "name": "RSAT DHCP",
-          "winget": "Microsoft.RSAT.DHCP",
-          "size": "10 MB"
-        },
-        {
-          "name": "eCarAdmin",
-          "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
-          "size": "50 MB"
+          "size": "45 MB",
+          "category": "DevOps",
+          "description": "Gestion de versions distribuée"
         },
         {
           "name": "SQL Server Management Studio",
           "winget": "Microsoft.SQLServerManagementStudio",
-          "size": "600 MB"
+          "size": "600 MB",
+          "category": "Base de données",
+          "description": "Administration SQL Server"
         },
         {
           "name": "DBeaver",
           "winget": "dbeaver.dbeaver",
-          "size": "110 MB"
+          "size": "110 MB",
+          "category": "Base de données",
+          "description": "Client universel de base de données"
+        },
+        {
+          "name": "Wireshark",
+          "winget": "WiresharkFoundation.Wireshark",
+          "size": "65 MB",
+          "category": "Réseau",
+          "description": "Analyseur de protocoles réseau"
+        },
+        {
+          "name": "Nmap",
+          "winget": "Insecure.Nmap",
+          "size": "25 MB",
+          "category": "Réseau",
+          "description": "Scanner de sécurité réseau"
+        },
+        {
+          "name": "Advanced IP Scanner",
+          "winget": "Famatech.AdvancedIPScanner",
+          "size": "15 MB",
+          "category": "Réseau",
+          "description": "Scanner d'adresses IP rapide"
+        },
+        {
+          "name": "Docker Desktop",
+          "winget": "Docker.DockerDesktop",
+          "size": "500 MB",
+          "category": "Conteneurisation",
+          "description": "Plateforme de conteneurisation"
+        },
+        {
+          "name": "PowerShell Core",
+          "winget": "Microsoft.PowerShell",
+          "size": "100 MB",
+          "category": "Scripting",
+          "description": "PowerShell multiplateforme"
+        },
+        {
+          "name": "Python",
+          "winget": "Python.Python.3.12",
+          "size": "25 MB",
+          "category": "Développement",
+          "description": "Langage de programmation Python"
+        },
+        {
+          "name": "HashiCorp Terraform",
+          "winget": "Hashicorp.Terraform",
+          "size": "50 MB",
+          "category": "Infrastructure as Code",
+          "description": "Provisionnement d'infrastructure"
+        },
+        {
+          "name": "AWS CLI",
+          "winget": "Amazon.AWSCLI",
+          "size": "40 MB",
+          "category": "Cloud",
+          "description": "Interface en ligne de commande AWS"
         },
         {
           "name": "Burp Suite Community Edition",
           "winget": "PortSwigger.BurpSuite.Community",
-          "size": "300 MB"
+          "size": "300 MB",
+          "category": "Sécurité",
+          "description": "Test de sécurité des applications web"
         }
       ]
     }
