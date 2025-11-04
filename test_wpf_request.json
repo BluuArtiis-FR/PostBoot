@@ -1,0 +1,11 @@
+{
+  "config": {
+    "custom_name": "Test WPF",
+    "master_apps": [],
+    "profile_apps": ["Git.Git"],
+    "optional_apps": [],
+    "modules": ["debloat", "performance"]
+  },
+  "scriptTypes": ["installation", "optimizations"],
+  "embedWpf": true
+}

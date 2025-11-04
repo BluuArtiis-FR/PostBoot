@@ -26,6 +26,7 @@ export const ConfigProvider = ({ children }) => {
     master_apps: [],
     profile_apps: [],
     optional_apps: [],
+    embed_wpf: false, // Interface WPF intégrée au script
     modules: {
       debloat: { enabled: true },
       performance: {
@@ -89,6 +90,7 @@ export const ConfigProvider = ({ children }) => {
         master_apps: [],
         profile_apps: [],
         optional_apps: [],
+        embed_wpf: false,
         modules: {
           debloat: { enabled: true },
           performance: {
@@ -123,12 +125,24 @@ export const ConfigProvider = ({ children }) => {
     // Charger les apps du profil
     const profileApps = apps.profiles[profileId]?.apps || [];
 
+    // Déterminer si le profil permet l'édition des apps master
+    const allowMasterEdit = apps.profiles[profileId]?.allowMasterEdit || false;
+
+    // Pré-sélectionner uniquement les apps avec preselected: true
+    const preselectedMasterApps = allowMasterEdit
+      ? apps.master.filter(app => app.preselected).map(app => app.winget || app.url)
+      : apps.master.map(app => app.winget || app.url); // Dans un profil normal, toutes les master apps sont incluses
+
+    const preselectedProfileApps = profileApps
+      .filter(app => app.preselected)
+      .map(app => app.winget || app.url);
+
     setUserConfig((prev) => ({
       ...prev,
       profile: profileId,
       custom_name: profile.name,
-      master_apps: apps.master.map(app => app.winget || app.url), // Toutes les apps master précochées
-      profile_apps: profileApps.map(app => app.winget || app.url), // Toutes les apps du profil précochées
+      master_apps: preselectedMasterApps,
+      profile_apps: preselectedProfileApps,
       optional_apps: [],
     }));
   };
@@ -141,6 +155,7 @@ export const ConfigProvider = ({ children }) => {
       master_apps: [],
       profile_apps: [],
       optional_apps: [],
+      embed_wpf: false,
       modules: {
         debloat: { enabled: true },
         performance: {

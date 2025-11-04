@@ -96,7 +96,8 @@ const Generate = () => {
     try {
       const response = await axios.post(`${API_URL}/api/generate`, {
         config: userConfig,
-        scriptTypes: selectedScripts
+        scriptTypes: selectedScripts,
+        embedWpf: userConfig.embed_wpf || false
       }, {
         responseType: 'blob'
       });
@@ -115,6 +116,12 @@ const Generate = () => {
       } else {
         filename = `PostBootSetup_${selectedScripts.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('_')}`;
       }
+
+      // Ajouter suffixe WPF si activé
+      if (userConfig.embed_wpf) {
+        filename += '_WPF';
+      }
+
       filename += '.ps1';
 
       // Create download link

@@ -1,6 +1,6 @@
 {
-  "version": "5.0",
-  "lastUpdate": "2025-10-01",
+  "version": "5.2",
+  "lastUpdate": "2025-11-03",
   "company": {
     "name": "Tenor Data Solutions",
     "domain": "tenorsolutions.local",
@@ -12,28 +12,33 @@
       "winget": "Microsoft.Office",
       "size": "3 GB",
       "category": "Bureautique",
-      "required": true
+      "required": true,
+      "preselected": true
     },
     {
       "name": "Microsoft Teams",
       "winget": "Microsoft.Teams",
       "size": "150 MB",
       "category": "Communication",
-      "required": true
+      "required": true,
+      "preselected": true
     },
     {
       "name": "Notepad++",
       "winget": "Notepad++.Notepad++",
       "size": "8 MB",
       "category": "Editeur",
-      "required": true
+      "required": true,
+      "preselected": true,
+      "plugins": ["XML Tools", "Compare"]
     },
     {
       "name": "Visual Studio Code",
       "winget": "Microsoft.VisualStudioCode",
       "size": "85 MB",
       "category": "Editeur",
-      "required": true
+      "required": true,
+      "preselected": true
     },
     {
       "name": "Flameshot",
@@ -41,6 +46,7 @@
       "size": "15 MB",
       "category": "Capture d'écran",
       "required": true,
+      "preselected": true,
       "description": "Outil de capture d'écran puissant et open-source"
     },
     {
@@ -50,6 +56,7 @@
       "size": "40 MB",
       "category": "VPN",
       "required": true,
+      "preselected": true,
       "installArgs": "/qn /norestart REBOOT=ReallySuppress",
       "note": "Si le téléchargement automatique échoue, télécharger manuellement depuis https://vpn.stormshield.eu/"
     },
@@ -58,35 +65,40 @@
       "winget": "Microsoft.PowerToys",
       "size": "25 MB",
       "category": "Utilitaires",
-      "required": true
+      "required": true,
+      "preselected": true
     },
     {
       "name": "PDF Gear",
       "winget": "PDFGear.PDFGear",
       "size": "150 MB",
       "category": "PDF",
-      "required": true
+      "required": true,
+      "preselected": true
     },
     {
       "name": "Winget",
       "winget": "Microsoft.AppInstaller",
       "size": "5 MB",
       "category": "Gestionnaire",
-      "required": true
+      "required": true,
+      "preselected": true
     },
     {
       "name": "Microsoft OneDrive Entreprise",
       "winget": "Microsoft.OneDrive",
       "size": "100 MB",
       "category": "Cloud",
-      "required": true
+      "required": true,
+      "preselected": true
     },
     {
       "name": "7-Zip",
       "winget": "7zip.7zip",
       "size": "2 MB",
       "category": "Compression",
-      "required": true
+      "required": true,
+      "preselected": true
     }
   ],
   "profiles": {
@@ -99,42 +111,89 @@
           "winget": "Git.Git",
           "size": "45 MB",
           "category": "Gestion de versions",
-          "description": "Contrôle de version distribué"
-        },
-        {
-          "name": "SQL Server Management Studio",
-          "winget": "Microsoft.SQLServerManagementStudio",
-          "size": "600 MB",
-          "category": "Base de données",
-          "description": "Administration SQL Server"
-        },
-        {
-          "name": "DBeaver",
-          "winget": "dbeaver.dbeaver",
-          "size": "110 MB",
-          "category": "Base de données",
-          "description": "Client universel de base de données"
-        },
-        {
-          "name": "Postman",
-          "winget": "Postman.Postman",
-          "size": "180 MB",
-          "category": "API Testing",
-          "description": "Test et documentation d'APIs REST"
+          "description": "Contrôle de version distribué",
+          "preselected": true
         },
         {
           "name": "Python",
           "winget": "Python.Python.3.12",
           "size": "25 MB",
           "category": "Runtime",
-          "description": "Langage de programmation Python"
+          "description": "Langage de programmation Python",
+          "preselected": true
+        },
+        {
+          "name": "DBeaver",
+          "winget": "dbeaver.dbeaver",
+          "size": "110 MB",
+          "category": "Base de données",
+          "description": "Client universel de base de données",
+          "preselected": true
+        },
+        {
+          "name": "Postman",
+          "winget": "Postman.Postman",
+          "size": "180 MB",
+          "category": "API Testing",
+          "description": "Test et documentation d'APIs REST",
+          "preselected": true
+        },
+        {
+          "name": "Docker Desktop",
+          "winget": "Docker.DockerDesktop",
+          "size": "500 MB",
+          "category": "Conteneurisation",
+          "description": "Plateforme de conteneurisation",
+          "preselected": true
+        },
+        {
+          "name": "SQL Server Management Studio",
+          "winget": "Microsoft.SQLServerManagementStudio",
+          "size": "600 MB",
+          "category": "Base de données",
+          "description": "Administration SQL Server",
+          "preselected": false
+        },
+        {
+          "name": "eCarAdmin",
+          "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
+          "size": "50 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion administrative des véhicules",
+          "preselected": false
+        },
+        {
+          "name": "EDI Translator",
+          "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
+          "size": "30 MB",
+          "category": "Métier TENOR",
+          "description": "Traduction et gestion des messages EDI",
+          "preselected": false
+        },
+        {
+          "name": "Gestion Temps",
+          "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
+          "size": "40 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion des temps et activités",
+          "preselected": false
         },
         {
           "name": "Node.js",
           "winget": "OpenJS.NodeJS",
           "size": "50 MB",
           "category": "Runtime",
-          "description": "Runtime JavaScript pour backend"
+          "description": "Runtime JavaScript pour backend",
+          "preselected": false
+        },
+        {
+          "name": "Avast Business Antivirus",
+          "url": "https://businesshub.avast.com/installer/ZHRhJTNETWdzWjhYcXQxeFRFdEw5UHUtQnVvMjBDVVk5a1NKbzE4OW5VaTlBdHNpRTRkZEZOVnQ5QmRyWldJZmZXMU82UVptellCdjFWaFVtSG9hZlh5WE1UOUlUMEFjTE02alMxTjkzdE4tNXRLUDFrZVhFeU5VZ0ctTEhQYVJPVUI4ejdRWW4tX3JEcnBDZkRaNlFyWnNyalk4S3ZLSzJQaHZYbi16X3BnM0FWcVdHNlJESExOT21scmQxZDFyaEpkLUJJTzY2bllsLXBfRTUtMkg4RzVJX3RRdyUyOCUyOCUyNm5jbiUzRFBjZTJFV3luRjA4ME5yd19DSkdWb0lPdWM5RSUyOA==/b2f277db-98d5-4b12-8df0-f2c9f5b51d09?encodedDataCenter=aHR0cHM6Ly9idXNpbmVzc2h1Yi1wcm9kLWZyYS5mZi5hdmFzdC5jb20=",
+          "size": "250 MB",
+          "category": "Sécurité",
+          "description": "Antivirus professionnel Avast Business",
+          "installArgs": "/silent /qn /norestart REBOOT=ReallySuppress",
+          "preselected": true
         }
       ]
     },
@@ -143,60 +202,111 @@
       "description": "Outils de développement WinDev et applications métier",
       "apps": [
         {
-          "name": "Git",
-          "winget": "Git.Git",
-          "size": "45 MB",
-          "category": "Gestion de versions",
-          "description": "Contrôle de version distribué"
-        },
-        {
-          "name": "SQL Server Management Studio",
-          "winget": "Microsoft.SQLServerManagementStudio",
-          "size": "600 MB",
-          "category": "Base de données",
-          "description": "Administration SQL Server"
-        },
-        {
-          "name": "DBeaver",
-          "winget": "dbeaver.dbeaver",
-          "size": "110 MB",
-          "category": "Base de données",
-          "description": "Client universel de base de données"
-        },
-        {
-          "name": "Postman",
-          "winget": "Postman.Postman",
-          "size": "180 MB",
-          "category": "API Testing",
-          "description": "Test et documentation d'APIs"
-        },
-        {
-          "name": "FileZilla",
-          "winget": "FileZilla.FileZilla",
-          "size": "15 MB",
-          "category": "FTP",
-          "description": "Client FTP/SFTP"
-        },
-        {
           "name": "eCarAdmin",
           "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
           "size": "50 MB",
           "category": "Métier TENOR",
-          "description": "Gestion administrative des véhicules"
+          "description": "Gestion administrative des véhicules",
+          "preselected": true
         },
         {
           "name": "EDI Translator",
           "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
           "size": "30 MB",
           "category": "Métier TENOR",
-          "description": "Traduction et gestion des messages EDI"
+          "description": "Traduction et gestion des messages EDI",
+          "preselected": true
+        },
+        {
+          "name": "FileZilla",
+          "winget": "FileZilla.FileZilla",
+          "size": "15 MB",
+          "category": "FTP",
+          "description": "Client FTP/SFTP",
+          "preselected": true,
+          "plugins": ["XML Tools", "Compare"]
+        },
+        {
+          "name": "SQL Server Management Studio",
+          "winget": "Microsoft.SQLServerManagementStudio",
+          "size": "600 MB",
+          "category": "Base de données",
+          "description": "Administration SQL Server",
+          "preselected": true
         },
         {
           "name": "Gestion Temps",
           "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
           "size": "40 MB",
           "category": "Métier TENOR",
-          "description": "Gestion des temps et activités"
+          "description": "Gestion des temps et activités",
+          "preselected": true
+        },
+        {
+          "name": "Postman",
+          "winget": "Postman.Postman",
+          "size": "180 MB",
+          "category": "API Testing",
+          "description": "Test et documentation d'APIs",
+          "preselected": false
+        },
+        {
+          "name": "Python",
+          "winget": "Python.Python.3.12",
+          "size": "25 MB",
+          "category": "Runtime",
+          "description": "Langage de programmation Python",
+          "preselected": false
+        },
+        {
+          "name": "Git",
+          "winget": "Git.Git",
+          "size": "45 MB",
+          "category": "Gestion de versions",
+          "description": "Contrôle de version distribué",
+          "preselected": false
+        },
+        {
+          "name": "DBeaver",
+          "winget": "dbeaver.dbeaver",
+          "size": "110 MB",
+          "category": "Base de données",
+          "description": "Client universel de base de données",
+          "preselected": false
+        },
+        {
+          "name": "Node.js",
+          "winget": "OpenJS.NodeJS",
+          "size": "50 MB",
+          "category": "Runtime",
+          "description": "Runtime JavaScript pour backend",
+          "preselected": false
+        },
+        {
+          "name": "R2 EDI Viewer",
+          "url": "https://r2ediviewer.de/download/R2EDIViewer_Setup.exe",
+          "size": "12 MB",
+          "category": "EDI",
+          "description": "Visualiseur de fichiers EDI (EDIFACT, X12, XML)",
+          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+          "preselected": false
+        },
+        {
+          "name": "Docker Desktop",
+          "winget": "Docker.DockerDesktop",
+          "size": "500 MB",
+          "category": "Conteneurisation",
+          "description": "Plateforme de conteneurisation",
+          "preselected": false
+        },
+        {
+          "name": "Avast Business Antivirus",
+          "url": "https://businesshub.avast.com/installer/ZHRhJTNETWdzWjhYcXQxeFRFdEw5UHUtQnVvMjBDVVk5a1NKbzE4OW5VaTlBdHNpRTRkZEZOVnQ5QmRyWldJZmZXMU82UVptellCdjFWaFVtSG9hZlh5WE1UOUlUMEFjTE02alMxTjkzdE4tNXRLUDFrZVhFeU5VZ0ctTEhQYVJPVUI4ejdRWW4tX3JEcnBDZkRaNlFyWnNyalk4S3ZLSzJQaHZYbi16X3BnM0FWcVdHNlJESExOT21scmQxZDFyaEpkLUJJTzY2bllsLXBfRTUtMkg4RzVJX3RRdyUyOCUyOCUyNm5jbiUzRFBjZTJFV3luRjA4ME5yd19DSkdWb0lPdWM5RSUyOA==/b2f277db-98d5-4b12-8df0-f2c9f5b51d09?encodedDataCenter=aHR0cHM6Ly9idXNpbmVzc2h1Yi1wcm9kLWZyYS5mZi5hdmFzdC5jb20=",
+          "size": "250 MB",
+          "category": "Sécurité",
+          "description": "Antivirus professionnel Avast Business",
+          "installArgs": "/silent /qn /norestart REBOOT=ReallySuppress",
+          "preselected": true
         }
       ]
     },
@@ -209,21 +319,16 @@
           "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
           "size": "50 MB",
           "category": "Métier TENOR",
-          "description": "Gestion administrative des véhicules"
+          "description": "Gestion administrative des véhicules",
+          "preselected": true
         },
         {
           "name": "EDI Translator",
           "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
           "size": "30 MB",
           "category": "Métier TENOR",
-          "description": "Traduction et gestion des messages EDI"
-        },
-        {
-          "name": "Gestion Temps",
-          "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
-          "size": "40 MB",
-          "category": "Métier TENOR",
-          "description": "Gestion des temps et activités"
+          "description": "Traduction et gestion des messages EDI",
+          "preselected": true
         },
         {
           "name": "R2 EDI Viewer",
@@ -231,21 +336,50 @@
           "size": "12 MB",
           "category": "EDI",
           "description": "Visualiseur de fichiers EDI (EDIFACT, X12, XML)",
-          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+          "preselected": true
         },
         {
-          "name": "TeamViewer",
-          "winget": "TeamViewer.TeamViewer",
+          "name": "Gestion Temps",
+          "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
+          "size": "40 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion des temps et activités",
+          "preselected": true
+        },
+        {
+          "name": "Postman",
+          "winget": "Postman.Postman",
+          "size": "180 MB",
+          "category": "API Testing",
+          "description": "Test et documentation d'APIs REST",
+          "preselected": true
+        },
+        {
+          "name": "Git",
+          "winget": "Git.Git",
           "size": "45 MB",
-          "category": "Support distant",
-          "description": "Support technique à distance"
+          "category": "Gestion de versions",
+          "description": "Contrôle de version distribué",
+          "preselected": true
         },
         {
-          "name": "Java JRE",
-          "winget": "Oracle.JavaRuntimeEnvironment",
-          "size": "70 MB",
-          "category": "Runtime",
-          "description": "Java Runtime Environment (requis pour applications métier)"
+          "name": "FileZilla",
+          "winget": "FileZilla.FileZilla",
+          "size": "15 MB",
+          "category": "FTP",
+          "description": "Client FTP/SFTP",
+          "preselected": true,
+          "plugins": ["XML Tools", "Compare"]
+        },
+        {
+          "name": "Avast Business Antivirus",
+          "url": "https://businesshub.avast.com/installer/ZHRhJTNEaV9DYnhYS04tdWlMd1BPWnd2V3pZMDNMMXFNUjQwRVJ0Q1NoQnVfcEFhR2VibmRWbDA5eHB4NldMaHhOdExqS0JKRVdsX2FjWlFDWnFDdEl1RDloMUYzUGxHcDhFNV9WYUtVN1lKSldWZFJraVExWWZUWU5OMnlDQXZLUk5XUU5nM1VCd1BLUmJKMGl0YXFQQTRianlUNVdNcW41MXY3WnVSeF9vdjBZSVcxUzdyakhORDdtWWtwTHFxQ0ZzUHowRU1lV19BRnRrSlBQMGF6bkx4bWZmQSUyOCUyOCUyNm5jbiUzRGxlMlFlZUpmbEhwRW10bzhrODJQU2ZQMlJFNCUyOA==/b2f277db-98d5-4b12-8df0-f2c9f5b51d09?encodedDataCenter=aHR0cHM6Ly9idXNpbmVzc2h1Yi1wcm9kLWZyYS5mZi5hdmFzdC5jb20=",
+          "size": "250 MB",
+          "category": "Sécurité",
+          "description": "Antivirus professionnel Avast Business",
+          "installArgs": "/silent /qn /norestart REBOOT=ReallySuppress",
+          "preselected": true
         }
       ]
     },
@@ -254,117 +388,267 @@
       "description": "Outils d'administration système et infrastructure",
       "apps": [
         {
-          "name": "Git",
-          "winget": "Git.Git",
-          "size": "45 MB",
-          "category": "DevOps",
-          "description": "Gestion de versions distribuée"
-        },
-        {
-          "name": "SQL Server Management Studio",
-          "winget": "Microsoft.SQLServerManagementStudio",
-          "size": "600 MB",
-          "category": "Base de données",
-          "description": "Administration SQL Server"
-        },
-        {
-          "name": "DBeaver",
-          "winget": "dbeaver.dbeaver",
-          "size": "110 MB",
-          "category": "Base de données",
-          "description": "Client universel de base de données"
-        },
-        {
           "name": "Wireshark",
           "winget": "WiresharkFoundation.Wireshark",
           "size": "65 MB",
           "category": "Réseau",
-          "description": "Analyseur de protocoles réseau"
+          "description": "Analyseur de protocoles réseau",
+          "preselected": true
         },
         {
           "name": "Nmap",
           "winget": "Insecure.Nmap",
           "size": "25 MB",
           "category": "Réseau",
-          "description": "Scanner de sécurité réseau"
+          "description": "Scanner de sécurité réseau",
+          "preselected": true
         },
         {
           "name": "Advanced IP Scanner",
           "winget": "Famatech.AdvancedIPScanner",
           "size": "15 MB",
           "category": "Réseau",
-          "description": "Scanner d'adresses IP rapide"
+          "description": "Scanner d'adresses IP rapide",
+          "preselected": true
         },
         {
           "name": "Docker Desktop",
           "winget": "Docker.DockerDesktop",
           "size": "500 MB",
           "category": "Conteneurisation",
-          "description": "Plateforme de conteneurisation"
+          "description": "Plateforme de conteneurisation",
+          "preselected": true
         },
         {
           "name": "PowerShell Core",
           "winget": "Microsoft.PowerShell",
           "size": "100 MB",
           "category": "Scripting",
-          "description": "PowerShell multiplateforme"
+          "description": "PowerShell multiplateforme",
+          "preselected": true
         },
         {
-          "name": "Python",
-          "winget": "Python.Python.3.12",
-          "size": "25 MB",
-          "category": "Développement",
-          "description": "Langage de programmation Python"
+          "name": "Oh My Posh",
+          "winget": "JanDeDobbeleer.OhMyPosh",
+          "size": "10 MB",
+          "category": "Scripting",
+          "description": "Prompt engine pour PowerShell",
+          "installArgs": "--scope user --force",
+          "preselected": true
         },
         {
           "name": "HashiCorp Terraform",
           "winget": "Hashicorp.Terraform",
           "size": "50 MB",
           "category": "Infrastructure as Code",
-          "description": "Provisionnement d'infrastructure"
+          "description": "Provisionnement d'infrastructure",
+          "postInstall": "addToPath",
+          "preselected": true
         },
         {
           "name": "AWS CLI",
           "winget": "Amazon.AWSCLI",
           "size": "40 MB",
           "category": "Cloud",
-          "description": "Interface en ligne de commande AWS"
+          "description": "Interface en ligne de commande AWS",
+          "preselected": true
+        },
+        {
+          "name": "OSC CLI",
+          "winget": "Outscale.osc-cli",
+          "size": "20 MB",
+          "category": "Cloud",
+          "description": "CLI Outscale",
+          "configFile": {
+            "path": "$HOME/.osc/config.json",
+            "content": {
+              "pdp-rct": {
+                "access_key": "",
+                "secret_key": "",
+                "host": "outscale.com",
+                "https": true,
+                "method": "POST",
+                "region_name": "eu-west-2"
+              },
+              "pdp-prd": {
+                "access_key": "",
+                "secret_key": "",
+                "host": "outscale.com",
+                "https": true,
+                "method": "POST",
+                "region_name": "cloudgouv-eu-west-1"
+              }
+            }
+          },
+          "sshConfig": {
+            "path": "$HOME/.ssh/config",
+            "content": "# Configuration pour l'environnement Production\nHost 10.10.*\n    User outscale\n    IdentityFile ~/.ssh/pdp-prd.rsa\n\n# Configuration pour l'environnement Recette\nHost 10.110.*\n    User outscale\n    IdentityFile ~/.ssh/pdp-rct.rsa"
+          },
+          "preselected": true
         },
         {
           "name": "Burp Suite Community Edition",
           "winget": "PortSwigger.BurpSuite.Community",
           "size": "300 MB",
           "category": "Sécurité",
-          "description": "Test de sécurité des applications web"
+          "description": "Test de sécurité des applications web",
+          "preselected": true
+        },
+        {
+          "name": "DBeaver",
+          "winget": "dbeaver.dbeaver",
+          "size": "110 MB",
+          "category": "Base de données",
+          "description": "Client universel de base de données",
+          "preselected": true
+        },
+        {
+          "name": "eCarAdmin",
+          "url": "http://85.90.48.117/eCarAdmin/INSTALL/INSTALL.EXE",
+          "size": "50 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion administrative des véhicules",
+          "preselected": true
+        },
+        {
+          "name": "Git",
+          "winget": "Git.Git",
+          "size": "45 MB",
+          "category": "DevOps",
+          "description": "Gestion de versions distribuée",
+          "preselected": true
+        },
+        {
+          "name": "Postman",
+          "winget": "Postman.Postman",
+          "size": "180 MB",
+          "category": "API Testing",
+          "description": "Test et documentation d'APIs",
+          "preselected": true
+        },
+        {
+          "name": "SQL Server Management Studio",
+          "winget": "Microsoft.SQLServerManagementStudio",
+          "size": "600 MB",
+          "category": "Base de données",
+          "description": "Administration SQL Server",
+          "preselected": true
+        },
+        {
+          "name": "Draw.io",
+          "winget": "JGraph.Draw",
+          "size": "120 MB",
+          "category": "Diagrammes",
+          "description": "Création de diagrammes et schémas",
+          "preselected": true
+        },
+        {
+          "name": "Python",
+          "winget": "Python.Python.3.12",
+          "size": "25 MB",
+          "category": "Développement",
+          "description": "Langage de programmation Python",
+          "preselected": false
+        },
+        {
+          "name": "Node.js",
+          "winget": "OpenJS.NodeJS",
+          "size": "50 MB",
+          "category": "Runtime",
+          "description": "Runtime JavaScript",
+          "preselected": false
+        },
+        {
+          "name": "EDI Translator",
+          "url": "http://85.90.48.117/EDITranslator/INSTALL/INSTALL.EXE",
+          "size": "30 MB",
+          "category": "Métier TENOR",
+          "description": "Traduction et gestion des messages EDI",
+          "preselected": false
+        },
+        {
+          "name": "R2 EDI Viewer",
+          "url": "https://r2ediviewer.de/download/R2EDIViewer_Setup.exe",
+          "size": "12 MB",
+          "category": "EDI",
+          "description": "Visualiseur de fichiers EDI",
+          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+          "preselected": false
+        },
+        {
+          "name": "Gestion Temps",
+          "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
+          "size": "40 MB",
+          "category": "Métier TENOR",
+          "description": "Gestion des temps et activités",
+          "preselected": false
+        },
+        {
+          "name": "FileZilla",
+          "winget": "FileZilla.FileZilla",
+          "size": "15 MB",
+          "category": "FTP",
+          "description": "Client FTP/SFTP",
+          "preselected": false
+        },
+        {
+          "name": "Avast Business Antivirus",
+          "url": "https://businesshub.avast.com/installer/ZHRhJTNETHFEaFlPV25QU2Y4bXpva1hCV29tMDdNVmtpTnl2QVF0di1JcnN4a0hKSExfZGpTbEs1c0t6VFIxd1RMSTVtY3JBcFFoZDVWYUZKZWp1LXFsaV9LMWhhZE1IeXRNR2FTSDFCaVMzLWxxNGs2T2JPMklOTUI1UXpWZ0NpU2VxVkNuRjF4X3RQX3ZOVlQ0Zm9mZWhXbE5pZUtvdHB6b2pjN1BsSDhOMkF0cU56TGZ1Qm9pRlF3MmFab1dEZm90SVJBS2Nrd1J6Qm1oSWxNTC04WW10LWVpUSUyOCUyOCUyNm5jbiUzRDBOVHpZWDgwcjdQeW1iWUFWRUF1a0xGOUZtNCUyOA==/b2f277db-98d5-4b12-8df0-f2c9f5b51d09?encodedDataCenter=aHR0cHM6Ly9idXNpbmVzc2h1Yi1wcm9kLWZyYS5mZi5hdmFzdC5jb20=",
+          "size": "250 MB",
+          "category": "Sécurité",
+          "description": "Antivirus professionnel Avast Business",
+          "installArgs": "/silent /qn /norestart REBOOT=ReallySuppress",
+          "preselected": true
         }
       ]
+    },
+    "CUSTOM": {
+      "name": "Personnalisé",
+      "description": "Configuration entièrement personnalisable - toutes applications disponibles",
+      "allowMasterEdit": true,
+      "apps": []
     }
   },
   "optional": [
     {
       "name": "VLC Media Player",
       "winget": "VideoLAN.VLC",
-      "size": "40 MB"
+      "size": "40 MB",
+      "category": "Multimédia",
+      "description": "Lecteur multimédia universel",
+      "preselected": false
     },
     {
       "name": "Firefox",
       "winget": "Mozilla.Firefox",
-      "size": "60 MB"
+      "size": "60 MB",
+      "category": "Navigateur",
+      "description": "Navigateur web Mozilla",
+      "preselected": false
     },
     {
       "name": "Google Chrome",
       "winget": "Google.Chrome",
-      "size": "80 MB"
+      "size": "80 MB",
+      "category": "Navigateur",
+      "description": "Navigateur web Google",
+      "preselected": false
     },
     {
       "name": "PeaZip",
       "winget": "Giorgiotani.Peazip",
-      "size": "10 MB"
+      "size": "10 MB",
+      "category": "Compression",
+      "description": "Gestionnaire d'archives",
+      "preselected": false
     },
     {
       "name": "OBS Studio",
       "winget": "OBSProject.OBSStudio",
-      "size": "95 MB"
+      "size": "95 MB",
+      "category": "Capture vidéo",
+      "description": "Enregistrement et streaming vidéo",
+      "preselected": false
     }
   ]
 }

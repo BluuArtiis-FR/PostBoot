@@ -136,18 +136,19 @@ class ScriptGenerator:
 
         return True, None
 
-    def generate_script(self, user_config: dict, profile_name: str = "Custom") -> str:
+    def generate_script(self, user_config: dict, profile_name: str = "Custom", embed_wpf: bool = False) -> str:
         """
         Génère un script PowerShell autonome basé sur la configuration utilisateur.
 
         Args:
             user_config: Configuration personnalisée de l'utilisateur
             profile_name: Nom du profil (pour documentation)
+            embed_wpf: Si True, embarque l'interface WPF dans le script généré
 
         Returns:
             Contenu du script PowerShell généré
         """
-        logger.info(f"Génération script pour profil: {profile_name}")
+        logger.info(f"Génération script pour profil: {profile_name} (WPF: {embed_wpf})")
 
         # Validation
         is_valid, error = self.validate_config(user_config)
@@ -158,7 +159,7 @@ class ScriptGenerator:
         script_parts = []
 
         # 1. En-tête avec métadonnées
-        header = self._generate_header(profile_name, user_config)
+        header = self._generate_header(profile_name, user_config, embed_wpf)
         script_parts.append(header)
 
         # 2. Configuration embarquée (JSON inline)
@@ -177,13 +178,491 @@ class ScriptGenerator:
         orchestrator = self._generate_orchestrator(user_config)
         script_parts.append(orchestrator)
 
-        # Assembler le script complet
-        full_script = '\n\n'.join(script_parts)
+        # 6. Si WPF embarqué, wrapper le tout dans l'interface graphique
+        if embed_wpf:
+            full_script = self._wrap_with_wpf(script_parts, profile_name)
+        else:
+            # Assembler le script complet normalement
+            full_script = '\n\n'.join(script_parts)
 
         logger.info(f"Script généré: {len(full_script)} caractères")
         return full_script
 
-    def _generate_header(self, profile_name: str, config: dict) -> str:
+    def _wrap_with_wpf(self, script_parts: list, profile_name: str) -> str:
+        """
+        Emballe le script d'installation dans une interface WPF autonome.
+
+        Args:
+            script_parts: Les parties du script (header, config, utilities, modules, orchestrator)
+            profile_name: Nom du profil pour l'affichage
+
+        Returns:
+            Script complet avec interface WPF embarquée
+        """
+        # Assembler le script d'installation principal
+        installation_script = '\n\n'.join(script_parts)
+
+        # Wrapper WPF avec interface graphique
+        wpf_wrapper = f'''<#
+.SYNOPSIS
+PostBootSetup avec Interface Graphique WPF Intégrée
+
+.DESCRIPTION
+Script autonome d'installation et configuration Windows avec interface WPF.
+Profil: {profile_name}
+Généré par PostBootSetup Generator v5.0 - Tenor Data Solutions
+
+.PARAMETER NoGUI
+Exécute le script en mode console sans interface graphique.
+
+.PARAMETER Silent
+Mode silencieux (pas de confirmation utilisateur).
+
+.PARAMETER NoDebloat
+Désactive le module Debloat Windows.
+
+.PARAMETER LogPath
+Chemin personnalisé pour le fichier de log.
+
+.NOTES
+Version: 5.0 (WPF Embedded)
+Author: Tenor Data Solutions
+Requires: PowerShell 5.1+, Windows 10+
+#>
+
+[CmdletBinding()]
+param(
+    [switch]$NoGUI,
+    [switch]$Silent,
+    [switch]$NoDebloat,
+    [string]$LogPath = "$env:TEMP\\PostBootSetup_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+)
+
+# Vérifier et forcer le mode STA (requis pour WPF)
+if (-not $NoGUI -and [Threading.Thread]::CurrentThread.GetApartmentState() -ne 'STA') {{
+    Write-Host "Redémarrage du script en mode STA (requis pour l'interface WPF)..." -ForegroundColor Yellow
+
+    # Construire les paramètres à transmettre
+    $params = @()
+    if ($Silent) {{ $params += '-Silent' }}
+    if ($NoDebloat) {{ $params += '-NoDebloat' }}
+    if ($PSBoundParameters.ContainsKey('LogPath')) {{ $params += "-LogPath `"$LogPath`"" }}
+
+    # Relancer le script en mode STA
+    $scriptPath = $MyInvocation.MyCommand.Path
+    Start-Process powershell.exe -ArgumentList "-STA -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" $($params -join ' ')" -Verb RunAs -Wait
+    exit
+}}
+
+#region Installation Script (Embedded)
+# Ce bloc contient le script d'installation complet qui sera exécuté
+# soit par l'interface WPF, soit directement en mode console
+
+$Global:InstallationScriptBlock = {{
+{installation_script}
+}}
+
+#endregion Installation Script
+
+#region WPF Interface
+
+function Show-WPFInterface {{
+    <#
+    .SYNOPSIS
+    Affiche l'interface graphique WPF et exécute le script d'installation.
+    #>
+
+    Add-Type -AssemblyName PresentationFramework
+    Add-Type -AssemblyName PresentationCore
+    Add-Type -AssemblyName WindowsBase
+    Add-Type -AssemblyName System.Windows.Forms
+
+    # XAML de l'interface
+    $xaml = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PostBoot Setup - {profile_name}"
+        Height="700" Width="900"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1D4ED8"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#9CA3AF"/>
+                    <Setter Property="Cursor" Value="Arrow"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="LogTextBox">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Foreground" Value="#D4D4D4"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style TargetType="ProgressBar">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Foreground" Value="#10B981"/>
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+            <StackPanel>
+                <TextBlock Text="🚀 PostBoot Setup - {profile_name}"
+                          FontSize="24"
+                          FontWeight="Bold"
+                          Foreground="#1F2937"
+                          Margin="0,0,0,8"/>
+                <TextBlock Text="Installation et configuration automatisée de Windows"
+                          FontSize="14"
+                          Foreground="#6B7280"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Zone de log -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="📋 Logs d'exécution"
+                          FontWeight="SemiBold"
+                          FontSize="14"
+                          Foreground="#374151"
+                          Margin="5,0,0,10"/>
+
+                <Border Grid.Row="1"
+                       BorderBrush="#D1D5DB"
+                       BorderThickness="1"
+                       CornerRadius="4">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <TextBox Name="LogTextBox"
+                                Style="{{StaticResource LogTextBox}}"
+                                TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Barre de progression -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+            <StackPanel>
+                <Grid Margin="0,0,0,8">
+                    <TextBlock Name="StatusLabel"
+                              Text="Prêt à démarrer"
+                              FontSize="13"
+                              FontWeight="Medium"
+                              Foreground="#6B7280"
+                              HorizontalAlignment="Left"/>
+                    <TextBlock Name="PercentLabel"
+                              Text="0%"
+                              FontSize="13"
+                              FontWeight="SemiBold"
+                              Foreground="#2563EB"
+                              HorizontalAlignment="Right"/>
+                </Grid>
+                <ProgressBar Name="ProgressBar"
+                            Minimum="0"
+                            Maximum="100"
+                            Value="0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Boutons d'action -->
+        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Name="ExecuteButton"
+                       Grid.Column="0"
+                       Content="▶ Démarrer l'installation"
+                       Width="200"/>
+
+                <StackPanel Grid.Column="1"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Center">
+                    <Button Name="ClearLogButton"
+                           Content="🗑 Effacer logs"
+                           Width="130"
+                           Background="#6B7280"/>
+                    <Button Name="SaveLogButton"
+                           Content="💾 Sauvegarder"
+                           Width="130"
+                           Background="#059669"/>
+                </StackPanel>
+
+                <Button Name="CloseButton"
+                       Grid.Column="2"
+                       Content="✖ Fermer"
+                       Width="120"
+                       Background="#DC2626"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
+"@
+
+    # Charger le XAML
+    $reader = [System.Xml.XmlNodeReader]::new([xml]$xaml)
+    $window = [Windows.Markup.XamlReader]::Load($reader)
+
+    # Récupérer les contrôles
+    $logTextBox = $window.FindName("LogTextBox")
+    $progressBar = $window.FindName("ProgressBar")
+    $statusLabel = $window.FindName("StatusLabel")
+    $percentLabel = $window.FindName("PercentLabel")
+    $executeButton = $window.FindName("ExecuteButton")
+    $clearLogButton = $window.FindName("ClearLogButton")
+    $saveLogButton = $window.FindName("SaveLogButton")
+    $closeButton = $window.FindName("CloseButton")
+
+    # Variables globales pour l'intégration WPF
+    $Global:WPFLogControl = $logTextBox
+    $Global:WPFProgressBar = $progressBar
+    $Global:WPFStatusLabel = $statusLabel
+    $Global:WPFPercentLabel = $percentLabel
+    $Global:WPFCloseButton = $closeButton
+    $Global:WPFAvailable = $true
+    $Global:ScriptRunning = $false
+
+    # Fonction pour ajouter un log
+    function Add-WPFLog {{
+        param([string]$Message, [string]$Level = 'INFO')
+
+        $timestamp = Get-Date -Format 'HH:mm:ss'
+        $prefix = switch ($Level) {{
+            'SUCCESS' {{ '[✓]' }}
+            'ERROR'   {{ '[✗]' }}
+            'WARNING' {{ '[⚠]' }}
+            default   {{ '[ℹ]' }}
+        }}
+
+        $logMessage = "[$timestamp] $prefix $Message`n"
+
+        $window.Dispatcher.Invoke([action]{{
+            $logTextBox.AppendText($logMessage)
+            $logTextBox.ScrollToEnd()
+        }})
+    }}
+
+    # Bouton Exécuter
+    $executeButton.Add_Click({{
+        $executeButton.IsEnabled = $false
+        $closeButton.IsEnabled = $false
+        $Global:ScriptRunning = $true
+
+        Add-WPFLog "========================================" -Level INFO
+        Add-WPFLog "DÉMARRAGE DE L'INSTALLATION" -Level SUCCESS
+        Add-WPFLog "========================================" -Level INFO
+
+        # Exécuter le script dans un Runspace séparé
+        $runspace = [runspacefactory]::CreateRunspace()
+        $runspace.ApartmentState = "STA"
+        $runspace.ThreadOptions = "ReuseThread"
+        $runspace.Open()
+
+        # Passer les paramètres du script au runspace
+        $runspace.SessionStateProxy.SetVariable("Silent", $Silent)
+        $runspace.SessionStateProxy.SetVariable("NoDebloat", $NoDebloat)
+        $runspace.SessionStateProxy.SetVariable("LogPath", $LogPath)
+
+        $powershell = [powershell]::Create()
+        $powershell.Runspace = $runspace
+
+        # Exécuter le script d'installation
+        $scriptBlock = {{
+            param($Dispatcher, $LogControl, $ProgressBar, $StatusLabel, $PercentLabel, $ExecuteBtn, $CloseBtn, $InstallScript)
+
+            try {{
+                # Définir les variables globales
+                $Global:WPFLogControl = $LogControl
+                $Global:WPFProgressBar = $ProgressBar
+                $Global:WPFStatusLabel = $StatusLabel
+                $Global:WPFPercentLabel = $PercentLabel
+                $Global:WPFCloseButton = $CloseBtn
+                $Global:WPFAvailable = $true
+
+                # Exécuter le script d'installation
+                & $InstallScript
+
+                # Notification de succès
+                $Dispatcher.Invoke([action]{{
+                    $StatusLabel.Text = "✓ Installation terminée avec succès"
+                    $ProgressBar.Value = 100
+                    $PercentLabel.Text = "100%"
+                }})
+
+            }} catch {{
+                $errorMsg = $_.Exception.Message
+                $Dispatcher.Invoke([action]{{
+                    $LogControl.AppendText("`n[ERREUR CRITIQUE] $errorMsg`n")
+                    $StatusLabel.Text = "✗ Erreur lors de l'installation"
+                }})
+            }} finally {{
+                $Dispatcher.Invoke([action]{{
+                    $ExecuteBtn.IsEnabled = $true
+                    $CloseBtn.IsEnabled = $true
+                }})
+            }}
+        }}
+
+        $powershell.AddScript($scriptBlock).AddArgument($window.Dispatcher).AddArgument($Global:WPFLogControl).AddArgument($Global:WPFProgressBar).AddArgument($Global:WPFStatusLabel).AddArgument($Global:WPFPercentLabel).AddArgument($executeButton).AddArgument($closeButton).AddArgument($Global:InstallationScriptBlock) | Out-Null
+        $asyncResult = $powershell.BeginInvoke()
+
+        # Surveiller l'exécution
+        $timer = New-Object System.Windows.Threading.DispatcherTimer
+        $timer.Interval = [TimeSpan]::FromMilliseconds(100)
+        $timer.Add_Tick({{
+            if ($asyncResult.IsCompleted) {{
+                $timer.Stop()
+                $powershell.EndInvoke($asyncResult)
+                $powershell.Dispose()
+                $runspace.Close()
+                $Global:ScriptRunning = $false
+            }}
+        }})
+        $timer.Start()
+    }})
+
+    # Bouton Effacer logs
+    $clearLogButton.Add_Click({{
+        $logTextBox.Clear()
+        $progressBar.Value = 0
+        $statusLabel.Text = "Prêt à démarrer"
+        $percentLabel.Text = "0%"
+        Add-WPFLog "Logs effacés" -Level INFO
+    }})
+
+    # Bouton Sauvegarder logs
+    $saveLogButton.Add_Click({{
+        $saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
+        $saveFileDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*"
+        $saveFileDialog.Title = "Sauvegarder les logs"
+        $saveFileDialog.FileName = "PostBootSetup_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+
+        if ($saveFileDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {{
+            try {{
+                $logTextBox.Text | Out-File -FilePath $saveFileDialog.FileName -Encoding UTF8
+                Add-WPFLog "Logs sauvegardés: $($saveFileDialog.FileName)" -Level SUCCESS
+            }} catch {{
+                [System.Windows.MessageBox]::Show(
+                    "Erreur lors de la sauvegarde: $($_.Exception.Message)",
+                    "Erreur",
+                    [System.Windows.MessageBoxButton]::OK,
+                    [System.Windows.MessageBoxImage]::Error
+                )
+            }}
+        }}
+    }})
+
+    # Bouton Fermer
+    $closeButton.Add_Click({{
+        if ($Global:ScriptRunning) {{
+            $result = [System.Windows.MessageBox]::Show(
+                "Une installation est en cours. Voulez-vous vraiment quitter ?",
+                "Confirmation",
+                [System.Windows.MessageBoxButton]::YesNo,
+                [System.Windows.MessageBoxImage]::Question
+            )
+            if ($result -eq [System.Windows.MessageBoxResult]::No) {{
+                return
+            }}
+        }}
+        $window.Close()
+    }})
+
+    # Gestion de la fermeture
+    $window.Add_Closing({{
+        param($sender, $e)
+        if ($Global:ScriptRunning) {{
+            $result = [System.Windows.MessageBox]::Show(
+                "Une installation est en cours. Voulez-vous vraiment quitter ?",
+                "Confirmation",
+                [System.Windows.MessageBoxButton]::YesNo,
+                [System.Windows.MessageBoxImage]::Question
+            )
+            if ($result -eq [System.Windows.MessageBoxResult]::No) {{
+                $e.Cancel = $true
+            }}
+        }}
+    }})
+
+    # Message d'accueil
+    Add-WPFLog "╔════════════════════════════════════════════════╗" -Level INFO
+    Add-WPFLog "║   PostBoot Setup - {profile_name}" -Level INFO
+    Add-WPFLog "║   Tenor Data Solutions                         ║" -Level INFO
+    Add-WPFLog "╚════════════════════════════════════════════════╝" -Level INFO
+    Add-WPFLog "" -Level INFO
+    Add-WPFLog "Cliquez sur 'Démarrer l'installation' pour commencer" -Level INFO
+
+    # Afficher la fenêtre
+    $window.ShowDialog() | Out-Null
+}}
+
+#endregion WPF Interface
+
+#region Main Execution Logic
+
+# Vérifier si on lance en mode GUI ou console
+if ($NoGUI) {{
+    # Mode console : exécuter directement le script d'installation
+    Write-Host "Mode console activé (paramètre -NoGUI)" -ForegroundColor Cyan
+    & $Global:InstallationScriptBlock
+}} else {{
+    # Mode GUI : lancer l'interface WPF
+    try {{
+        Show-WPFInterface
+    }} catch {{
+        Write-Host "Erreur lors du lancement de l'interface WPF: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Basculement en mode console..." -ForegroundColor Yellow
+        Start-Sleep -Seconds 2
+        & $Global:InstallationScriptBlock
+    }}
+}}
+
+#endregion Main Execution Logic
+'''
+
+        return wpf_wrapper
+
+    def _generate_header(self, profile_name: str, config: dict, embed_wpf: bool = False) -> str:
         """Génère l'en-tête du script avec métadonnées."""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -254,23 +733,38 @@ $Global:EmbeddedConfig = @'
         return embedded
 
     def _generate_utilities(self) -> str:
-        """Génère les fonctions utilitaires communes."""
+        """Génère les fonctions utilitaires communes avec fonctionnalités avancées."""
         utilities = """#region Fonctions Utilitaires
+
+# Initialiser le log JSON structuré
+$Global:LogEntries = @()
+$Global:JSONLogPath = $LogPath -replace '\\.log$', '.json'
 
 function Write-ScriptLog {
     param(
         [string]$Message,
         [ValidateSet('INFO', 'SUCCESS', 'WARNING', 'ERROR')]
-        [string]$Level = 'INFO'
+        [string]$Level = 'INFO',
+        [hashtable]$Metadata = @{}
     )
 
     $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $logMessage = "[$timestamp] [$Level] $Message"
 
+    # Log vers fichier texte
     try {
         Add-Content -Path $Global:LogPath -Value $logMessage -ErrorAction SilentlyContinue
     } catch { }
 
+    # Ajouter à la collection JSON
+    $Global:LogEntries += @{
+        Timestamp = $timestamp
+        Level = $Level
+        Message = $Message
+        Metadata = $Metadata
+    }
+
+    # Affichage console
     if (-not $Silent) {
         $color = switch ($Level) {
             'SUCCESS' { 'Green' }
@@ -280,6 +774,35 @@ function Write-ScriptLog {
         }
         Write-Host $Message -ForegroundColor $color
     }
+
+    # Intégration WPF si disponible
+    if ($Global:WPFAvailable) {
+        try {
+            Invoke-WPFLog -Message $Message -Level $Level
+        } catch { }
+    }
+}
+
+function Save-JSONLog {
+    <#
+    .SYNOPSIS
+    Sauvegarde le log structuré au format JSON.
+    #>
+    try {
+        $logData = @{
+            GeneratedDate = $Global:ScriptMetadata.GeneratedDate
+            ProfileName = $Global:ScriptMetadata.ProfileName
+            ExecutionStart = $Global:StartTime.ToString('yyyy-MM-dd HH:mm:ss')
+            ExecutionEnd = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+            Duration = ((Get-Date) - $Global:StartTime).ToString('hh\\:mm\\:ss')
+            Entries = $Global:LogEntries
+        }
+
+        $logData | ConvertTo-Json -Depth 5 | Out-File -FilePath $Global:JSONLogPath -Encoding UTF8
+        Write-ScriptLog "Log JSON sauvegardé: $Global:JSONLogPath" -Level INFO
+    } catch {
+        Write-ScriptLog "Impossible de sauvegarder le log JSON: $_" -Level WARNING
+    }
 }
 
 function Test-IsAdministrator {
@@ -287,70 +810,264 @@ function Test-IsAdministrator {
     return $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+function Test-AppInstalled {
+    <#
+    .SYNOPSIS
+    Vérifie si une application est déjà installée.
+
+    .PARAMETER WingetId
+    L'identifiant Winget de l'application.
+
+    .PARAMETER AppName
+    Le nom de l'application (utilisé pour recherche dans les programmes installés).
+
+    .OUTPUTS
+    Boolean - True si l'application est installée, False sinon
+    #>
+    param(
+        [string]$WingetId,
+        [string]$AppName
+    )
+
+    # Vérifier via Winget si l'ID est fourni
+    if ($WingetId) {
+        try {
+            $wingetList = winget list --id $WingetId 2>&1 | Out-String
+            if ($wingetList -match [regex]::Escape($WingetId)) {
+                return $true
+            }
+        } catch { }
+    }
+
+    # Vérifier via le registre Windows
+    if ($AppName) {
+        $registryPaths = @(
+            'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+            'HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+            'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+        )
+
+        foreach ($path in $registryPaths) {
+            $installed = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue |
+                         Where-Object { $_.DisplayName -like "*$AppName*" }
+
+            if ($installed) {
+                return $true
+            }
+        }
+    }
+
+    return $false
+}
+
+function Get-FileHash-Safe {
+    <#
+    .SYNOPSIS
+    Calcule le hash SHA256 d'un fichier de manière sécurisée.
+    #>
+    param([string]$FilePath)
+
+    try {
+        $hash = Get-FileHash -Path $FilePath -Algorithm SHA256 -ErrorAction Stop
+        return $hash.Hash
+    } catch {
+        Write-ScriptLog "Impossible de calculer le hash de $FilePath" -Level WARNING
+        return $null
+    }
+}
+
 function Install-WingetApp {
+    <#
+    .SYNOPSIS
+    Installe une application via Winget avec vérification préalable.
+    #>
     param($App)
+
+    # Vérifier si déjà installé
+    if (Test-AppInstalled -WingetId $App.winget -AppName $App.name) {
+        Write-ScriptLog "→ $($App.name) déjà installé (ignoré)" -Level INFO
+        return $true
+    }
 
     Write-ScriptLog "Installation: $($App.name)..." -Level INFO
 
-    try {
-        winget install --id $App.winget --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+    $maxRetries = 3
+    $retryCount = 0
 
-        if ($LASTEXITCODE -eq 0) {
-            Write-ScriptLog "✓ $($App.name) installé" -Level SUCCESS
-            return $true
-        } else {
-            Write-ScriptLog "✗ Échec $($App.name)" -Level ERROR
-            return $false
+    while ($retryCount -lt $maxRetries) {
+        try {
+            $output = winget install --id $App.winget --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-String
+
+            if ($LASTEXITCODE -eq 0 -or $output -match 'successfully installed') {
+                Write-ScriptLog "✓ $($App.name) installé" -Level SUCCESS -Metadata @{ Winget = $App.winget; Retries = $retryCount }
+                return $true
+            } else {
+                $retryCount++
+                if ($retryCount -lt $maxRetries) {
+                    Write-ScriptLog "Tentative $retryCount/$maxRetries échouée, nouvelle tentative..." -Level WARNING
+                    Start-Sleep -Seconds 5
+                }
+            }
+        } catch {
+            $retryCount++
+            if ($retryCount -lt $maxRetries) {
+                Write-ScriptLog "Erreur: $_, nouvelle tentative..." -Level WARNING
+                Start-Sleep -Seconds 5
+            }
         }
-    } catch {
-        Write-ScriptLog "✗ Erreur $($App.name): $_" -Level ERROR
-        return $false
+    }
+
+    Write-ScriptLog "✗ Échec $($App.name) après $maxRetries tentatives" -Level ERROR
+    return $false
+}
+
+function Get-InstallArguments {
+    <#
+    .SYNOPSIS
+    Détermine les arguments d'installation silencieux selon le type de fichier.
+    #>
+    param(
+        [string]$FilePath,
+        [string]$CustomArgs
+    )
+
+    # Si des arguments personnalisés sont fournis, les utiliser
+    if ($CustomArgs) {
+        return $CustomArgs
+    }
+
+    # Détection automatique selon l'extension
+    $extension = [System.IO.Path]::GetExtension($FilePath).ToLower()
+
+    switch ($extension) {
+        '.msi' {
+            return '/qn /norestart REBOOT=ReallySuppress'
+        }
+        '.exe' {
+            # Tenter de détecter l'installeur
+            $fileContent = Get-Content -Path $FilePath -Encoding Byte -TotalCount 1MB -ErrorAction SilentlyContinue
+            $contentStr = [System.Text.Encoding]::ASCII.GetString($fileContent)
+
+            if ($contentStr -match 'Inno Setup') {
+                return '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+            }
+            elseif ($contentStr -match 'Nullsoft') {
+                return '/S /NCRC'
+            }
+            elseif ($contentStr -match 'InstallShield') {
+                return '/s /v"/qn"'
+            }
+            else {
+                # Arguments génériques
+                return '/S /silent /quiet /q /qn'
+            }
+        }
+        '.zip' {
+            Write-ScriptLog "Fichier ZIP détecté, extraction requise" -Level WARNING
+            return $null
+        }
+        default {
+            return '/S'
+        }
     }
 }
 
 function Install-CustomApp {
+    <#
+    .SYNOPSIS
+    Installe une application personnalisée via URL avec retry, validation hash, et détection automatique des arguments.
+    #>
     param($App)
+
+    # Vérifier si déjà installé
+    if (Test-AppInstalled -AppName $App.name) {
+        Write-ScriptLog "→ $($App.name) déjà installé (ignoré)" -Level INFO
+        return $true
+    }
 
     Write-ScriptLog "Téléchargement: $($App.name)..." -Level INFO
 
     try {
-        $uri = [System.Uri]$App.url
+        # Remplacer HTTP par HTTPS si possible
+        $downloadUrl = $App.url
+        if ($downloadUrl -match '^http://') {
+            $httpsUrl = $downloadUrl -replace '^http://', 'https://'
+            Write-ScriptLog "Tentative HTTPS: $httpsUrl" -Level INFO
+
+            try {
+                $testRequest = Invoke-WebRequest -Uri $httpsUrl -Method Head -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
+                $downloadUrl = $httpsUrl
+                Write-ScriptLog "✓ HTTPS disponible, utilisation de la connexion sécurisée" -Level SUCCESS
+            } catch {
+                Write-ScriptLog "⚠ HTTPS non disponible, utilisation de HTTP (non sécurisé)" -Level WARNING
+            }
+        }
+
+        $uri = [System.Uri]$downloadUrl
         $fileName = Split-Path $uri.LocalPath -Leaf
-        if (-not $fileName -or $fileName -notmatch '\.[a-zA-Z0-9]+$') {
+        if (-not $fileName -or $fileName -notmatch '\\.[a-zA-Z0-9]+$') {
             $fileName = "$($App.name -replace '[^a-zA-Z0-9]', '_').exe"
         }
 
         $tempPath = Join-Path $env:TEMP $fileName
 
-        # Télécharger avec gestion des erreurs SSL
-        try {
-            # Désactiver temporairement la vérification SSL si nécessaire
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            $webClient = New-Object System.Net.WebClient
-            $webClient.DownloadFile($App.url, $tempPath)
-        } catch {
-            # Fallback avec Invoke-WebRequest (PowerShell 5.1 compatible)
-            Invoke-WebRequest -Uri $App.url -OutFile $tempPath -UseBasicParsing -ErrorAction Stop
+        # Téléchargement avec retry
+        $maxRetries = 3
+        $retryCount = 0
+        $downloaded = $false
+
+        while ($retryCount -lt $maxRetries -and -not $downloaded) {
+            try {
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+
+                Invoke-WebRequest -Uri $downloadUrl -OutFile $tempPath -UseBasicParsing -TimeoutSec 300 -ErrorAction Stop
+
+                if (Test-Path $tempPath) {
+                    $fileSize = (Get-Item $tempPath).Length
+                    Write-ScriptLog "✓ Téléchargement réussi ($([math]::Round($fileSize / 1MB, 2)) MB)" -Level SUCCESS
+                    $downloaded = $true
+                } else {
+                    throw "Fichier non créé"
+                }
+            } catch {
+                $retryCount++
+                if ($retryCount -lt $maxRetries) {
+                    Write-ScriptLog "Tentative $retryCount/$maxRetries échouée, nouvelle tentative dans 5s..." -Level WARNING
+                    Start-Sleep -Seconds 5
+                } else {
+                    throw "Échec du téléchargement après $maxRetries tentatives: $_"
+                }
+            }
         }
 
-        if (-not (Test-Path $tempPath)) {
-            throw "Fichier non téléchargé"
+        # Calculer le hash pour validation
+        $fileHash = Get-FileHash-Safe -FilePath $tempPath
+        if ($fileHash) {
+            Write-ScriptLog "Hash SHA256: $fileHash" -Level INFO -Metadata @{ Hash = $fileHash }
         }
 
-        $installArgs = if ($App.installArgs) { $App.installArgs }
-                       elseif ($tempPath -match '\\.msi$') { '/qn /norestart' }
-                       else { '/S' }
+        # Déterminer les arguments d'installation
+        $installArgs = Get-InstallArguments -FilePath $tempPath -CustomArgs $App.installArgs
 
-        Write-ScriptLog "Installation de $($App.name)..." -Level INFO
-        $process = Start-Process -FilePath $tempPath -ArgumentList $installArgs -Wait -NoNewWindow -PassThru
+        if ($null -eq $installArgs) {
+            Write-ScriptLog "⚠ Type de fichier non supporté pour installation automatique" -Level WARNING
+            Remove-Item $tempPath -ErrorAction SilentlyContinue
+            return $false
+        }
 
+        Write-ScriptLog "Installation de $($App.name) avec args: $installArgs" -Level INFO
+
+        $process = Start-Process -FilePath $tempPath -ArgumentList $installArgs -Wait -NoNewWindow -PassThru -ErrorAction Stop
+
+        # Nettoyer le fichier temporaire
         Remove-Item $tempPath -ErrorAction SilentlyContinue
 
+        # Codes de sortie acceptables (0 = succès, 3010 = redémarrage requis)
         if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
-            Write-ScriptLog "✓ $($App.name) installé" -Level SUCCESS
+            Write-ScriptLog "✓ $($App.name) installé (code: $($process.ExitCode))" -Level SUCCESS -Metadata @{ ExitCode = $process.ExitCode; URL = $App.url }
             return $true
         } else {
-            Write-ScriptLog "✗ $($App.name) - Code erreur: $($process.ExitCode)" -Level ERROR
+            Write-ScriptLog "✗ $($App.name) - Code erreur: $($process.ExitCode)" -Level ERROR -Metadata @{ ExitCode = $process.ExitCode }
             return $false
         }
     } catch {
@@ -367,6 +1084,13 @@ function Install-CustomApp {
     def _generate_modules_code(self, config: dict) -> str:
         """Génère le code inline des modules PowerShell activés."""
         modules_code_parts = []
+
+        # TOUJOURS inclure UIHooks pour l'intégration WPF
+        uihooks_code = self._load_module('UIHooks')
+        if uihooks_code:
+            modules_code_parts.append("#region Module UIHooks")
+            modules_code_parts.append(uihooks_code)
+            modules_code_parts.append("#endregion Module UIHooks")
 
         # Liste des modules à inclure
         modules_to_include = config.get('modules', [])
@@ -438,6 +1162,9 @@ function Install-CustomApp {
         orchestrator = f"""#region Orchestrateur Principal
 
 try {{
+    # Initialiser WPF si disponible
+    Test-WPFAvailability | Out-Null
+
     # En-tête
     if (-not $Silent) {{
         Clear-Host
@@ -473,13 +1200,43 @@ try {{
         exit 1
     }}
 
+    # Afficher le résumé de configuration
+    $totalMasterApps = $Global:EmbeddedConfig.apps.master.Count
+    $totalProfileApps = $Global:EmbeddedConfig.apps.profile.Count
+    $totalApps = $totalMasterApps + $totalProfileApps
+
+    Write-Host "`n📦 Configuration:" -ForegroundColor Cyan
+    Write-Host "   - Applications Master: $totalMasterApps" -ForegroundColor White
+    Write-Host "   - Applications Profil: $totalProfileApps" -ForegroundColor White
+    Write-Host "   - Total: $totalApps applications`n" -ForegroundColor White
+
+    # Confirmation utilisateur (sauf en mode silencieux)
+    if (-not $Silent) {{
+        Write-Host "⚠ Cette opération va installer $totalApps applications." -ForegroundColor Yellow
+        $confirmation = Read-Host "Voulez-vous continuer? (O/N)"
+
+        if ($confirmation -notmatch '^[OoYy]') {{
+            Write-ScriptLog "Installation annulée par l'utilisateur" -Level WARNING
+            Write-Host "`nInstallation annulée." -ForegroundColor Yellow
+            exit 0
+        }}
+
+        Write-Host ""
+    }}
+
     # Installation des applications
     Write-ScriptLog "======== INSTALLATION APPLICATIONS ========" -Level INFO
+    Invoke-WPFProgress -PercentComplete 0 -Status "Démarrage de l'installation..."
 
-    $stats = @{{ Success = 0; Failed = 0 }}
+    $stats = @{{ Success = 0; Failed = 0; Skipped = 0 }}
+    $currentApp = 0
 
     # Applications master
     foreach ($app in $Global:EmbeddedConfig.apps.master) {{
+        $currentApp++
+        $percentComplete = [math]::Round(($currentApp / $totalApps) * 100)
+        Invoke-WPFProgress -PercentComplete $percentComplete -Status "Installation: $($app.name) ($currentApp/$totalApps)"
+
         if ($app.winget) {{
             $success = Install-WingetApp -App $app
         }} else {{
@@ -491,6 +1248,10 @@ try {{
 
     # Applications profil
     foreach ($app in $Global:EmbeddedConfig.apps.profile) {{
+        $currentApp++
+        $percentComplete = [math]::Round(($currentApp / $totalApps) * 100)
+        Invoke-WPFProgress -PercentComplete $percentComplete -Status "Installation: $($app.name) ($currentApp/$totalApps)"
+
         if ($app.winget) {{
             $success = Install-WingetApp -App $app
         }} else {{
@@ -505,6 +1266,7 @@ try {{
 
     # Résumé final
     $duration = (Get-Date) - $Global:StartTime
+    $durationFormatted = $duration.ToString("hh\\:mm\\:ss")
 
     Write-Host @"
 
@@ -513,15 +1275,26 @@ try {{
 ================================================================
   Applications installées: $($stats.Success)
   Applications échouées: $($stats.Failed)
-  Durée totale: $($duration.ToString("mm\\:ss"))
+  Durée totale: $durationFormatted
 
   Log complet: $Global:LogPath
+  Log JSON: $Global:JSONLogPath
   Support: it@tenorsolutions.com
 ================================================================
 
 "@ -ForegroundColor Green
 
     Write-ScriptLog "Exécution terminée avec succès" -Level SUCCESS
+
+    # Sauvegarder le log JSON
+    Save-JSONLog
+
+    # Notifier WPF de la complétion
+    Complete-WPFExecution -Success $true -Summary @{{
+        'Applications installées' = $stats.Success
+        'Applications échouées' = $stats.Failed
+        'Durée' = $durationFormatted
+    }}
 
     if (-not $Silent) {{
         Read-Host "`nAppuyez sur Entrée pour terminer"
@@ -532,6 +1305,14 @@ try {{
 }} catch {{
     Write-ScriptLog "ERREUR CRITIQUE: $($_.Exception.Message)" -Level ERROR
     Write-Host "`nUne erreur critique est survenue. Consultez le log: $Global:LogPath" -ForegroundColor Red
+
+    # Sauvegarder le log JSON même en cas d'erreur
+    Save-JSONLog
+
+    # Notifier WPF de l'échec
+    Complete-WPFExecution -Success $false -Summary @{{
+        'Erreur' = $_.Exception.Message
+    }}
 
     if (-not $Silent) {{
         Read-Host "`nAppuyez sur Entrée pour quitter"
@@ -724,44 +1505,61 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
     # Charger les apps depuis la config
     apps_data = generator.apps_config
 
-    # Construire la liste des apps master
-    master_apps = []
+    # Construire la liste des apps master (avec déduplication)
+    master_apps_dict = {}
     if 'installation' in script_types:
         for app in apps_data.get('master', []):
             app_id = app.get('winget') or app.get('url')
             if app_id in user_config.get('master_apps', []) or user_config.get('profile'):
-                master_apps.append({
-                    'name': app.get('name'),
-                    'winget': app.get('winget'),
-                    'url': app.get('url'),
-                    'size': app.get('size'),
-                    'category': app.get('category')
-                })
+                # Dédupliquer (au cas où il y aurait des doublons dans la config)
+                if app_id not in master_apps_dict:
+                    master_apps_dict[app_id] = {
+                        'name': app.get('name'),
+                        'winget': app.get('winget'),
+                        'url': app.get('url'),
+                        'size': app.get('size'),
+                        'category': app.get('category'),
+                        'installArgs': app.get('installArgs')
+                    }
+
+    master_apps = list(master_apps_dict.values())
 
     # Construire la liste des apps de profil + optionnelles
-    profile_apps = []
+    # IMPORTANT: Utiliser un dictionnaire pour dédupliquer par app_id
+    profile_apps_dict = {}
     if 'installation' in script_types:
         # Apps de profil
         for profile_id, profile_data in apps_data.get('profiles', {}).items():
             for app in profile_data.get('apps', []):
                 app_id = app.get('winget') or app.get('url')
                 if app_id in user_config.get('profile_apps', []):
-                    profile_apps.append({
-                        'name': app.get('name'),
-                        'winget': app.get('winget'),
-                        'url': app.get('url'),
-                        'size': app.get('size')
-                    })
+                    # Ne garder que la première occurrence de chaque app
+                    if app_id not in profile_apps_dict:
+                        profile_apps_dict[app_id] = {
+                            'name': app.get('name'),
+                            'winget': app.get('winget'),
+                            'url': app.get('url'),
+                            'size': app.get('size'),
+                            'category': app.get('category'),
+                            'installArgs': app.get('installArgs')
+                        }
 
         # Apps optionnelles
         for app in apps_data.get('optional', []):
             app_id = app.get('winget')
             if app_id in user_config.get('optional_apps', []):
-                profile_apps.append({
-                    'name': app.get('name'),
-                    'winget': app.get('winget'),
-                    'size': app.get('size')
-                })
+                # Ne garder que la première occurrence
+                if app_id not in profile_apps_dict:
+                    profile_apps_dict[app_id] = {
+                        'name': app.get('name'),
+                        'winget': app.get('winget'),
+                        'size': app.get('size'),
+                        'category': app.get('category'),
+                        'installArgs': app.get('installArgs')
+                    }
+
+    # Convertir le dictionnaire en liste
+    profile_apps = list(profile_apps_dict.values())
 
     # Construire la liste des modules actifs
     modules = []
@@ -844,6 +1642,7 @@ def generate():
         request_data = request.json
         user_config = request_data.get('config', {})
         script_types = request_data.get('scriptTypes', ['installation', 'optimizations'])
+        embed_wpf = request_data.get('embedWpf', False)  # Nouveau paramètre WPF
 
         profile_name = user_config.get('custom_name', 'Custom')
 
@@ -860,7 +1659,11 @@ def generate():
         else:
             type_suffix = '_'.join([t.capitalize() for t in script_types])
 
-        logger.info(f"Requête génération - Profil: {profile_name} - Types: {script_types} - IP: {request.remote_addr}")
+        # Ajouter suffixe WPF si activé
+        if embed_wpf:
+            type_suffix += '_WPF'
+
+        logger.info(f"Requête génération - Profil: {profile_name} - Types: {script_types} - WPF: {embed_wpf} - IP: {request.remote_addr}")
 
         # Transformer la config utilisateur en config pour le générateur
         api_config = transform_user_config_to_api_config(user_config, script_types)
@@ -868,8 +1671,8 @@ def generate():
         # Gérer diagnostic (à implémenter plus tard)
         include_diagnostic = 'diagnostic' in script_types
 
-        # Générer le script
-        script_content = generator.generate_script(api_config, profile_name)
+        # Générer le script avec ou sans WPF embarqué
+        script_content = generator.generate_script(api_config, profile_name, embed_wpf=embed_wpf)
 
         # Si diagnostic demandé, ajouter le module de diagnostic
         if include_diagnostic:

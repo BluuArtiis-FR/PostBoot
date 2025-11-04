@@ -153,6 +153,9 @@ PostBootSetup/
 ├── 📁 generator/            # Backend Flask
 │   └── app.py              # API principale de génération
 │
+├── 📁 launcher/             # 🆕 Interface WPF
+│   └── PostBootLauncher.ps1 # Lanceur graphique WPF
+│
 ├── 📁 config/               # Configuration
 │   ├── apps.json           # Catalogue 40+ applications
 │   ├── settings.json       # Paramètres optimisations
@@ -161,7 +164,8 @@ PostBootSetup/
 ├── 📁 modules/              # Modules PowerShell
 │   ├── Debloat-Windows.psm1
 │   ├── Optimize-Performance.psm1
-│   └── Customize-UI.psm1
+│   ├── Customize-UI.psm1
+│   └── UIHooks.psm1        # 🆕 Intégration WPF
 │
 ├── 📁 templates/            # Templates PowerShell
 │   └── main_template.ps1   # Template principal
@@ -177,6 +181,7 @@ PostBootSetup/
 ├── docker-compose.yml       # Dev local
 ├── docker-compose.prod.yml  # Production
 ├── ValidateScript.ps1       # Validation PowerShell
+├── Lancer PostBoot.bat     # 🆕 Raccourci lanceur WPF
 └── README.md               # Ce fichier
 ```
 
@@ -232,6 +237,22 @@ powershell -ExecutionPolicy Bypass -File ValidateScript.ps1 -ScriptPath "PostBoo
 ```
 
 ### Exécution du Script
+
+#### 🖥️ **Méthode 1 : Interface Graphique WPF (Recommandée)**
+
+```batch
+# Double-cliquer sur le fichier ou exécuter en tant qu'Administrateur
+Lancer PostBoot.bat
+```
+
+**Fonctionnalités de l'interface WPF :**
+- ✅ Sélection visuelle du script à exécuter
+- 📊 Suivi en temps réel de la progression (0-100%)
+- 📝 Logs colorés en direct
+- 💾 Sauvegarde des logs au format TXT
+- ⚡ Exécution asynchrone sans blocage
+
+#### 💻 **Méthode 2 : Ligne de Commande**
 
 ```powershell
 # Sur la machine cible Windows

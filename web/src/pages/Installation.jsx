@@ -165,7 +165,7 @@ const Installation = () => {
           </button>
 
           {/* Profils prédéfinis */}
-          {profiles.map((profile) => (
+          {profiles.filter(p => p.id !== 'CUSTOM').map((profile) => (
             <button
               key={profile.id}
               onClick={() => selectProfile(profile.id)}
@@ -223,10 +223,12 @@ const Installation = () => {
           <h2 className="text-xl font-semibold text-gray-900">
             Applications Master
             <span className="ml-3 text-xs bg-red-100 text-red-700 px-2 py-1 rounded font-medium">
-              {userConfig.profile ? 'INCLUS AUTOMATIQUEMENT' : 'REQUIS'}
+              {userConfig.profile && !apps.profiles[userConfig.profile]?.allowMasterEdit
+                ? 'INCLUS AUTOMATIQUEMENT'
+                : 'REQUIS'}
             </span>
           </h2>
-          {!userConfig.profile && (
+          {(!userConfig.profile || apps.profiles[userConfig.profile]?.allowMasterEdit) && (
             <div className="flex space-x-2">
               <button
                 onClick={() => selectAllInCategory('master')}
@@ -247,7 +249,8 @@ const Installation = () => {
           {apps.master.map((app) => {
             const appId = app.winget || app.url;
             const isChecked = userConfig.profile || userConfig.master_apps.includes(appId);
-            const isDisabled = userConfig.profile !== null;
+            const allowMasterEdit = userConfig.profile ? apps.profiles[userConfig.profile]?.allowMasterEdit : true;
+            const isDisabled = userConfig.profile !== null && !allowMasterEdit;
 
             return (
               <label
@@ -295,8 +298,24 @@ const Installation = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {userConfig.profile && apps.profiles[userConfig.profile]
-            ? apps.profiles[userConfig.profile].apps.map((app) => {
+          {(() => {
+            const condition1 = userConfig.profile !== null;
+            const condition2 = userConfig.profile !== 'CUSTOM';
+            const condition3 = apps.profiles[userConfig.profile]?.apps;
+            const condition4 = Array.isArray(apps.profiles[userConfig.profile]?.apps);
+            const finalCondition = condition1 && condition2 && condition3 && condition4;
+
+            console.log('[DEBUG] Condition check:', {
+              'profile !== null': condition1,
+              'profile !== CUSTOM': condition2,
+              'has apps': condition3,
+              'is array': condition4,
+              'FINAL': finalCondition
+            });
+
+            if (finalCondition) {
+              console.log('[DEBUG] DISPLAYING PROFILE APPS ONLY');
+              return apps.profiles[userConfig.profile].apps.map((app) => {
                 const appId = app.winget || app.url;
                 return (
                   <label
@@ -315,31 +334,47 @@ const Installation = () => {
                     </div>
                   </label>
                 );
-              })
-            : Object.entries(apps.profiles).flatMap(([profileId, profile]) =>
-                profile.apps.map((app) => {
-                  const appId = app.winget || app.url;
-                  return (
-                    <label
-                      key={appId}
-                      className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:border-primary-300 bg-white transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={userConfig.profile_apps.includes(appId)}
-                        onChange={() => toggleApp(appId, 'profile')}
-                        className="checkbox mt-1"
-                      />
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">{app.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {app.size} • {profileId}
-                        </div>
-                      </div>
-                    </label>
-                  );
-                })
-              )}
+              });
+            } else {
+              console.log('[DEBUG] DISPLAYING ALL APPS (CUSTOM MODE)');
+              // Collecter toutes les apps et dédupliquer par appId (sans afficher les profils)
+              const allAppsMap = new Map();
+              Object.entries(apps.profiles)
+                .filter(([profileId]) => profileId !== 'CUSTOM')
+                .forEach(([profileId, profile]) => {
+                  profile.apps.forEach((app) => {
+                    const appId = app.winget || app.url;
+                    if (!allAppsMap.has(appId)) {
+                      // Première occurrence de cette app, on la garde
+                      allAppsMap.set(appId, app);
+                    }
+                    // Si l'app existe déjà, on ne fait rien (pas de doublon)
+                  });
+                });
+
+              // Afficher les apps dédupliquées (sans indication de profil)
+              return Array.from(allAppsMap.values()).map((app) => {
+                const appId = app.winget || app.url;
+                return (
+                  <label
+                    key={appId}
+                    className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:border-primary-300 bg-white transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={userConfig.profile_apps.includes(appId)}
+                      onChange={() => toggleApp(appId, 'profile')}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900">{app.name}</div>
+                      <div className="text-xs text-gray-500">{app.size}</div>
+                    </div>
+                  </label>
+                );
+              });
+            }
+          })()}
         </div>
       </div>
 
@@ -380,6 +415,41 @@ const Installation = () => {
               </div>
             </label>
           ))}
+        </div>
+      </div>
+
+      {/* Option WPF */}
+      <div className="card mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex-1">
+            <label className="flex items-start cursor-pointer">
+              <input
+                type="checkbox"
+                checked={userConfig.embed_wpf}
+                onChange={(e) => updateConfig({ embed_wpf: e.target.checked })}
+                className="checkbox mt-1 mr-3"
+              />
+              <div>
+                <div className="font-semibold text-gray-900 mb-1">
+                  Interface WPF intégrée (Recommandé)
+                </div>
+                <div className="text-sm text-gray-600">
+                  Le script généré inclura une interface graphique moderne avec suivi en temps réel de la progression,
+                  logs colorés et sauvegarde automatique. Un seul fichier .ps1 à exécuter sur le poste client.
+                </div>
+                <div className="mt-2 text-xs text-blue-700 bg-blue-100 inline-block px-2 py-1 rounded">
+                  ✓ Tout-en-un • ✓ Suivi visuel • ✓ Aucune dépendance externe
+                </div>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
 

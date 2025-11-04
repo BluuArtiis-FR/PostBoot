@@ -29,41 +29,66 @@ function Remove-BloatwareApps {
 
     Write-Host "`n[DEBLOAT] Suppression des applications préinstallées..." -ForegroundColor Cyan
 
-    # Liste des applications à supprimer (bloatware Windows courant)
+    # Liste des applications à supprimer (bloatware Windows 11 2024/2025)
     $bloatwareApps = @(
-        "Microsoft.3DBuilder"
+        # Applications Bing (obsolètes)
         "Microsoft.BingFinance"
         "Microsoft.BingNews"
         "Microsoft.BingSports"
         "Microsoft.BingWeather"
-        "Microsoft.GetHelp"
-        "Microsoft.Getstarted"
-        "Microsoft.Messaging"
+        "Microsoft.BingSearch"                  # Nouveau: Widget Bing (Windows 11 22H2+)
+
+        # Applications 3D (rarement utilisées)
+        "Microsoft.3DBuilder"
         "Microsoft.Microsoft3DViewer"
-        "Microsoft.MicrosoftOfficeHub"
-        "Microsoft.MicrosoftSolitaireCollection"
-        "Microsoft.MixedReality.Portal"
-        "Microsoft.Office.OneNote"
-        "Microsoft.OneConnect"
-        "Microsoft.People"
         "Microsoft.Print3D"
+        "Microsoft.MixedReality.Portal"
+
+        # Applications de communication (si alternatives installées)
+        "Microsoft.People"
+        "Microsoft.YourPhone"                   # Remplacé par Phone Link
+        "microsoft.windowscommunicationsapps"   # Mail & Calendar (si Outlook installé)
+        "Microsoft.Messaging"
         "Microsoft.SkypeApp"
-        "Microsoft.Wallet"
-        "Microsoft.WindowsAlarms"
-        "Microsoft.WindowsCamera"
-        "microsoft.windowscommunicationsapps"
-        "Microsoft.WindowsFeedbackHub"
-        "Microsoft.WindowsMaps"
-        "Microsoft.WindowsSoundRecorder"
+
+        # Applications Office Hub
+        "Microsoft.MicrosoftOfficeHub"
+        "Microsoft.Office.OneNote"              # Si OneNote desktop installé
+
+        # Jeux et divertissement
+        "Microsoft.MicrosoftSolitaireCollection"
+        "Microsoft.ZuneMusic"
+        "Microsoft.ZuneVideo"
+
+        # Applications Xbox (à garder si gaming)
         "Microsoft.Xbox.TCUI"
         "Microsoft.XboxApp"
         "Microsoft.XboxGameOverlay"
         "Microsoft.XboxGamingOverlay"
         "Microsoft.XboxIdentityProvider"
         "Microsoft.XboxSpeechToTextOverlay"
-        "Microsoft.YourPhone"
-        "Microsoft.ZuneMusic"
-        "Microsoft.ZuneVideo"
+        "Microsoft.GamingApp"                   # Nouveau: Xbox Gaming App (Windows 11)
+
+        # Utilitaires Windows
+        "Microsoft.WindowsAlarms"
+        "Microsoft.WindowsCamera"
+        "Microsoft.WindowsFeedbackHub"
+        "Microsoft.WindowsMaps"
+        "Microsoft.WindowsSoundRecorder"
+        "Microsoft.ScreenSketch"                # Capture d'écran (renommé dans Win11)
+        "Microsoft.GetHelp"
+        "Microsoft.Getstarted"
+        "Microsoft.GetStarted"                  # Tips (orthographe alternative)
+
+        # Nouvelles applications Windows 11 2024/2025
+        "Microsoft.Todos"                       # Microsoft To Do
+        "Microsoft.PowerAutomateDesktop"        # Power Automate (pushy)
+        "Clipchamp.Clipchamp"                   # Éditeur vidéo (Windows 11 23H2+)
+        "MicrosoftTeams"                        # Teams consumer (garder version entreprise)
+
+        # Autres
+        "Microsoft.Wallet"
+        "Microsoft.OneConnect"
     )
 
     $removedCount = 0
@@ -111,17 +136,27 @@ function Disable-TelemetryServices {
 
     Write-Host "`n[DEBLOAT] Désactivation des services de télémétrie..." -ForegroundColor Cyan
 
-    # Liste des services de télémétrie à désactiver
+    # Liste des services de télémétrie à désactiver (Windows 11 optimisé)
+    # NOTE: Services utiles (OneSyncSvc, UserDataSvc, MessagingService) sont PRÉSERVÉS
     $telemetryServices = @(
-        "DiagTrack"                         # Connected User Experiences and Telemetry
-        "dmwappushservice"                  # WAP Push Message Routing Service
-        "diagnosticshub.standardcollector.service" # Microsoft Diagnostics Hub
-        "WerSvc"                            # Windows Error Reporting
-        "OneSyncSvc"                        # Sync Host Service
-        "MessagingService"                  # Messaging Service
-        "PimIndexMaintenanceSvc"           # Contact Data
-        "UserDataSvc"                       # User Data Access
-        "UnistoreSvc"                       # User Data Storage
+        "DiagTrack"                                 # Connected User Experiences and Telemetry (TÉLÉMÉTRIE)
+        "dmwappushservice"                          # WAP Push Message Routing Service (OBSOLÈTE)
+        "diagnosticshub.standardcollector.service"  # Microsoft Diagnostics Hub (DIAGNOSTIC)
+
+        # Services Windows 11 spécifiques
+        "CDPUserSvc"                                # Connected Devices Platform (TÉLÉMÉTRIE)
+
+        # Services Xbox (si pas de gaming)
+        "XblAuthManager"                            # Xbox Live Auth Manager
+        "XblGameSave"                               # Xbox Live Game Save
+        "XboxNetApiSvc"                             # Xbox Networking Service
+
+        # NOTE: Les services suivants sont PRÉSERVÉS pour la stabilité:
+        # - OneSyncSvc (requis pour synchro compte Microsoft)
+        # - MessagingService (requis pour apps modernes)
+        # - UserDataSvc (requis pour Mail/Calendar/Contacts)
+        # - UnistoreSvc (requis pour Microsoft Store)
+        # - WerSvc (utile pour diagnostics - peut être désactivé si souhaité)
     )
 
     $disabledCount = 0
@@ -168,8 +203,9 @@ function Set-PrivacyRegistry {
 
     Write-Host "`n[DEBLOAT] Configuration du registre pour la confidentialité..." -ForegroundColor Cyan
 
-    # Définition des modifications du registre pour la confidentialité
+    # Définition des modifications du registre pour la confidentialité (Windows 11 2024/2025)
     $registrySettings = @(
+        # ===== TÉLÉMÉTRIE ET CONFIDENTIALITÉ =====
         @{
             Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"
             Name = "AllowTelemetry"
@@ -185,12 +221,14 @@ function Set-PrivacyRegistry {
             Description = "Désactiver l'ID de publicité"
         },
         @{
-            Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
-            Name = "SmartScreenEnabled"
-            Value = "Off"
-            Type = "String"
-            Description = "Désactiver SmartScreen"
+            Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+            Name = "AllowTelemetry"
+            Value = 0
+            Type = "DWord"
+            Description = "Bloquer la télémétrie (niveau entreprise)"
         },
+
+        # ===== MENU DÉMARRER ET SUGGESTIONS =====
         @{
             Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
             Name = "SystemPaneSuggestionsEnabled"
@@ -213,19 +251,115 @@ function Set-PrivacyRegistry {
             Description = "Désactiver les applications préinstallées"
         },
         @{
-            Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
-            Name = "AllowCortana"
+            Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+            Name = "SubscribedContent-338388Enabled"
             Value = 0
             Type = "DWord"
-            Description = "Désactiver Cortana"
+            Description = "Désactiver les suggestions d'applications dans Démarrer"
         },
+
+        # ===== WINDOWS 11 - RECOMMANDATIONS ET WIDGETS =====
+        @{
+            Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+            Name = "Start_IrisRecommendations"
+            Value = 0
+            Type = "DWord"
+            Description = "Désactiver les recommandations dans le menu Démarrer (Windows 11)"
+        },
+        @{
+            Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+            Name = "TaskbarDa"
+            Value = 0
+            Type = "DWord"
+            Description = "Désactiver les widgets de la barre des tâches (Windows 11)"
+        },
+        @{
+            Path = "HKLM:\SOFTWARE\Policies\Microsoft\Dsh"
+            Name = "AllowNewsAndInterests"
+            Value = 0
+            Type = "DWord"
+            Description = "Désactiver les actualités et centres d'intérêt"
+        },
+
+        # ===== WINDOWS COPILOT (NOUVEAU POUR WINDOWS 11 23H2+) =====
+        @{
+            Path = "HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot"
+            Name = "TurnOffWindowsCopilot"
+            Value = 1
+            Type = "DWord"
+            Description = "Désactiver Windows Copilot (Windows 11 23H2+)"
+        },
+        @{
+            Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot"
+            Name = "TurnOffWindowsCopilot"
+            Value = 1
+            Type = "DWord"
+            Description = "Désactiver Windows Copilot (stratégie machine)"
+        },
+
+        # ===== RECHERCHE WINDOWS =====
         @{
             Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Search"
             Name = "BingSearchEnabled"
             Value = 0
             Type = "DWord"
-            Description = "Désactiver la recherche Bing"
+            Description = "Désactiver la recherche Bing dans Windows Search"
+        },
+        @{
+            Path = "HKCU:\Software\Policies\Microsoft\Windows\Explorer"
+            Name = "DisableSearchBoxSuggestions"
+            Value = 1
+            Type = "DWord"
+            Description = "Désactiver les suggestions web dans la recherche"
+        },
+        @{
+            Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings"
+            Name = "IsAADCloudSearchEnabled"
+            Value = 0
+            Type = "DWord"
+            Description = "Désactiver la recherche cloud Azure AD"
+        },
+        @{
+            Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings"
+            Name = "IsMSACloudSearchEnabled"
+            Value = 0
+            Type = "DWord"
+            Description = "Désactiver la recherche cloud Microsoft Account"
+        },
+
+        # ===== EXPLORATEUR DE FICHIERS =====
+        @{
+            Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+            Name = "ShowSyncProviderNotifications"
+            Value = 0
+            Type = "DWord"
+            Description = "Désactiver les notifications OneDrive dans l'Explorateur"
+        },
+
+        # ===== ACTIVITÉ ET HISTORIQUE =====
+        @{
+            Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+            Name = "EnableActivityFeed"
+            Value = 0
+            Type = "DWord"
+            Description = "Désactiver le flux d'activités"
+        },
+        @{
+            Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+            Name = "PublishUserActivities"
+            Value = 0
+            Type = "DWord"
+            Description = "Ne pas publier les activités utilisateur"
+        },
+        @{
+            Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+            Name = "UploadUserActivities"
+            Value = 0
+            Type = "DWord"
+            Description = "Ne pas envoyer les activités à Microsoft"
         }
+
+        # NOTE: Cortana (AllowCortana) supprimé car obsolète sur Windows 11 23H2+
     )
 
     $appliedCount = 0
@@ -261,6 +395,7 @@ function Optimize-WindowsFeatures {
     .DESCRIPTION
     Cette fonction désactive certaines fonctionnalités Windows qui ne sont généralement pas nécessaires
     dans un environnement professionnel, comme les jeux Xbox, la reconnaissance vocale, etc.
+    SÉCURISÉ: Cette version préserve les points de restauration et l'hibernation.
     #>
 
     [CmdletBinding()]
@@ -269,23 +404,19 @@ function Optimize-WindowsFeatures {
     Write-Host "`n[DEBLOAT] Optimisation des fonctionnalités Windows..." -ForegroundColor Cyan
 
     try {
-        # Désactiver l'indexation sur le disque système (sauf si explicitement nécessaire)
-        Write-Host "  Optimisation de l'indexation Windows Search..." -ForegroundColor Yellow
-        Get-WmiObject -Class Win32_Service -Filter "Name='WSearch'" | ForEach-Object {
-            $_.ChangeStartMode("Manual") | Out-Null
+        # Windows Search: Automatique (Début différé) pour Windows 11
+        Write-Host "  Configuration de Windows Search..." -ForegroundColor Yellow
+        $wsearch = Get-Service -Name 'WSearch' -ErrorAction SilentlyContinue
+        if ($wsearch) {
+            # Configurer en "Automatique (Début différé)" au lieu de Manuel
+            # Cela permet une indexation optimale sans impact au démarrage
+            Set-Service -Name 'WSearch' -StartupType Automatic -ErrorAction SilentlyContinue
+            sc.exe config WSearch start=delayed-auto | Out-Null
+            Write-Host "  ✓ Windows Search configuré en Automatique (Début différé)" -ForegroundColor Green
         }
-        Write-Host "  ✓ Windows Search configuré en mode manuel" -ForegroundColor Green
 
-        # Désactiver l'hibernation pour libérer de l'espace disque
-        Write-Host "  Désactivation de l'hibernation..." -ForegroundColor Yellow
-        powercfg -h off 2>$null
-        Write-Host "  ✓ Hibernation désactivée" -ForegroundColor Green
-
-        # Désactiver la restauration système pour gagner de l'espace
-        Write-Host "  Configuration de la restauration système..." -ForegroundColor Yellow
-        Disable-ComputerRestore -Drive "C:\" -ErrorAction SilentlyContinue
-        vssadmin delete shadows /for=C: /all /quiet 2>$null
-        Write-Host "  ✓ Points de restauration optimisés" -ForegroundColor Green
+        # NOTE: L'hibernation et la restauration système sont PRÉSERVÉS pour la sécurité
+        Write-Host "  ℹ Hibernation et points de restauration préservés (sécurité)" -ForegroundColor Cyan
 
     }
     catch {
