@@ -26,7 +26,6 @@ export const ConfigProvider = ({ children }) => {
     master_apps: [],
     profile_apps: [],
     optional_apps: [],
-    embed_wpf: false, // Interface WPF intégrée au script
     modules: {
       debloat: { enabled: true },
       performance: {
@@ -90,7 +89,6 @@ export const ConfigProvider = ({ children }) => {
         master_apps: [],
         profile_apps: [],
         optional_apps: [],
-        embed_wpf: false,
         modules: {
           debloat: { enabled: true },
           performance: {
@@ -155,7 +153,6 @@ export const ConfigProvider = ({ children }) => {
       master_apps: [],
       profile_apps: [],
       optional_apps: [],
-      embed_wpf: false,
       modules: {
         debloat: { enabled: true },
         performance: {

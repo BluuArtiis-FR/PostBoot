@@ -418,40 +418,6 @@ const Installation = () => {
         </div>
       </div>
 
-      {/* Option WPF */}
-      <div className="card mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex-1">
-            <label className="flex items-start cursor-pointer">
-              <input
-                type="checkbox"
-                checked={userConfig.embed_wpf}
-                onChange={(e) => updateConfig({ embed_wpf: e.target.checked })}
-                className="checkbox mt-1 mr-3"
-              />
-              <div>
-                <div className="font-semibold text-gray-900 mb-1">
-                  Interface WPF intégrée (Recommandé)
-                </div>
-                <div className="text-sm text-gray-600">
-                  Le script généré inclura une interface graphique moderne avec suivi en temps réel de la progression,
-                  logs colorés et sauvegarde automatique. Un seul fichier .ps1 à exécuter sur le poste client.
-                </div>
-                <div className="mt-2 text-xs text-blue-700 bg-blue-100 inline-block px-2 py-1 rounded">
-                  ✓ Tout-en-un • ✓ Suivi visuel • ✓ Aucune dépendance externe
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
 
       {/* Actions */}
       <div className="flex items-center justify-between">

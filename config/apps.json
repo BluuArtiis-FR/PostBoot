@@ -51,14 +51,13 @@
     },
     {
       "name": "VPN Stormshield",
-      "url": "https://vpn.stormshield.eu/download/Stormshield_SSLVPN_Client_4.0.10_fr_x64.msi",
       "manualUrl": "https://vpn.stormshield.eu/",
-      "size": "40 MB",
+      "size": "45 MB",
       "category": "VPN",
       "required": true,
       "preselected": true,
       "installArgs": "/qn /norestart REBOOT=ReallySuppress",
-      "note": "Si le téléchargement automatique échoue, télécharger manuellement depuis https://vpn.stormshield.eu/"
+      "note": "INSTALLATION MANUELLE REQUISE - Le téléchargement automatique n'est pas possible. Télécharger la dernière version depuis https://vpn.stormshield.eu/ et installer manuellement."
     },
     {
       "name": "Microsoft PowerToys",
@@ -282,15 +281,6 @@
           "preselected": false
         },
         {
-          "name": "R2 EDI Viewer",
-          "url": "https://r2ediviewer.de/download/R2EDIViewer_Setup.exe",
-          "size": "12 MB",
-          "category": "EDI",
-          "description": "Visualiseur de fichiers EDI (EDIFACT, X12, XML)",
-          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
-          "preselected": false
-        },
-        {
           "name": "Docker Desktop",
           "winget": "Docker.DockerDesktop",
           "size": "500 MB",
@@ -327,15 +317,6 @@
           "size": "30 MB",
           "category": "Métier TENOR",
           "description": "Traduction et gestion des messages EDI",
-          "preselected": true
-        },
-        {
-          "name": "R2 EDI Viewer",
-          "url": "https://r2ediviewer.de/download/R2EDIViewer_Setup.exe",
-          "size": "12 MB",
-          "category": "EDI",
-          "description": "Visualiseur de fichiers EDI (EDIFACT, X12, XML)",
-          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
           "preselected": true
         },
         {
@@ -553,15 +534,6 @@
           "size": "30 MB",
           "category": "Métier TENOR",
           "description": "Traduction et gestion des messages EDI",
-          "preselected": false
-        },
-        {
-          "name": "R2 EDI Viewer",
-          "url": "https://r2ediviewer.de/download/R2EDIViewer_Setup.exe",
-          "size": "12 MB",
-          "category": "EDI",
-          "description": "Visualiseur de fichiers EDI",
-          "installArgs": "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
           "preselected": false
         },
         {

@@ -99,19 +99,21 @@ function Optimize-PageFile {
         Write-Host "  Taille du pagefile: $($pageFileSize / 1024) GB" -ForegroundColor Yellow
 
         # Configuration via WMI
-        $computersys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
-        $computersys.AutomaticManagedPagefile = $false
-        $computersys.Put() | Out-Null
+        # Désactiver la gestion automatique du pagefile
+        $computersys = Get-CimInstance -ClassName Win32_ComputerSystem
+        $computersys | Set-CimInstance -Property @{AutomaticManagedPagefile = $false}
 
-        $pagefile = Get-WmiObject Win32_PageFileSetting
+        # Supprimer l'ancien pagefile si existant
+        $pagefile = Get-CimInstance -ClassName Win32_PageFileSetting -ErrorAction SilentlyContinue
         if ($pagefile) {
-            $pagefile.Delete()
+            Remove-CimInstance -InputObject $pagefile
         }
 
-        Set-WmiInstance -Class Win32_PageFileSetting -Arguments @{
+        # Créer le nouveau pagefile
+        New-CimInstance -ClassName Win32_PageFileSetting -Property @{
             Name = "C:\pagefile.sys"
-            InitialSize = $pageFileSize
-            MaximumSize = $pageFileSize
+            InitialSize = [uint32]$pageFileSize
+            MaximumSize = [uint32]$pageFileSize
         } | Out-Null
 
         Write-Host "  ✓ Fichier d'échange optimisé" -ForegroundColor Green
@@ -260,10 +262,15 @@ function Set-PowerPlan {
 
     try {
         # Obtenir tous les plans disponibles
-        $plans = powercfg -l 2>$null | Select-String -Pattern "GUID|Schéma"
+        $plans = powercfg -l 2>$null
 
         # Chercher "Performances élevées" ou "High performance"
-        $highPerfGuid = ($plans | Select-String -Pattern "Performances élevées|High performance|Ultimate Performance").ToString() -replace '.*(\w{8}-\w{4}-\w{4}-\w{4}-\w{12}).*','$1'
+        $highPerfPlan = $plans | Select-String -Pattern "Performances élevées|High performance|Ultimate Performance"
+
+        $highPerfGuid = $null
+        if ($highPerfPlan) {
+            $highPerfGuid = ($highPerfPlan.ToString() -replace '.*(\w{8}-\w{4}-\w{4}-\w{4}-\w{12}).*','$1')
+        }
 
         if ($highPerfGuid -and $highPerfGuid.Length -eq 36) {
             powercfg -setactive $highPerfGuid 2>$null

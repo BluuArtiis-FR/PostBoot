@@ -421,6 +421,67 @@ function Optimize-WindowsFeatures {
     Write-Host "`n[DEBLOAT] Optimisations système appliquées" -ForegroundColor Green
 }
 
+function Remove-OfficeLanguagePacks {
+    <#
+    .SYNOPSIS
+    Supprime les packs de langues Office inutiles pour garder uniquement Français et Anglais.
+
+    .DESCRIPTION
+    Cette fonction détecte et supprime tous les packs de langues Office préinstallés
+    sauf le français (fr-fr) et l'anglais (en-us). Cela libère de l'espace disque et
+    évite l'encombrement dans les menus Office.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[DEBLOAT] Nettoyage des langues Office inutiles..." -ForegroundColor Cyan
+
+    # Langues à conserver (français et anglais)
+    $keepLanguages = @('fr-fr', 'en-us')
+
+    try {
+        # Chercher les packs de langues Office installés via AppX
+        $officeLanguages = Get-AppxPackage | Where-Object {
+            $_.Name -like "*Microsoft.Office.Desktop.LanguagePack*" -or
+            $_.Name -like "*Microsoft.LanguageExperiencePack*"
+        }
+
+        $removed = 0
+        foreach ($lang in $officeLanguages) {
+            # Vérifier si c'est une langue à garder
+            $isKeepLang = $false
+            foreach ($keepLang in $keepLanguages) {
+                if ($lang.Name -match $keepLang) {
+                    $isKeepLang = $true
+                    break
+                }
+            }
+
+            if (-not $isKeepLang) {
+                try {
+                    Write-Host "  → Suppression de $($lang.Name)..." -ForegroundColor Gray
+                    Remove-AppxPackage -Package $lang.PackageFullName -ErrorAction Stop
+                    $removed++
+                } catch {
+                    Write-Host "  ✗ Échec: $($lang.Name)" -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "  ✓ Conservation de $($lang.Name)" -ForegroundColor Green
+            }
+        }
+
+        if ($removed -gt 0) {
+            Write-Host "  ✓ $removed pack(s) de langues Office supprimés" -ForegroundColor Green
+        } else {
+            Write-Host "  ℹ Aucun pack de langue à supprimer" -ForegroundColor Gray
+        }
+
+    } catch {
+        Write-Host "  ✗ Erreur lors du nettoyage des langues: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
+
 function Invoke-WindowsDebloat {
     <#
     .SYNOPSIS
@@ -455,6 +516,7 @@ function Invoke-WindowsDebloat {
     try {
         # Exécution séquentielle de toutes les opérations de debloat
         Remove-BloatwareApps
+        Remove-OfficeLanguagePacks
         Disable-TelemetryServices
         Set-PrivacyRegistry
         Optimize-WindowsFeatures
@@ -487,6 +549,7 @@ function Invoke-WindowsDebloat {
 Export-ModuleMember -Function @(
     'Invoke-WindowsDebloat',
     'Remove-BloatwareApps',
+    'Remove-OfficeLanguagePacks',
     'Disable-TelemetryServices',
     'Set-PrivacyRegistry',
     'Optimize-WindowsFeatures'

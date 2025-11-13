@@ -295,13 +295,6 @@ function Write-ScriptLog {
         }
         Write-Host $Message -ForegroundColor $color
     }
-
-    # Intégration WPF si disponible
-    if ($Global:WPFAvailable) {
-        try {
-            Invoke-WPFLog -Message $Message -Level $Level
-        } catch { }
-    }
 }
 
 function Save-JSONLog {
@@ -397,6 +390,96 @@ function Get-FileHash-Safe {
     }
 }
 
+function Install-NotepadPlusPlusPlugins {
+    <#
+    .SYNOPSIS
+    Installe les plugins Notepad++ spécifiés.
+
+    .PARAMETER Plugins
+    Liste des noms de plugins à installer.
+    #>
+    param([array]$Plugins)
+
+    if (-not $Plugins -or $Plugins.Count -eq 0) {{
+        return $true
+    }}
+
+    # Déterminer le chemin d'installation de Notepad++
+    $nppPath = $null
+    $possiblePaths = @(
+        "$env:ProgramFiles\\Notepad++",
+        "${{env:ProgramFiles(x86)}}\\Notepad++",
+        "$env:LOCALAPPDATA\\Programs\\Notepad++"
+    )
+
+    foreach ($path in $possiblePaths) {{
+        if (Test-Path "$path\\notepad++.exe") {{
+            $nppPath = $path
+            break
+        }}
+    }}
+
+    if (-not $nppPath) {{
+        Write-ScriptLog "  ✗ Notepad++ non trouvé, impossible d'installer les plugins" -Level WARNING
+        return $false
+    }}
+
+    $pluginsDir = Join-Path $nppPath "plugins"
+    if (-not (Test-Path $pluginsDir)) {{
+        New-Item -ItemType Directory -Path $pluginsDir -Force | Out-Null
+    }}
+
+    Write-ScriptLog "  → Installation des plugins Notepad++..." -Level INFO
+
+    # Mapping des plugins avec leurs URLs de téléchargement
+    $pluginUrls = @{{
+        "XML Tools" = @{{
+            Url = "https://github.com/morbac/xmltools/releases/latest/download/xmltools.zip"
+            Folder = "XMLTools"
+        }}
+        "Compare" = @{{
+            Url = "https://github.com/pnedev/compare-plugin/releases/latest/download/ComparePlus.zip"
+            Folder = "ComparePlus"
+        }}
+    }}
+
+    $installed = 0
+    foreach ($plugin in $Plugins) {{
+        if ($pluginUrls.ContainsKey($plugin)) {{
+            try {{
+                $pluginInfo = $pluginUrls[$plugin]
+                $tempZip = Join-Path $env:TEMP "$($pluginInfo.Folder).zip"
+                $pluginTargetDir = Join-Path $pluginsDir $pluginInfo.Folder
+
+                Write-ScriptLog "    • Téléchargement de $plugin..." -Level INFO
+                Invoke-WebRequest -Uri $pluginInfo.Url -OutFile $tempZip -UseBasicParsing -ErrorAction Stop
+
+                # Extraire le plugin
+                if (Test-Path $pluginTargetDir) {{
+                    Remove-Item $pluginTargetDir -Recurse -Force
+                }}
+                Expand-Archive -Path $tempZip -DestinationPath $pluginTargetDir -Force
+
+                # Nettoyer
+                Remove-Item $tempZip -Force
+
+                Write-ScriptLog "    ✓ Plugin $plugin installé" -Level SUCCESS
+                $installed++
+            }} catch {{
+                Write-ScriptLog "    ✗ Échec installation $plugin : $($_.Exception.Message)" -Level WARNING
+            }}
+        }} else {{
+            Write-ScriptLog "    ⚠ Plugin $plugin non supporté (installation manuelle requise)" -Level WARNING
+        }}
+    }}
+
+    if ($installed -gt 0) {{
+        Write-ScriptLog "  ✓ $installed plugin(s) Notepad++ installé(s)" -Level SUCCESS
+    }}
+
+    return $true
+}}
+
 function Install-WingetApp {
     <#
     .SYNOPSIS
@@ -407,6 +490,12 @@ function Install-WingetApp {
     # Vérifier si déjà installé
     if (Test-AppInstalled -WingetId $App.winget -AppName $App.name) {
         Write-ScriptLog "→ $($App.name) déjà installé (ignoré)" -Level INFO
+
+        # Installer les plugins si c'est Notepad++ et qu'ils sont spécifiés
+        if ($App.name -eq "Notepad++" -and $App.plugins) {{
+            Install-NotepadPlusPlusPlugins -Plugins $App.plugins
+        }}
+
         return $true
     }
 
@@ -421,6 +510,12 @@ function Install-WingetApp {
 
             if ($LASTEXITCODE -eq 0 -or $output -match 'successfully installed') {
                 Write-ScriptLog "✓ $($App.name) installé" -Level SUCCESS -Metadata @{ Winget = $App.winget; Retries = $retryCount }
+
+                # Installer les plugins si c'est Notepad++ et qu'ils sont spécifiés
+                if ($App.name -eq "Notepad++" -and $App.plugins) {{
+                    Install-NotepadPlusPlusPlugins -Plugins $App.plugins
+                }}
+
                 return $true
             } else {
                 $retryCount++
@@ -606,13 +701,6 @@ function Install-CustomApp {
         """Génère le code inline des modules PowerShell activés."""
         modules_code_parts = []
 
-        # TOUJOURS inclure UIHooks pour l'intégration WPF
-        uihooks_code = self._load_module('UIHooks')
-        if uihooks_code:
-            modules_code_parts.append("#region Module UIHooks")
-            modules_code_parts.append(uihooks_code)
-            modules_code_parts.append("#endregion Module UIHooks")
-
         # Liste des modules à inclure
         modules_to_include = config.get('modules', [])
 
@@ -683,9 +771,6 @@ function Install-CustomApp {
         orchestrator = f"""#region Orchestrateur Principal
 
 try {{
-    # Initialiser WPF si disponible
-    Test-WPFAvailability | Out-Null
-
     # En-tête
     if (-not $Silent) {{
         Clear-Host
@@ -747,9 +832,10 @@ try {{
         Write-Host ""
     }}
 
+{modules_execution}
+
     # Installation des applications
     Write-ScriptLog "======== INSTALLATION APPLICATIONS ========" -Level INFO
-    Invoke-WPFProgress -PercentComplete 0 -Status "Démarrage de l'installation..."
 
     $stats = @{{ Success = 0; Failed = 0; Skipped = 0 }}
     $currentApp = 0
@@ -758,7 +844,7 @@ try {{
     foreach ($app in $Global:EmbeddedConfig.apps.master) {{
         $currentApp++
         $percentComplete = [math]::Round(($currentApp / $totalApps) * 100)
-        Invoke-WPFProgress -PercentComplete $percentComplete -Status "Installation: $($app.name) ($currentApp/$totalApps)"
+        Write-Progress -Activity "Installation des applications" -Status "Installation: $($app.name) ($currentApp/$totalApps)" -PercentComplete $percentComplete
 
         if ($app.winget) {{
             $success = Install-WingetApp -App $app
@@ -773,7 +859,7 @@ try {{
     foreach ($app in $Global:EmbeddedConfig.apps.profile) {{
         $currentApp++
         $percentComplete = [math]::Round(($currentApp / $totalApps) * 100)
-        Invoke-WPFProgress -PercentComplete $percentComplete -Status "Installation: $($app.name) ($currentApp/$totalApps)"
+        Write-Progress -Activity "Installation des applications" -Status "Installation: $($app.name) ($currentApp/$totalApps)" -PercentComplete $percentComplete
 
         if ($app.winget) {{
             $success = Install-WingetApp -App $app
@@ -785,7 +871,6 @@ try {{
     }}
 
     Write-ScriptLog "Applications: $($stats.Success) installées, $($stats.Failed) échouées" -Level INFO
-{modules_execution}
 
     # Résumé final
     $duration = (Get-Date) - $Global:StartTime
@@ -812,8 +897,8 @@ try {{
     # Sauvegarder le log JSON
     Save-JSONLog
 
-    # Notifier WPF de la complétion
-    Complete-WPFExecution -Success $true -Summary @{{
+    # Complétion réussie
+    $completionSummary = @{{
         'Applications installées' = $stats.Success
         'Applications échouées' = $stats.Failed
         'Durée' = $durationFormatted
@@ -832,8 +917,8 @@ try {{
     # Sauvegarder le log JSON même en cas d'erreur
     Save-JSONLog
 
-    # Notifier WPF de l'échec
-    Complete-WPFExecution -Success $false -Summary @{{
+    # Échec
+    $failureSummary = @{{
         'Erreur' = $_.Exception.Message
     }}
 
@@ -1166,20 +1251,8 @@ def generate():
         user_config = request_data.get('config', {})
         script_types = request_data.get('scriptTypes', ['installation', 'optimizations'])
 
-        profile_name = user_config.get('custom_name', 'Custom')
-
-        # Déterminer le nom du script basé sur les types sélectionnés
-        if len(script_types) == 1:
-            script_type_names = {
-                'installation': 'Installation',
-                'optimizations': 'Optimizations',
-                'diagnostic': 'Diagnostic'
-            }
-            type_suffix = script_type_names.get(script_types[0], 'Custom')
-        elif len(script_types) == 3:
-            type_suffix = 'Complete'
-        else:
-            type_suffix = '_'.join([t.capitalize() for t in script_types])
+        # Récupérer le nom du profil (priorité : profile > custom_name > 'Custom')
+        profile_name = user_config.get('profile', user_config.get('custom_name', 'Custom'))
 
         logger.info(f"Requête génération - Profil: {profile_name} - Types: {script_types} - IP: {request.remote_addr}")
 
@@ -1197,9 +1270,10 @@ def generate():
             diagnostic_module = self._load_template("diagnostic_module.ps1") if hasattr(generator, '_load_template') else "# Diagnostic module à implémenter"
             script_content += f"\n\n# === MODULE DIAGNOSTIC ===\n{diagnostic_module}"
 
-        # Créer un ID unique pour ce script
-        script_id = str(uuid.uuid4())
-        script_filename = f"PostBootSetup_{type_suffix}_{script_id[:8]}.ps1"
+        # Nom de fichier basé sur le profil (ex: PostBootSetup-TENOR.ps1)
+        # Nettoyer le nom du profil (retirer espaces, caractères spéciaux)
+        safe_profile_name = profile_name.replace(' ', '-').replace('_', '-')
+        script_filename = f"PostBootSetup-{safe_profile_name}.ps1"
         script_path = GENERATED_DIR / script_filename
 
         # Sauvegarder le script
@@ -1236,9 +1310,9 @@ def generate_script():
         # Générer le script
         script_content = generator.generate_script(user_config, profile_name)
 
-        # Créer un ID unique pour ce script
-        script_id = str(uuid.uuid4())
-        script_filename = f"PostBootSetup_{profile_name}_{script_id[:8]}.ps1"
+        # Nom de fichier basé sur le profil (ex: PostBootSetup-TENOR.ps1)
+        safe_profile_name = profile_name.replace(' ', '-').replace('_', '-')
+        script_filename = f"PostBootSetup-{safe_profile_name}.ps1"
         script_path = GENERATED_DIR / script_filename
 
         # Sauvegarder le script
