@@ -328,13 +328,8 @@ function Set-PrivacyRegistry {
         },
 
         # ===== EXPLORATEUR DE FICHIERS =====
-        @{
-            Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
-            Name = "ShowSyncProviderNotifications"
-            Value = 0
-            Type = "DWord"
-            Description = "Désactiver les notifications OneDrive dans l'Explorateur"
-        },
+        # NOTE: ShowSyncProviderNotifications PRÉSERVÉ car OneDrive Entreprise est requis
+        # Masquer ces notifications empêcherait les utilisateurs de voir les erreurs de synchro
 
         # ===== ACTIVITÉ ET HISTORIQUE =====
         @{

@@ -136,19 +136,18 @@ class ScriptGenerator:
 
         return True, None
 
-    def generate_script(self, user_config: dict, profile_name: str = "Custom", embed_wpf: bool = False) -> str:
+    def generate_script(self, user_config: dict, profile_name: str = "Custom") -> str:
         """
         Génère un script PowerShell autonome basé sur la configuration utilisateur.
 
         Args:
             user_config: Configuration personnalisée de l'utilisateur
             profile_name: Nom du profil (pour documentation)
-            embed_wpf: Si True, embarque l'interface WPF dans le script généré
 
         Returns:
             Contenu du script PowerShell généré
         """
-        logger.info(f"Génération script pour profil: {profile_name} (WPF: {embed_wpf})")
+        logger.info(f"Génération script pour profil: {profile_name}")
 
         # Validation
         is_valid, error = self.validate_config(user_config)
@@ -159,7 +158,7 @@ class ScriptGenerator:
         script_parts = []
 
         # 1. En-tête avec métadonnées
-        header = self._generate_header(profile_name, user_config, embed_wpf)
+        header = self._generate_header(profile_name, user_config)
         script_parts.append(header)
 
         # 2. Configuration embarquée (JSON inline)
@@ -178,491 +177,13 @@ class ScriptGenerator:
         orchestrator = self._generate_orchestrator(user_config)
         script_parts.append(orchestrator)
 
-        # 6. Si WPF embarqué, wrapper le tout dans l'interface graphique
-        if embed_wpf:
-            full_script = self._wrap_with_wpf(script_parts, profile_name)
-        else:
-            # Assembler le script complet normalement
-            full_script = '\n\n'.join(script_parts)
+        # 6. Assembler le script complet
+        full_script = '\n\n'.join(script_parts)
 
         logger.info(f"Script généré: {len(full_script)} caractères")
         return full_script
 
-    def _wrap_with_wpf(self, script_parts: list, profile_name: str) -> str:
-        """
-        Emballe le script d'installation dans une interface WPF autonome.
-
-        Args:
-            script_parts: Les parties du script (header, config, utilities, modules, orchestrator)
-            profile_name: Nom du profil pour l'affichage
-
-        Returns:
-            Script complet avec interface WPF embarquée
-        """
-        # Assembler le script d'installation principal
-        installation_script = '\n\n'.join(script_parts)
-
-        # Wrapper WPF avec interface graphique
-        wpf_wrapper = f'''<#
-.SYNOPSIS
-PostBootSetup avec Interface Graphique WPF Intégrée
-
-.DESCRIPTION
-Script autonome d'installation et configuration Windows avec interface WPF.
-Profil: {profile_name}
-Généré par PostBootSetup Generator v5.0 - Tenor Data Solutions
-
-.PARAMETER NoGUI
-Exécute le script en mode console sans interface graphique.
-
-.PARAMETER Silent
-Mode silencieux (pas de confirmation utilisateur).
-
-.PARAMETER NoDebloat
-Désactive le module Debloat Windows.
-
-.PARAMETER LogPath
-Chemin personnalisé pour le fichier de log.
-
-.NOTES
-Version: 5.0 (WPF Embedded)
-Author: Tenor Data Solutions
-Requires: PowerShell 5.1+, Windows 10+
-#>
-
-[CmdletBinding()]
-param(
-    [switch]$NoGUI,
-    [switch]$Silent,
-    [switch]$NoDebloat,
-    [string]$LogPath = "$env:TEMP\\PostBootSetup_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-)
-
-# Vérifier et forcer le mode STA (requis pour WPF)
-if (-not $NoGUI -and [Threading.Thread]::CurrentThread.GetApartmentState() -ne 'STA') {{
-    Write-Host "Redémarrage du script en mode STA (requis pour l'interface WPF)..." -ForegroundColor Yellow
-
-    # Construire les paramètres à transmettre
-    $params = @()
-    if ($Silent) {{ $params += '-Silent' }}
-    if ($NoDebloat) {{ $params += '-NoDebloat' }}
-    if ($PSBoundParameters.ContainsKey('LogPath')) {{ $params += "-LogPath `"$LogPath`"" }}
-
-    # Relancer le script en mode STA
-    $scriptPath = $MyInvocation.MyCommand.Path
-    Start-Process powershell.exe -ArgumentList "-STA -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" $($params -join ' ')" -Verb RunAs -Wait
-    exit
-}}
-
-#region Installation Script (Embedded)
-# Ce bloc contient le script d'installation complet qui sera exécuté
-# soit par l'interface WPF, soit directement en mode console
-
-$Global:InstallationScriptBlock = {{
-{installation_script}
-}}
-
-#endregion Installation Script
-
-#region WPF Interface
-
-function Show-WPFInterface {{
-    <#
-    .SYNOPSIS
-    Affiche l'interface graphique WPF et exécute le script d'installation.
-    #>
-
-    Add-Type -AssemblyName PresentationFramework
-    Add-Type -AssemblyName PresentationCore
-    Add-Type -AssemblyName WindowsBase
-    Add-Type -AssemblyName System.Windows.Forms
-
-    # XAML de l'interface
-    $xaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PostBoot Setup - {profile_name}"
-        Height="700" Width="900"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="CanResize"
-        Background="#F5F5F5">
-
-    <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#2563EB"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1D4ED8"/>
-                </Trigger>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Background" Value="#9CA3AF"/>
-                    <Setter Property="Cursor" Value="Arrow"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style TargetType="TextBox" x:Key="LogTextBox">
-            <Setter Property="FontFamily" Value="Consolas"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="#D4D4D4"/>
-            <Setter Property="IsReadOnly" Value="True"/>
-            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="BorderThickness" Value="0"/>
-        </Style>
-
-        <Style TargetType="ProgressBar">
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Foreground" Value="#10B981"/>
-            <Setter Property="Background" Value="#E5E7EB"/>
-            <Setter Property="BorderThickness" Value="0"/>
-        </Style>
-    </Window.Resources>
-
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- En-tête -->
-        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15">
-            <StackPanel>
-                <TextBlock Text="🚀 PostBoot Setup - {profile_name}"
-                          FontSize="24"
-                          FontWeight="Bold"
-                          Foreground="#1F2937"
-                          Margin="0,0,0,8"/>
-                <TextBlock Text="Installation et configuration automatisée de Windows"
-                          FontSize="14"
-                          Foreground="#6B7280"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Zone de log -->
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Text="📋 Logs d'exécution"
-                          FontWeight="SemiBold"
-                          FontSize="14"
-                          Foreground="#374151"
-                          Margin="5,0,0,10"/>
-
-                <Border Grid.Row="1"
-                       BorderBrush="#D1D5DB"
-                       BorderThickness="1"
-                       CornerRadius="4">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <TextBox Name="LogTextBox"
-                                Style="{{StaticResource LogTextBox}}"
-                                TextWrapping="Wrap"/>
-                    </ScrollViewer>
-                </Border>
-            </Grid>
-        </Border>
-
-        <!-- Barre de progression -->
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,15">
-            <StackPanel>
-                <Grid Margin="0,0,0,8">
-                    <TextBlock Name="StatusLabel"
-                              Text="Prêt à démarrer"
-                              FontSize="13"
-                              FontWeight="Medium"
-                              Foreground="#6B7280"
-                              HorizontalAlignment="Left"/>
-                    <TextBlock Name="PercentLabel"
-                              Text="0%"
-                              FontSize="13"
-                              FontWeight="SemiBold"
-                              Foreground="#2563EB"
-                              HorizontalAlignment="Right"/>
-                </Grid>
-                <ProgressBar Name="ProgressBar"
-                            Minimum="0"
-                            Maximum="100"
-                            Value="0"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Boutons d'action -->
-        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="15">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <Button Name="ExecuteButton"
-                       Grid.Column="0"
-                       Content="▶ Démarrer l'installation"
-                       Width="200"/>
-
-                <StackPanel Grid.Column="1"
-                           Orientation="Horizontal"
-                           HorizontalAlignment="Center">
-                    <Button Name="ClearLogButton"
-                           Content="🗑 Effacer logs"
-                           Width="130"
-                           Background="#6B7280"/>
-                    <Button Name="SaveLogButton"
-                           Content="💾 Sauvegarder"
-                           Width="130"
-                           Background="#059669"/>
-                </StackPanel>
-
-                <Button Name="CloseButton"
-                       Grid.Column="2"
-                       Content="✖ Fermer"
-                       Width="120"
-                       Background="#DC2626"/>
-            </Grid>
-        </Border>
-    </Grid>
-</Window>
-"@
-
-    # Charger le XAML
-    $reader = [System.Xml.XmlNodeReader]::new([xml]$xaml)
-    $window = [Windows.Markup.XamlReader]::Load($reader)
-
-    # Récupérer les contrôles
-    $logTextBox = $window.FindName("LogTextBox")
-    $progressBar = $window.FindName("ProgressBar")
-    $statusLabel = $window.FindName("StatusLabel")
-    $percentLabel = $window.FindName("PercentLabel")
-    $executeButton = $window.FindName("ExecuteButton")
-    $clearLogButton = $window.FindName("ClearLogButton")
-    $saveLogButton = $window.FindName("SaveLogButton")
-    $closeButton = $window.FindName("CloseButton")
-
-    # Variables globales pour l'intégration WPF
-    $Global:WPFLogControl = $logTextBox
-    $Global:WPFProgressBar = $progressBar
-    $Global:WPFStatusLabel = $statusLabel
-    $Global:WPFPercentLabel = $percentLabel
-    $Global:WPFCloseButton = $closeButton
-    $Global:WPFAvailable = $true
-    $Global:ScriptRunning = $false
-
-    # Fonction pour ajouter un log
-    function Add-WPFLog {{
-        param([string]$Message, [string]$Level = 'INFO')
-
-        $timestamp = Get-Date -Format 'HH:mm:ss'
-        $prefix = switch ($Level) {{
-            'SUCCESS' {{ '[✓]' }}
-            'ERROR'   {{ '[✗]' }}
-            'WARNING' {{ '[⚠]' }}
-            default   {{ '[ℹ]' }}
-        }}
-
-        $logMessage = "[$timestamp] $prefix $Message`n"
-
-        $window.Dispatcher.Invoke([action]{{
-            $logTextBox.AppendText($logMessage)
-            $logTextBox.ScrollToEnd()
-        }})
-    }}
-
-    # Bouton Exécuter
-    $executeButton.Add_Click({{
-        $executeButton.IsEnabled = $false
-        $closeButton.IsEnabled = $false
-        $Global:ScriptRunning = $true
-
-        Add-WPFLog "========================================" -Level INFO
-        Add-WPFLog "DÉMARRAGE DE L'INSTALLATION" -Level SUCCESS
-        Add-WPFLog "========================================" -Level INFO
-
-        # Exécuter le script dans un Runspace séparé
-        $runspace = [runspacefactory]::CreateRunspace()
-        $runspace.ApartmentState = "STA"
-        $runspace.ThreadOptions = "ReuseThread"
-        $runspace.Open()
-
-        # Passer les paramètres du script au runspace
-        $runspace.SessionStateProxy.SetVariable("Silent", $Silent)
-        $runspace.SessionStateProxy.SetVariable("NoDebloat", $NoDebloat)
-        $runspace.SessionStateProxy.SetVariable("LogPath", $LogPath)
-
-        $powershell = [powershell]::Create()
-        $powershell.Runspace = $runspace
-
-        # Exécuter le script d'installation
-        $scriptBlock = {{
-            param($Dispatcher, $LogControl, $ProgressBar, $StatusLabel, $PercentLabel, $ExecuteBtn, $CloseBtn, $InstallScript)
-
-            try {{
-                # Définir les variables globales
-                $Global:WPFLogControl = $LogControl
-                $Global:WPFProgressBar = $ProgressBar
-                $Global:WPFStatusLabel = $StatusLabel
-                $Global:WPFPercentLabel = $PercentLabel
-                $Global:WPFCloseButton = $CloseBtn
-                $Global:WPFAvailable = $true
-
-                # Exécuter le script d'installation
-                & $InstallScript
-
-                # Notification de succès
-                $Dispatcher.Invoke([action]{{
-                    $StatusLabel.Text = "✓ Installation terminée avec succès"
-                    $ProgressBar.Value = 100
-                    $PercentLabel.Text = "100%"
-                }})
-
-            }} catch {{
-                $errorMsg = $_.Exception.Message
-                $Dispatcher.Invoke([action]{{
-                    $LogControl.AppendText("`n[ERREUR CRITIQUE] $errorMsg`n")
-                    $StatusLabel.Text = "✗ Erreur lors de l'installation"
-                }})
-            }} finally {{
-                $Dispatcher.Invoke([action]{{
-                    $ExecuteBtn.IsEnabled = $true
-                    $CloseBtn.IsEnabled = $true
-                }})
-            }}
-        }}
-
-        $powershell.AddScript($scriptBlock).AddArgument($window.Dispatcher).AddArgument($Global:WPFLogControl).AddArgument($Global:WPFProgressBar).AddArgument($Global:WPFStatusLabel).AddArgument($Global:WPFPercentLabel).AddArgument($executeButton).AddArgument($closeButton).AddArgument($Global:InstallationScriptBlock) | Out-Null
-        $asyncResult = $powershell.BeginInvoke()
-
-        # Surveiller l'exécution
-        $timer = New-Object System.Windows.Threading.DispatcherTimer
-        $timer.Interval = [TimeSpan]::FromMilliseconds(100)
-        $timer.Add_Tick({{
-            if ($asyncResult.IsCompleted) {{
-                $timer.Stop()
-                $powershell.EndInvoke($asyncResult)
-                $powershell.Dispose()
-                $runspace.Close()
-                $Global:ScriptRunning = $false
-            }}
-        }})
-        $timer.Start()
-    }})
-
-    # Bouton Effacer logs
-    $clearLogButton.Add_Click({{
-        $logTextBox.Clear()
-        $progressBar.Value = 0
-        $statusLabel.Text = "Prêt à démarrer"
-        $percentLabel.Text = "0%"
-        Add-WPFLog "Logs effacés" -Level INFO
-    }})
-
-    # Bouton Sauvegarder logs
-    $saveLogButton.Add_Click({{
-        $saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
-        $saveFileDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*"
-        $saveFileDialog.Title = "Sauvegarder les logs"
-        $saveFileDialog.FileName = "PostBootSetup_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
-
-        if ($saveFileDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {{
-            try {{
-                $logTextBox.Text | Out-File -FilePath $saveFileDialog.FileName -Encoding UTF8
-                Add-WPFLog "Logs sauvegardés: $($saveFileDialog.FileName)" -Level SUCCESS
-            }} catch {{
-                [System.Windows.MessageBox]::Show(
-                    "Erreur lors de la sauvegarde: $($_.Exception.Message)",
-                    "Erreur",
-                    [System.Windows.MessageBoxButton]::OK,
-                    [System.Windows.MessageBoxImage]::Error
-                )
-            }}
-        }}
-    }})
-
-    # Bouton Fermer
-    $closeButton.Add_Click({{
-        if ($Global:ScriptRunning) {{
-            $result = [System.Windows.MessageBox]::Show(
-                "Une installation est en cours. Voulez-vous vraiment quitter ?",
-                "Confirmation",
-                [System.Windows.MessageBoxButton]::YesNo,
-                [System.Windows.MessageBoxImage]::Question
-            )
-            if ($result -eq [System.Windows.MessageBoxResult]::No) {{
-                return
-            }}
-        }}
-        $window.Close()
-    }})
-
-    # Gestion de la fermeture
-    $window.Add_Closing({{
-        param($sender, $e)
-        if ($Global:ScriptRunning) {{
-            $result = [System.Windows.MessageBox]::Show(
-                "Une installation est en cours. Voulez-vous vraiment quitter ?",
-                "Confirmation",
-                [System.Windows.MessageBoxButton]::YesNo,
-                [System.Windows.MessageBoxImage]::Question
-            )
-            if ($result -eq [System.Windows.MessageBoxResult]::No) {{
-                $e.Cancel = $true
-            }}
-        }}
-    }})
-
-    # Message d'accueil
-    Add-WPFLog "╔════════════════════════════════════════════════╗" -Level INFO
-    Add-WPFLog "║   PostBoot Setup - {profile_name}" -Level INFO
-    Add-WPFLog "║   Tenor Data Solutions                         ║" -Level INFO
-    Add-WPFLog "╚════════════════════════════════════════════════╝" -Level INFO
-    Add-WPFLog "" -Level INFO
-    Add-WPFLog "Cliquez sur 'Démarrer l'installation' pour commencer" -Level INFO
-
-    # Afficher la fenêtre
-    $window.ShowDialog() | Out-Null
-}}
-
-#endregion WPF Interface
-
-#region Main Execution Logic
-
-# Vérifier si on lance en mode GUI ou console
-if ($NoGUI) {{
-    # Mode console : exécuter directement le script d'installation
-    Write-Host "Mode console activé (paramètre -NoGUI)" -ForegroundColor Cyan
-    & $Global:InstallationScriptBlock
-}} else {{
-    # Mode GUI : lancer l'interface WPF
-    try {{
-        Show-WPFInterface
-    }} catch {{
-        Write-Host "Erreur lors du lancement de l'interface WPF: $($_.Exception.Message)" -ForegroundColor Red
-        Write-Host "Basculement en mode console..." -ForegroundColor Yellow
-        Start-Sleep -Seconds 2
-        & $Global:InstallationScriptBlock
-    }}
-}}
-
-#endregion Main Execution Logic
-'''
-
-        return wpf_wrapper
-
-    def _generate_header(self, profile_name: str, config: dict, embed_wpf: bool = False) -> str:
+    def _generate_header(self, profile_name: str, config: dict) -> str:
         """Génère l'en-tête du script avec métadonnées."""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -1185,7 +706,9 @@ try {{
     if (-not (Test-IsAdministrator)) {{
         Write-ScriptLog "Droits administrateur requis" -Level ERROR
         Write-Host "`nVeuillez exécuter ce script en tant qu'administrateur" -ForegroundColor Red
-        Read-Host "Appuyez sur Entrée pour quitter"
+        if (-not $Silent) {{
+            Read-Host "Appuyez sur Entrée pour quitter"
+        }}
         exit 1
     }}
 
@@ -1642,7 +1165,6 @@ def generate():
         request_data = request.json
         user_config = request_data.get('config', {})
         script_types = request_data.get('scriptTypes', ['installation', 'optimizations'])
-        embed_wpf = request_data.get('embedWpf', False)  # Nouveau paramètre WPF
 
         profile_name = user_config.get('custom_name', 'Custom')
 
@@ -1659,11 +1181,7 @@ def generate():
         else:
             type_suffix = '_'.join([t.capitalize() for t in script_types])
 
-        # Ajouter suffixe WPF si activé
-        if embed_wpf:
-            type_suffix += '_WPF'
-
-        logger.info(f"Requête génération - Profil: {profile_name} - Types: {script_types} - WPF: {embed_wpf} - IP: {request.remote_addr}")
+        logger.info(f"Requête génération - Profil: {profile_name} - Types: {script_types} - IP: {request.remote_addr}")
 
         # Transformer la config utilisateur en config pour le générateur
         api_config = transform_user_config_to_api_config(user_config, script_types)
@@ -1671,8 +1189,8 @@ def generate():
         # Gérer diagnostic (à implémenter plus tard)
         include_diagnostic = 'diagnostic' in script_types
 
-        # Générer le script avec ou sans WPF embarqué
-        script_content = generator.generate_script(api_config, profile_name, embed_wpf=embed_wpf)
+        # Générer le script
+        script_content = generator.generate_script(api_config, profile_name)
 
         # Si diagnostic demandé, ajouter le module de diagnostic
         if include_diagnostic:

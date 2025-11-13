@@ -223,8 +223,7 @@
           "size": "15 MB",
           "category": "FTP",
           "description": "Client FTP/SFTP",
-          "preselected": true,
-          "plugins": ["XML Tools", "Compare"]
+          "preselected": true
         },
         {
           "name": "SQL Server Management Studio",
@@ -353,7 +352,7 @@
           "size": "180 MB",
           "category": "API Testing",
           "description": "Test et documentation d'APIs REST",
-          "preselected": true
+          "preselected": false
         },
         {
           "name": "Git",
@@ -361,7 +360,7 @@
           "size": "45 MB",
           "category": "Gestion de versions",
           "description": "Contrôle de version distribué",
-          "preselected": true
+          "preselected": false
         },
         {
           "name": "FileZilla",
@@ -369,16 +368,6 @@
           "size": "15 MB",
           "category": "FTP",
           "description": "Client FTP/SFTP",
-          "preselected": true,
-          "plugins": ["XML Tools", "Compare"]
-        },
-        {
-          "name": "Avast Business Antivirus",
-          "url": "https://businesshub.avast.com/installer/ZHRhJTNEaV9DYnhYS04tdWlMd1BPWnd2V3pZMDNMMXFNUjQwRVJ0Q1NoQnVfcEFhR2VibmRWbDA5eHB4NldMaHhOdExqS0JKRVdsX2FjWlFDWnFDdEl1RDloMUYzUGxHcDhFNV9WYUtVN1lKSldWZFJraVExWWZUWU5OMnlDQXZLUk5XUU5nM1VCd1BLUmJKMGl0YXFQQTRianlUNVdNcW41MXY3WnVSeF9vdjBZSVcxUzdyakhORDdtWWtwTHFxQ0ZzUHowRU1lV19BRnRrSlBQMGF6bkx4bWZmQSUyOCUyOCUyNm5jbiUzRGxlMlFlZUpmbEhwRW10bzhrODJQU2ZQMlJFNCUyOA==/b2f277db-98d5-4b12-8df0-f2c9f5b51d09?encodedDataCenter=aHR0cHM6Ly9idXNpbmVzc2h1Yi1wcm9kLWZyYS5mZi5hdmFzdC5jb20=",
-          "size": "250 MB",
-          "category": "Sécurité",
-          "description": "Antivirus professionnel Avast Business",
-          "installArgs": "/silent /qn /norestart REBOOT=ReallySuppress",
           "preselected": true
         }
       ]

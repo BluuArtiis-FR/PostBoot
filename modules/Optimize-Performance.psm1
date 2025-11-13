@@ -80,7 +80,7 @@ function Optimize-PageFile {
         # - RAM < 8GB: 1.5x RAM (compatibilité anciennes machines)
         # - RAM 8-16GB: 1x RAM (équilibre optimal)
         # - RAM 16-32GB: 8GB fixe (suffisant pour la plupart des cas)
-        # - RAM > 32GB: 4GB fixe (minimal, très peu utilisé)
+        # - RAM > 32GB: 16GB fixe (requis pour crash dumps complets - recommandation Microsoft)
 
         if ($ram -lt 8) {
             $pageFileSize = [Math]::Round($ram * 1.5 * 1024)
@@ -92,7 +92,7 @@ function Optimize-PageFile {
             $pageFileSize = 8192
         }
         else {
-            $pageFileSize = 4096
+            $pageFileSize = 16384  # 16GB pour diagnostic et crash dumps (au lieu de 4GB)
         }
 
         Write-Host "  RAM détectée: $([Math]::Round($ram, 2)) GB" -ForegroundColor Yellow
@@ -141,6 +141,7 @@ function Disable-StartupPrograms {
 
     try {
         # Liste mise à jour des programmes à désactiver (patterns 2025)
+        # NOTE: OneDrive est PRÉSERVÉ car requis en environnement entreprise
         $disablePatterns = @(
             "*Adobe*",
             "*CCXProcess*",
@@ -148,10 +149,9 @@ function Disable-StartupPrograms {
             "*Skype*",
             "*Spotify*",
             "*Discord*",
-            "*Teams*",
+            "*Teams*",         # Teams personnel uniquement (pas Teams entreprise)
             "*Slack*",
-            "*OneDrive*",
-            "*Dropbox*",
+            "*Dropbox*",       # OneDrive est préféré en entreprise
             "*Google Update*",
             "*iTunesHelper*",
             "*QuickTime*"
@@ -401,14 +401,14 @@ function Disable-UnnecessaryServices {
 
     try {
         # Liste des services à désactiver (non critiques)
+        # NOTE: WSearch (Windows Search) est géré par le module Debloat-Windows (Automatique début différé)
         $servicesToDisable = @(
             "Fax",                          # Service de télécopie (obsolète)
             "RemoteRegistry",               # Registre à distance (sécurité)
             "RetailDemo",                   # Service de démonstration (magasins)
             "TabletInputService",           # Service de saisie Tablet PC (si pas de tactile)
             "WMPNetworkSvc",                # Partage réseau Windows Media Player
-            "WpcMonSvc",                    # Contrôle parental (si non utilisé)
-            "WSearch"                       # Windows Search (déjà géré en début différé)
+            "WpcMonSvc"                     # Contrôle parental (si non utilisé)
         )
 
         $disabledCount = 0
