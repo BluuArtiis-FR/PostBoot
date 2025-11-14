@@ -73,6 +73,8 @@ test_output/
 CORRECTIONS_*.md
 terraform.tfstate
 terraform.tfstate.backup
+*.har
+nul
 
 # Données sensibles
 secrets/
