@@ -23,6 +23,13 @@ from flask_cors import CORS
 import logging
 from typing import Dict, List, Optional, Tuple
 
+# JSON Schema validation (optional dependency)
+try:
+    import jsonschema
+    HAS_JSONSCHEMA = True
+except ImportError:
+    HAS_JSONSCHEMA = False
+
 # Configuration de l'application
 app = Flask(__name__)
 CORS(app)  # Permettre les requêtes cross-origin depuis le frontend
@@ -62,17 +69,110 @@ class ScriptGenerator:
     def __init__(self):
         self.apps_config = self._load_json(CONFIG_DIR / "apps.json")
         self.settings_config = self._load_json(CONFIG_DIR / "settings.json")
-        self.template_main = self._load_template("main_template.ps1")
+        # Template main_template.ps1 removed - scripts generated dynamically
+
+    def get_resolved_apps_config(self) -> dict:
+        """Retourne une copie du apps_config avec les références résolues."""
+        import copy
+        resolved = copy.deepcopy(self.apps_config)
+        return self._resolve_app_references(resolved)
+
+    @staticmethod
+    def _resolve_app_references(data: dict) -> dict:
+        """
+        Résout les références aux common_apps dans les profils.
+        Transforme {"ref": "git", "preselected": true} en objet app complet.
+        """
+        if 'common_apps' not in data or 'profiles' not in data:
+            return data
+
+        common_apps = data.get('common_apps', {})
+
+        # Parcourir tous les profils
+        for profile_key, profile_data in data['profiles'].items():
+            if 'apps' not in profile_data:
+                continue
+
+            resolved_apps = []
+            for app in profile_data['apps']:
+                # Si c'est une référence (contient "ref")
+                if isinstance(app, dict) and 'ref' in app:
+                    ref_id = app['ref']
+
+                    # Chercher l'app dans common_apps
+                    if ref_id in common_apps:
+                        # Copier l'objet complet depuis common_apps
+                        resolved_app = common_apps[ref_id].copy()
+
+                        # Appliquer les surcharges du profil (preselected, category, description, etc.)
+                        for key, value in app.items():
+                            if key != 'ref':
+                                resolved_app[key] = value
+
+                        resolved_apps.append(resolved_app)
+                    else:
+                        logger.warning(f"Référence non trouvée dans common_apps: {ref_id}")
+                        resolved_apps.append(app)  # Garder tel quel
+                else:
+                    # App complète, garder telle quelle
+                    resolved_apps.append(app)
+
+            # Remplacer la liste d'apps par la version résolue
+            profile_data['apps'] = resolved_apps
+
+        return data
 
     @staticmethod
     def _load_json(filepath: Path) -> dict:
-        """Charge un fichier JSON."""
+        """Charge un fichier JSON avec validation optionnelle."""
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+
+            # NOTE: Ne pas résoudre les références ici pour éviter de modifier la structure
+            # La résolution se fait lors de la génération du script avec get_resolved_apps_config()
+
+            # Validation apps.json si jsonschema disponible
+            if HAS_JSONSCHEMA and filepath.name == "apps.json":
+                # Schéma basique pour apps.json
+                schema = {{
+                    "type": "object",
+                    "required": ["version", "master"],
+                    "properties": {{
+                        "version": {{"type": "string"}},
+                        "master": {{
+                            "type": "array",
+                            "items": {{
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": {{
+                                    "name": {{"type": "string"}},
+                                    "winget": {{"type": "string"}},
+                                    "url": {{"type": "string"}},
+                                    "plugins": {{
+                                        "type": "array",
+                                        "items": {{"type": "string"}},
+                                        "description": "Liste des plugins (Notepad++ uniquement: XML Tools, Compare)"
+                                    }}
+                                }}
+                            }}
+                        }}
+                    }}
+                }}
+
+                try:
+                    jsonschema.validate(data, schema)
+                    logger.info(f"✓ Validation JSON Schema réussie: {{filepath.name}}")
+                except jsonschema.ValidationError as e:
+                    logger.warning(f"⚠ Validation JSON Schema échouée pour {{filepath.name}}: {{e.message}}")
+
+            return data
+        except json.JSONDecodeError as e:
+            logger.error(f"Erreur parsing JSON {{filepath}}: {{e}}")
+            return {{}}
         except Exception as e:
-            logger.error(f"Erreur chargement JSON {filepath}: {e}")
-            return {}
+            logger.error(f"Erreur chargement JSON {{filepath}}: {{e}}")
+            return {{}}
 
     @staticmethod
     def _load_template(filename: str) -> str:
@@ -397,6 +497,9 @@ function Install-NotepadPlusPlusPlugins {
 
     .PARAMETER Plugins
     Liste des noms de plugins à installer.
+
+    .NOTES
+    Plugins supportés: XML Tools, Compare
     #>
     param([array]$Plugins)
 
@@ -431,7 +534,7 @@ function Install-NotepadPlusPlusPlugins {
 
     Write-ScriptLog "  → Installation des plugins Notepad++..." -Level INFO
 
-    # Mapping des plugins avec leurs URLs de téléchargement
+    # Mapping des plugins avec leurs URLs de téléchargement (liste exhaustive des plugins supportés)
     $pluginUrls = @{{
         "XML Tools" = @{{
             Url = "https://github.com/morbac/xmltools/releases/latest/download/xmltools.zip"
@@ -441,6 +544,14 @@ function Install-NotepadPlusPlusPlugins {
             Url = "https://github.com/pnedev/compare-plugin/releases/latest/download/ComparePlus.zip"
             Folder = "ComparePlus"
         }}
+    }}
+
+    # Valider que tous les plugins demandés sont supportés
+    $unsupportedPlugins = $Plugins | Where-Object {{ -not $pluginUrls.ContainsKey($_) }}
+    if ($unsupportedPlugins) {{
+        Write-ScriptLog "  ✗ Plugins non supportés détectés: $($unsupportedPlugins -join ', ')" -Level ERROR
+        Write-ScriptLog "  ℹ Plugins supportés: $($pluginUrls.Keys -join ', ')" -Level INFO
+        return $false
     }}
 
     $installed = 0
@@ -1066,14 +1177,16 @@ def get_profiles():
 
 @app.route('/api/apps', methods=['GET'])
 def get_apps():
-    """Retourne la liste de toutes les applications disponibles."""
+    """Retourne la liste de toutes les applications disponibles avec références résolues."""
     try:
+        # Utiliser la version résolue pour que le frontend reçoive les objets complets
+        resolved_config = generator.get_resolved_apps_config()
         return jsonify({
             'success': True,
             'apps': {
-                'master': generator.apps_config.get('master', []),
-                'profiles': generator.apps_config.get('profiles', {}),
-                'optional': generator.apps_config.get('optional', [])
+                'master': resolved_config.get('master', []),
+                'profiles': resolved_config.get('profiles', {}),
+                'optional': resolved_config.get('optional', [])
             }
         })
     except Exception as e:
@@ -1110,8 +1223,8 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
     - performance_options: {...}
     - ui_options: {...}
     """
-    # Charger les apps depuis la config
-    apps_data = generator.apps_config
+    # Charger les apps depuis la config avec références résolues
+    apps_data = generator.get_resolved_apps_config()
 
     # Construire la liste des apps master (avec déduplication)
     master_apps_dict = {}
@@ -1292,49 +1405,22 @@ def generate():
 
     except ValueError as e:
         logger.warning(f"Configuration invalide: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 400
+        return jsonify({'success': False, 'error': f"Configuration invalide: {str(e)}"}), 400
+    except KeyError as e:
+        logger.warning(f"Champ manquant dans la configuration: {e}")
+        return jsonify({'success': False, 'error': f"Champ manquant: {str(e)}"}), 400
+    except IOError as e:
+        logger.error(f"Erreur fichier lors de la génération: {e}")
+        return jsonify({'success': False, 'error': 'Erreur lors de l\'écriture du fichier'}), 500
+    except PermissionError as e:
+        logger.error(f"Permission refusée: {e}")
+        return jsonify({'success': False, 'error': 'Permission refusée lors de l\'écriture du fichier'}), 500
     except Exception as e:
-        logger.error(f"Erreur génération script: {e}")
+        logger.critical(f"Erreur inattendue lors de la génération: {e}", exc_info=True)
         return jsonify({'success': False, 'error': 'Erreur interne du serveur'}), 500
 
 
-@app.route('/api/generate/script', methods=['POST'])
-def generate_script():
-    """Génère un script PowerShell personnalisé (legacy endpoint)."""
-    try:
-        user_config = request.json
-        profile_name = user_config.get('profile_name', 'Custom')
-
-        logger.info(f"Requête génération script - Profil: {profile_name} - IP: {request.remote_addr}")
-
-        # Générer le script
-        script_content = generator.generate_script(user_config, profile_name)
-
-        # Nom de fichier basé sur le profil (ex: PostBootSetup-TENOR.ps1)
-        safe_profile_name = profile_name.replace(' ', '-').replace('_', '-')
-        script_filename = f"PostBootSetup-{safe_profile_name}.ps1"
-        script_path = GENERATED_DIR / script_filename
-
-        # Sauvegarder le script
-        with open(script_path, 'w', encoding='utf-8-sig') as f:
-            f.write(script_content)
-
-        logger.info(f"✓ Script généré: {script_filename} ({len(script_content)} chars)")
-
-        return jsonify({
-            'success': True,
-            'script_id': script_id,
-            'filename': script_filename,
-            'size': len(script_content),
-            'download_url': f'/api/download/{script_id}'
-        })
-
-    except ValueError as e:
-        logger.warning(f"Configuration invalide: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 400
-    except Exception as e:
-        logger.error(f"Erreur génération script: {e}")
-        return jsonify({'success': False, 'error': 'Erreur interne du serveur'}), 500
+# Legacy endpoint /api/generate/script removed - use /api/generate instead
 
 
 @app.route('/api/generate/executable', methods=['POST'])

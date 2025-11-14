@@ -62,13 +62,26 @@ export const ConfigProvider = ({ children }) => {
           apiService.getModules(),
         ]);
 
+        console.log('API Response - Profiles:', profilesData);
+        console.log('API Response - Apps:', appsData);
+        console.log('API Response - Modules:', modulesData);
+
         setProfiles(profilesData.profiles || []);
         setApps(appsData.apps || null);
         setModules(modulesData.modules || null);
         setError(null);
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Impossible de charger les données depuis l\'API');
+        console.error('Error details:', {
+          message: err.message,
+          response: err.response,
+          stack: err.stack
+        });
+        setError(`Impossible de charger les données depuis l'API: ${err.message}`);
+        // Set defaults to prevent infinite loading
+        setApps({ master: [], profiles: {}, optional: [] });
+        setProfiles([]);
+        setModules({});
       } finally {
         setLoading(false);
       }

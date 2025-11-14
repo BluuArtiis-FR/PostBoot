@@ -4,7 +4,9 @@ import { useConfig } from '../context/ConfigContext';
 import { ArrowLeft, Download, Package, Zap, Activity, CheckCircle, Info } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// En production Docker, utiliser l'URL relative pour que nginx fasse le proxy
+// En dev local, définir VITE_API_URL=http://localhost:5000 dans .env.development.local
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 const Generate = () => {
   const navigate = useNavigate();
@@ -101,22 +103,9 @@ const Generate = () => {
         responseType: 'blob'
       });
 
-      // Determine filename based on selected scripts
-      let filename = 'PostBootSetup';
-      if (selectedScripts.length === 1) {
-        const scriptNames = {
-          installation: 'Installation',
-          optimizations: 'Optimizations',
-          diagnostic: 'Diagnostic'
-        };
-        filename = `PostBootSetup_${scriptNames[selectedScripts[0]]}`;
-      } else if (selectedScripts.length === 3) {
-        filename = 'PostBootSetup_Complete';
-      } else {
-        filename = `PostBootSetup_${selectedScripts.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('_')}`;
-      }
-
-      filename += '.ps1';
+      // Determine filename based on selected profile
+      const profileName = userConfig.profile ? userConfig.profile.toLowerCase() : 'custom';
+      const filename = `postboot-${profileName}.ps1`;
 
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
