@@ -243,9 +243,11 @@ const Optimizations = () => {
         </div>
 
         {userConfig.modules.performance.enabled && (
-          <div className="space-y-3 border-t pt-4">
-            {/* Option 1: Effets visuels */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white">
+          <div className="border-t pt-4">
+            {/* Layout en 2 colonnes sur desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
+              {/* Option 1: Effets visuels */}
+              <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white">
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -268,10 +270,10 @@ const Optimizations = () => {
                   </div>
                 </div>
               </label>
-            </div>
+              </div>
 
-            {/* Option 2: Programmes démarrage */}
-            <div className="border-2 border-green-200 rounded-lg p-4 hover:border-green-300 transition-colors bg-green-50">
+              {/* Option 2: Programmes démarrage */}
+              <div className="border-2 border-green-200 rounded-lg p-4 hover:border-green-300 transition-colors bg-green-50">
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -297,10 +299,10 @@ const Optimizations = () => {
                   </div>
                 </div>
               </label>
-            </div>
+              </div>
 
-            {/* Option 3: Réseau */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white">
+              {/* Option 3: Réseau */}
+              <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white">
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -314,19 +316,19 @@ const Optimizations = () => {
                     <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded">Latence réduite</span>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">
-                    Améliore latence et débit réseau (gaming, streaming)
+                    Améliore latence et débit réseau (gaming, streaming, navigation)
                   </p>
                   <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 space-y-1">
-                    <p>• <strong>TCP Window Scaling</strong> : Optimise débit haut-débit</p>
-                    <p>• <strong>Network Throttling</strong> : Désactive limitation Windows</p>
+                    <p>• <strong>Optimisation TCP/IP</strong> : Ajuste taille fenêtre réseau pour connexions rapides</p>
+                    <p>• <strong>Network Throttling</strong> : Désactive limitation Windows (multimédias)</p>
                     <p>• <strong>Impact</strong> : -5-15ms latence, +10-20% débit</p>
                   </div>
                 </div>
               </label>
-            </div>
+              </div>
 
-            {/* Option 4: Power Plan */}
-            <div className="border-2 border-green-200 rounded-lg p-4 hover:border-green-300 transition-colors bg-green-50">
+              {/* Option 4: Power Plan */}
+              <div className="border-2 border-green-200 rounded-lg p-4 hover:border-green-300 transition-colors bg-green-50">
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -352,10 +354,11 @@ const Optimizations = () => {
                   </div>
                 </div>
               </label>
+              </div>
             </div>
 
-            {/* Résumé performances */}
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4 mt-4">
+            {/* Résumé performances - Pleine largeur */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <Zap className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
@@ -406,15 +409,17 @@ const Optimizations = () => {
         </div>
 
         {userConfig.modules.ui.enabled && (
-          <div className="space-y-3 border-t pt-4">
-            {/* Catégorie: Explorateur */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-              <h3 className="font-semibold text-purple-900 mb-3 flex items-center">
-                <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs mr-2">EXPLORATEUR</span>
-                Paramètres de l'explorateur Windows
-              </h3>
+          <div className="border-t pt-4">
+            {/* Layout en 2 colonnes sur desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Colonne 1: Explorateur */}
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                <h3 className="font-semibold text-purple-900 mb-3 flex items-center">
+                  <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs mr-2">EXPLORATEUR</span>
+                  Paramètres de l'explorateur
+                </h3>
 
-              <div className="space-y-3">
+                <div className="space-y-3">
                 {/* Afficher extensions */}
                 <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <label className="flex items-start space-x-3 cursor-pointer">
@@ -477,17 +482,17 @@ const Optimizations = () => {
                     </div>
                   </label>
                 </div>
+                </div>
               </div>
-            </div>
 
-            {/* Catégorie: Bureau */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
-                <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs mr-2">BUREAU</span>
-                Icônes et apparence du bureau
-              </h3>
+              {/* Colonne 2: Bureau */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
+                  <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs mr-2">BUREAU</span>
+                  Apparence du bureau
+                </h3>
 
-              <div className="space-y-3">
+                <div className="space-y-3">
                 {/* Mode sombre */}
                 <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <label className="flex items-start space-x-3 cursor-pointer">
@@ -550,38 +555,7 @@ const Optimizations = () => {
                     </div>
                   </label>
                 </div>
-              </div>
-            </div>
-
-            {/* Catégorie: Système */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <h3 className="font-semibold text-green-900 mb-3 flex items-center">
-                <span className="bg-green-200 text-green-800 px-2 py-1 rounded text-xs mr-2">SYSTÈME</span>
-                Paramètres système et redémarrage
-              </h3>
-
-              {/* Redémarrer explorateur */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={userConfig.modules.ui.RestartExplorer || false}
-                    onChange={(e) => updateModule('ui', { RestartExplorer: e.target.checked })}
-                    className="checkbox mt-1"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-gray-900">Redémarrer explorateur</span>
-                      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">⚡ Requis</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Redémarre l'explorateur Windows pour appliquer immédiatement les changements d'interface
-                    </p>
-                    <div className="bg-orange-50 rounded p-2 text-xs text-orange-700">
-                      <strong>⚠️ Recommandé :</strong> Sans redémarrage, les modifications ne seront visibles qu'après un redémarrage Windows
-                    </div>
-                  </div>
-                </label>
+                </div>
               </div>
             </div>
           </div>
