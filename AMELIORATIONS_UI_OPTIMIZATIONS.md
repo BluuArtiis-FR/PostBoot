@@ -1,7 +1,9 @@
 # 🎨 Améliorations de la page Optimizations
 
 **Date:** 2025-11-17
-**Commit:** 2f088b6
+**Commits:**
+- `2f088b6` - Interface détaillée et pédagogique initiale
+- `d617473` - Layout horizontal + amélioration descriptions
 
 ---
 
@@ -9,12 +11,18 @@
 
 La page [Optimizations.jsx](web/src/pages/Optimizations.jsx) a été complètement refondée pour offrir une **interface professionnelle et pédagogique** qui met en valeur les ~90 optimisations implémentées lors des Phases 1 et 2.
 
+### 🆕 Dernières améliorations (d617473)
+- ✅ **Layout horizontal** : 2 colonnes sur desktop pour modules Performance et UI (réduit scroll ~40%)
+- ✅ **Description réseau améliorée** : Explication accessible "Optimisation TCP/IP" au lieu de "TCP Window Scaling"
+- ✅ **Suppression section Système** : Retrait de l'option "Redémarrer explorateur" (non pertinente pour utilisateur final)
+
 ---
 
 ## 🎯 OBJECTIFS ATTEINTS
 
 ### ✅ Meilleure lisibilité
 - Organisation visuelle hiérarchisée avec code couleur
+- **Layout 2 colonnes** sur desktop (Performance + UI) pour réduire scroll
 - Sections collapsibles pour réduire la surcharge cognitive
 - Badges contextuels pour guider l'utilisateur
 
@@ -118,8 +126,8 @@ Badge vert: `⭐ RECOMMANDÉ`
 
 #### 3️⃣ Optimiser paramètres réseau
 Badge: `Latence réduite`
-- **TCP Window Scaling** : Optimise débit haut-débit
-- **Network Throttling** : Désactive limitation Windows
+- **Optimisation TCP/IP** : Ajuste taille fenêtre réseau pour connexions rapides
+- **Network Throttling** : Désactive limitation Windows (multimédias)
 - **Impact** : -5-15ms latence, +10-20% débit
 
 #### 4️⃣ Plan d'alimentation haute performance ⭐ RECOMMANDÉ
@@ -173,12 +181,9 @@ Badge: `💻 Accès rapide`
 Badge: `🗑️ Classique`
 - Affiche l'icône Corbeille sur le bureau (récupération fichiers supprimés)
 
-### ⚙️ CATÉGORIE: SYSTÈME (vert)
+---
 
-#### Redémarrer explorateur
-Badge: `⚡ Requis`
-- Redémarre l'explorateur Windows pour appliquer immédiatement les changements d'interface
-- **⚠️ Recommandé :** Sans redémarrage, les modifications ne seront visibles qu'après un redémarrage Windows
+**Note :** La section "Système/Redémarrer explorateur" a été supprimée car non pertinente pour l'utilisateur final (gérée automatiquement par le script).
 
 ---
 
@@ -255,9 +260,16 @@ Badge: `⚡ Requis`
 ## 📁 FICHIERS MODIFIÉS
 
 ### [web/src/pages/Optimizations.jsx](web/src/pages/Optimizations.jsx)
+
+**Commit initial (2f088b6):**
 - **Lignes modifiées** : ~465 insertions, ~120 suppressions
 - **Imports ajoutés** : `ChevronDown`, `ChevronUp`, `AlertTriangle` (lucide-react)
 - **State ajouté** : `expandedDebloat` pour section collapsible
+
+**Commit améliorations (d617473):**
+- **Lignes modifiées** : +39 insertions, -65 suppressions
+- **Layout changements** : Ajout grids 2 colonnes (`grid-cols-1 lg:grid-cols-2`) pour Performance et UI
+- **Suppressions** : Section complète "Système/Redémarrer explorateur" retirée
 
 ### Structure du code
 ```jsx
@@ -283,13 +295,20 @@ Badge: `⚡ Requis`
 
 // Module Performance (lignes 213-374)
 <div className="card mb-6 border-2 border-blue-200">
-  {/* 4 options avec détails dans cards expandées */}
-  {/* Résumé gains quantifiés */}
+  {/* Layout 2 colonnes sur desktop */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    {/* 4 options (2x2) avec détails dans cards */}
+  </div>
+  {/* Résumé gains quantifiés (pleine largeur) */}
 </div>
 
-// Module UI (lignes 376-589)
+// Module UI (lignes 376-560)
 <div className="card mb-8 border-2 border-purple-200">
-  {/* Organisation par catégories: EXPLORATEUR / BUREAU / SYSTÈME */}
+  {/* Layout 2 colonnes sur desktop */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    {/* Colonne 1: EXPLORATEUR (3 options) */}
+    {/* Colonne 2: BUREAU (3 options) */}
+  </div>
 </div>
 ```
 
