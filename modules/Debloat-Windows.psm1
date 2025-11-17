@@ -36,7 +36,10 @@ function Remove-BloatwareApps {
         "Microsoft.BingNews"
         "Microsoft.BingSports"
         "Microsoft.BingWeather"
-        "Microsoft.BingSearch"                  # Nouveau: Widget Bing (Windows 11 22H2+)
+        "Microsoft.BingSearch"                  # Widget Bing (Windows 11 22H2+)
+        "Microsoft.BingTravel"
+        "Microsoft.BingTranslator"
+        "Microsoft.BingFoodAndDrink"
 
         # Applications 3D (rarement utilisées)
         "Microsoft.3DBuilder"
@@ -54,6 +57,7 @@ function Remove-BloatwareApps {
         # Applications Office Hub
         "Microsoft.MicrosoftOfficeHub"
         "Microsoft.Office.OneNote"              # Si OneNote desktop installé
+        "Microsoft.Office.Sway"
 
         # Jeux et divertissement
         "Microsoft.MicrosoftSolitaireCollection"
@@ -67,7 +71,7 @@ function Remove-BloatwareApps {
         "Microsoft.XboxGamingOverlay"
         "Microsoft.XboxIdentityProvider"
         "Microsoft.XboxSpeechToTextOverlay"
-        "Microsoft.GamingApp"                   # Nouveau: Xbox Gaming App (Windows 11)
+        "Microsoft.GamingApp"                   # Xbox Gaming App (Windows 11)
 
         # Utilitaires Windows
         "Microsoft.WindowsAlarms"
@@ -82,13 +86,71 @@ function Remove-BloatwareApps {
 
         # Nouvelles applications Windows 11 2024/2025
         "Microsoft.Todos"                       # Microsoft To Do
-        "Microsoft.PowerAutomateDesktop"        # Power Automate (pushy)
+        "Microsoft.PowerAutomateDesktop"        # Power Automate
         "Clipchamp.Clipchamp"                   # Éditeur vidéo (Windows 11 23H2+)
         "MicrosoftTeams"                        # Teams consumer (garder version entreprise)
+        "Microsoft.DevHome"                     # Dev Home (Windows 11 23H2+)
+        "Microsoft.549981C3F5F10"               # Cortana standalone app
+        "MicrosoftCorporationII.QuickAssist"    # Quick Assist
 
         # Autres
         "Microsoft.Wallet"
         "Microsoft.OneConnect"
+
+        # ============================================
+        # APPLICATIONS TIERCES (BLOATWARE)
+        # ============================================
+
+        # Réseaux sociaux
+        "TikTok.TikTok"
+        "Twitter.Twitter"
+        "Instagram.Instagram"
+        "LinkedIn.LinkedIn"
+        "Facebook.Facebook"
+        "Facebook.InstagramBeta"
+
+        # Streaming et Musique
+        "SpotifyAB.SpotifyMusic"
+        "Netflix.Netflix"
+        "AmazonVideo.PrimeVideo"
+        "Disney.37853FC22B2CE"                  # Disney+
+        "Hulu.HuluPlus"
+        "PandoraMediaInc.29680B314EFC2"         # Pandora
+        "iHeartMedia.iHeartRadio"
+
+        # Jeux casual (les plus courants)
+        "king.com.CandyCrushSaga"
+        "king.com.CandyCrushSodaSaga"
+        "king.com.CandyCrushFriends"
+        "king.com.BubbleWitch3Saga"
+        "Playtika.CaesarsSlotsFreeCasino"
+        "A278AB0D.MarchofEmpires"
+        "A278AB0D.DisneyMagicKingdoms"
+        "AdobeSystemsIncorporated.AdobePhotoshopExpress"
+        "GAMELOFTSA.Asphalt8Airborne"
+        "2414FC7A.Viber"
+        "41038Axilesoft.ACGMediaPlayer"
+        "DolbyLaboratories.DolbyAccess"
+        "HiddenCityMysteryofShadows"
+        "ForgeofEmpires"
+
+        # Actualités et utilitaires
+        "Flipboard.Flipboard"
+        "ShazamEntertainmentLtd.Shazam"
+        "ActiproSoftwareLLC.562882FEEB491"      # Code Writer
+        "Duolingo.DuolingoforWindows"
+        "EclipseManager"
+        "PandoraMediaInc.29680B314EFC2"
+        "WinZipComputing.WinZipUniversal"
+        "XINGAG.XING"
+
+        # Services et outils tiers
+        "AmazonVideo.PrimeVideo"
+        "Evernote.Evernote"
+        "Wunderlist.Wunderlist"
+        "CyberLinkCorp.hs.PowerMediaPlayer14forHPConsumerPC"
+        "NAVER.LINEwin8"
+        "BytedancePte.Ltd.TikTok"
     )
 
     $removedCount = 0
@@ -519,6 +581,8 @@ function Invoke-WindowsDebloat {
         Remove-OfficeLanguagePacks
         Disable-TelemetryServices
         Set-PrivacyRegistry
+        Disable-AIFeatures
+        Disable-ThirdPartyTelemetry
         Optimize-WindowsFeatures
 
         $duration = (Get-Date) - $startTime
@@ -545,6 +609,190 @@ function Invoke-WindowsDebloat {
     }
 }
 
+function Disable-AIFeatures {
+    <#
+    .SYNOPSIS
+    Désactive les fonctionnalités d'intelligence artificielle de Windows 11 24H2+.
+
+    .DESCRIPTION
+    Désactive Windows Recall, Click to Do, et autres fonctionnalités IA invasives
+    introduites dans Windows 11 24H2 et versions ultérieures.
+    NOTE: Copilot est déjà géré dans Set-PrivacyRegistry.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[DEBLOAT] Désactivation des fonctionnalités IA..." -ForegroundColor Cyan
+
+    try {
+        $registrySettings = @(
+            # Windows Recall (enregistrement écran IA - 24H2+)
+            @{
+                Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsAI"
+                Name = "DisableAIDataAnalysis"
+                Value = 1
+                Type = "DWord"
+                Description = "Désactiver Windows Recall"
+            },
+            @{
+                Path = "HKCU:\Software\Policies\Microsoft\Windows\WindowsAI"
+                Name = "DisableAIDataAnalysis"
+                Value = 1
+                Type = "DWord"
+                Description = "Désactiver Windows Recall (utilisateur)"
+            },
+
+            # Click to Do (analyse IA texte/image)
+            @{
+                Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\SmartActionPlatform\SmartClipboard"
+                Name = "Disabled"
+                Value = 1
+                Type = "DWord"
+                Description = "Désactiver Click to Do"
+            },
+            @{
+                Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\SmartActionPlatform"
+                Name = "Disabled"
+                Value = 1
+                Type = "DWord"
+                Description = "Désactiver Smart Action Platform"
+            },
+
+            # Edge AI Features (suggestions IA dans Edge)
+            @{
+                Path = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
+                Name = "HubsSidebarEnabled"
+                Value = 0
+                Type = "DWord"
+                Description = "Désactiver Edge Sidebar (Bing AI)"
+            },
+            @{
+                Path = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
+                Name = "DiscoverPageContextEnabled"
+                Value = 0
+                Type = "DWord"
+                Description = "Désactiver Edge Discover"
+            }
+        )
+
+        foreach ($setting in $registrySettings) {
+            try {
+                if (-not (Test-Path $setting.Path)) {
+                    New-Item -Path $setting.Path -Force | Out-Null
+                }
+
+                Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
+                Write-Host "  ✓ $($setting.Description)" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "  ⚠ Échec: $($setting.Description)" -ForegroundColor Yellow
+            }
+        }
+
+        Write-Host "  ✓ Fonctionnalités IA désactivées" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Disable-ThirdPartyTelemetry {
+    <#
+    .SYNOPSIS
+    Désactive la télémétrie des applications tierces courantes.
+
+    .DESCRIPTION
+    Désactive la collecte de données par Adobe, Google Chrome, VS Code, Nvidia GeForce Experience,
+    et autres applications tierces qui collectent des données d'utilisation.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[DEBLOAT] Désactivation télémétrie applications tierces..." -ForegroundColor Cyan
+
+    try {
+        $registrySettings = @(
+            # Adobe telemetry
+            @{
+                Path = "HKLM:\SOFTWARE\Policies\Adobe\Acrobat Reader\DC\FeatureLockDown"
+                Name = "bUsageMeasurement"
+                Value = 0
+                Type = "DWord"
+                Description = "Désactiver télémétrie Adobe Reader"
+            },
+
+            # Google Chrome telemetry
+            @{
+                Path = "HKLM:\SOFTWARE\Policies\Google\Chrome"
+                Name = "MetricsReportingEnabled"
+                Value = 0
+                Type = "DWord"
+                Description = "Désactiver télémétrie Google Chrome"
+            },
+            @{
+                Path = "HKLM:\SOFTWARE\Policies\Google\Chrome"
+                Name = "ChromeCleanupReportingEnabled"
+                Value = 0
+                Type = "DWord"
+                Description = "Désactiver rapports Chrome Cleanup"
+            },
+
+            # Visual Studio Code telemetry
+            @{
+                Path = "HKCU:\Software\Microsoft\VSCode"
+                Name = "telemetry.enableTelemetry"
+                Value = 0
+                Type = "DWord"
+                Description = "Désactiver télémétrie VS Code"
+            },
+
+            # Nvidia telemetry
+            @{
+                Path = "HKLM:\SOFTWARE\NVIDIA Corporation\NvControlPanel2\Client"
+                Name = "OptInOrOutPreference"
+                Value = 0
+                Type = "DWord"
+                Description = "Désactiver télémétrie Nvidia"
+            },
+            @{
+                Path = "HKLM:\SYSTEM\CurrentControlSet\Services\NvTelemetryContainer"
+                Name = "Start"
+                Value = 4
+                Type = "DWord"
+                Description = "Désactiver service Nvidia Telemetry"
+            }
+        )
+
+        $settingsApplied = 0
+        foreach ($setting in $registrySettings) {
+            try {
+                if (-not (Test-Path $setting.Path)) {
+                    New-Item -Path $setting.Path -Force | Out-Null
+                }
+
+                Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
+                Write-Host "  ✓ $($setting.Description)" -ForegroundColor Green
+                $settingsApplied++
+            }
+            catch {
+                # Ne pas afficher d'erreur si l'application n'est pas installée
+                Write-Verbose "  - $($setting.Description) (app non installée)"
+            }
+        }
+
+        Write-Host "  ✓ Télémétrie tierces désactivée ($settingsApplied paramètres appliqués)" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
 # Export des fonctions publiques du module
 Export-ModuleMember -Function @(
     'Invoke-WindowsDebloat',
@@ -552,5 +800,7 @@ Export-ModuleMember -Function @(
     'Remove-OfficeLanguagePacks',
     'Disable-TelemetryServices',
     'Set-PrivacyRegistry',
-    'Optimize-WindowsFeatures'
+    'Optimize-WindowsFeatures',
+    'Disable-AIFeatures',
+    'Disable-ThirdPartyTelemetry'
 )
