@@ -319,7 +319,7 @@ const Optimizations = () => {
                     Améliore latence et débit réseau (gaming, streaming, navigation)
                   </p>
                   <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 space-y-1">
-                    <p>• <strong>Optimisation TCP/IP</strong> : Ajuste taille fenêtre réseau pour connexions rapides</p>
+                    <p>• <strong>Optimisation haut débit</strong> : Adapte Windows aux connexions rapides (fibre, câble)</p>
                     <p>• <strong>Network Throttling</strong> : Désactive limitation Windows (multimédias)</p>
                     <p>• <strong>Impact</strong> : -5-15ms latence, +10-20% débit</p>
                   </div>
