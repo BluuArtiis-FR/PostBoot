@@ -555,6 +555,32 @@ const Optimizations = () => {
                     </div>
                   </label>
                 </div>
+
+                {/* Fond d'écran Tenor */}
+                <div className="bg-white border-2 border-blue-300 rounded-lg p-4">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userConfig.modules.ui.TenorWallpaper || false}
+                      onChange={(e) => updateModule('ui', { TenorWallpaper: e.target.checked })}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Fond d'écran Tenor Data Solutions</span>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold">🏢 Branding</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Applique le fond d'écran et l'écran de verrouillage aux couleurs Tenor
+                      </p>
+                      <div className="bg-blue-50 rounded p-2 text-xs text-gray-600">
+                        <p>• Fond d'écran bureau personnalisé</p>
+                        <p>• Écran de verrouillage Tenor</p>
+                        <p>• Image téléchargée automatiquement</p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
                 </div>
               </div>
             </div>

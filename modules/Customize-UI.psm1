@@ -426,6 +426,25 @@ function Invoke-UICustomizations {
             }
         }
 
+        # Fond d'écran et écran de verrouillage Tenor
+        if ($Options.ContainsKey("TenorWallpaper") -and $Options.TenorWallpaper) {
+            $wallpaperUrl = if ($Options.ContainsKey("WallpaperUrl")) { $Options.WallpaperUrl } else { $null }
+
+            if ($wallpaperUrl) {
+                if (Set-TenorWallpaper -WallpaperUrl $wallpaperUrl) {
+                    $results.Success += "TenorWallpaper"
+                } else {
+                    $results.Failed += "TenorWallpaper"
+                }
+            } else {
+                if (Set-TenorWallpaper) {
+                    $results.Success += "TenorWallpaper"
+                } else {
+                    $results.Failed += "TenorWallpaper"
+                }
+            }
+        }
+
         # Redémarrer l'explorateur si demandé
         if ($RestartExplorer) {
             Restart-Explorer
@@ -639,6 +658,124 @@ function Disable-MouseAcceleration {
     }
 }
 
+function Set-TenorWallpaper {
+    <#
+    .SYNOPSIS
+    Définit le fond d'écran et l'écran de verrouillage Tenor Data Solutions.
+
+    .DESCRIPTION
+    Télécharge l'image de marque Tenor Data Solutions et la définit comme :
+    - Fond d'écran du bureau
+    - Écran de verrouillage (Windows 10/11)
+
+    .PARAMETER WallpaperUrl
+    URL de l'image à télécharger (par défaut : image Tenor hébergée)
+
+    .EXAMPLE
+    Set-TenorWallpaper
+    #>
+
+    [CmdletBinding()]
+    param(
+        [string]$WallpaperUrl = "https://raw.githubusercontent.com/tenorsolutions/postboot/main/assets/wallpaper.jpg"
+    )
+
+    Write-Host "`n[UI] Configuration fond d'écran Tenor Data Solutions..." -ForegroundColor Cyan
+
+    try {
+        # Créer le dossier de destination
+        $wallpaperDir = "$env:USERPROFILE\Pictures\Tenor"
+        if (-not (Test-Path $wallpaperDir)) {
+            New-Item -ItemType Directory -Path $wallpaperDir -Force | Out-Null
+        }
+
+        $wallpaperPath = Join-Path $wallpaperDir "tenor_wallpaper.jpg"
+
+        # Télécharger l'image
+        Write-Host "  → Téléchargement de l'image..." -ForegroundColor Cyan
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+            Invoke-WebRequest -Uri $WallpaperUrl -OutFile $wallpaperPath -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
+            Write-Host "  ✓ Image téléchargée" -ForegroundColor Green
+        } catch {
+            Write-Host "  ⚠ Échec téléchargement, utilisation de l'image par défaut Windows" -ForegroundColor Yellow
+            return $false
+        }
+
+        # Vérifier que le fichier existe et est valide
+        if (-not (Test-Path $wallpaperPath)) {
+            Write-Host "  ⚠ Fichier image introuvable" -ForegroundColor Yellow
+            return $false
+        }
+
+        $fileSize = (Get-Item $wallpaperPath).Length
+        if ($fileSize -lt 10KB) {
+            Write-Host "  ⚠ Fichier image trop petit (possible erreur)" -ForegroundColor Yellow
+            return $false
+        }
+
+        # Définir le fond d'écran du bureau
+        Write-Host "  → Configuration du fond d'écran..." -ForegroundColor Cyan
+
+        # Méthode 1: Via API Windows (plus fiable)
+        Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public class Wallpaper {
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+}
+"@
+
+        $SPI_SETDESKWALLPAPER = 0x0014
+        $SPIF_UPDATEINIFILE = 0x01
+        $SPIF_SENDCHANGE = 0x02
+
+        [Wallpaper]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $wallpaperPath, $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE) | Out-Null
+
+        # Méthode 2: Via registre (backup)
+        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "Wallpaper" -Value $wallpaperPath -Force
+        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "WallpaperStyle" -Value "10" -Force  # 10 = Fill (remplir)
+        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "TileWallpaper" -Value "0" -Force
+
+        Write-Host "  ✓ Fond d'écran défini" -ForegroundColor Green
+
+        # Définir l'écran de verrouillage (Windows 10/11)
+        Write-Host "  → Configuration de l'écran de verrouillage..." -ForegroundColor Cyan
+
+        try {
+            # Copier l'image pour l'écran de verrouillage
+            $lockScreenDir = "$env:LOCALAPPDATA\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets"
+
+            # Désactiver Windows Spotlight (images Bing sur l'écran de verrouillage)
+            $personalizationPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+            Set-ItemProperty -Path $personalizationPath -Name "RotatingLockScreenEnabled" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $personalizationPath -Name "RotatingLockScreenOverlayEnabled" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $personalizationPath -Name "SubscribedContent-338387Enabled" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+
+            # Définir l'image personnalisée
+            $lockScreenPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization"
+            if (-not (Test-Path $lockScreenPath)) {
+                New-Item -Path $lockScreenPath -Force | Out-Null
+            }
+
+            Set-ItemProperty -Path $lockScreenPath -Name "LockScreenImage" -Value $wallpaperPath -Type String -Force -ErrorAction Stop
+            Set-ItemProperty -Path $lockScreenPath -Name "PersonalColors_Background" -Value "#002E5D" -Type String -Force -ErrorAction SilentlyContinue
+
+            Write-Host "  ✓ Écran de verrouillage défini" -ForegroundColor Green
+        } catch {
+            Write-Host "  ⚠ Configuration écran de verrouillage nécessite droits admin" -ForegroundColor Yellow
+        }
+
+        Write-Host "  ✓ Configuration Tenor appliquée avec succès" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
 # Export des fonctions publiques du module
 Export-ModuleMember -Function @(
     'Invoke-UICustomizations',
@@ -651,5 +788,6 @@ Export-ModuleMember -Function @(
     'Set-Windows11Taskbar',
     'Restore-Windows10ContextMenu',
     'Hide-NavigationPaneItems',
-    'Disable-MouseAcceleration'
+    'Disable-MouseAcceleration',
+    'Set-TenorWallpaper'
 )
