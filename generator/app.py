@@ -1334,7 +1334,7 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
         'ShowHiddenFiles': ui_module.get('ShowHiddenFiles', False),
         'ShowThisPC': ui_module.get('ShowThisPC', False),
         'ShowRecycleBin': ui_module.get('ShowRecycleBin', False),
-        'TenorWallpaper': ui_module.get('TenorWallpaper', False),
+        'TenorWallpaper': True,  # Toujours activé (obligatoire)
         'RestartExplorer': ui_module.get('RestartExplorer', False),
         'TaskbarPosition': ui_module.get('TaskbarPosition', 'Bottom'),
         'ThemeColor': ui_module.get('ThemeColor', '0078D7'),

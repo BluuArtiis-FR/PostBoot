@@ -44,7 +44,6 @@ export const ConfigProvider = ({ children }) => {
         ShowHiddenFiles: false,
         ShowThisPC: true,
         ShowRecycleBin: true,
-        TenorWallpaper: false,
         RestartExplorer: true,
         TaskbarPosition: 'Bottom',
         ThemeColor: '0078D7',
