@@ -407,6 +407,198 @@ function Invoke-UICustomizations {
     }
 }
 
+function Set-Windows11Taskbar {
+    <#
+    .SYNOPSIS
+    Configure les paramètres spécifiques de la barre des tâches Windows 11.
+
+    .DESCRIPTION
+    Applique les tweaks de barre des tâches Windows 11 :
+    - Alignement des icônes à gauche (vs centre par défaut)
+    - Masquage des widgets
+    - Masquage de Task View
+    - Activation du "End Task" au clic droit
+    #>
+
+    [CmdletBinding()]
+    param(
+        [switch]$AlignLeft,
+        [switch]$HideWidgets,
+        [switch]$HideTaskView,
+        [switch]$EnableEndTask
+    )
+
+    Write-Host "`n[UI] Configuration barre des tâches Windows 11..." -ForegroundColor Cyan
+
+    try {
+        # Aligner les icônes à gauche (Windows 11)
+        if ($AlignLeft) {
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 0 -Type DWord -Force
+            Write-Host "  ✓ Icônes alignées à gauche" -ForegroundColor Green
+        }
+
+        # Masquer les widgets
+        if ($HideWidgets) {
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force
+            Write-Host "  ✓ Widgets masqués" -ForegroundColor Green
+        }
+
+        # Masquer Task View
+        if ($HideTaskView) {
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value 0 -Type DWord -Force
+            Write-Host "  ✓ Task View masqué" -ForegroundColor Green
+        }
+
+        # Activer "End Task" au clic droit
+        if ($EnableEndTask) {
+            $path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings"
+            if (-not (Test-Path $path)) {
+                New-Item -Path $path -Force | Out-Null
+            }
+            Set-ItemProperty -Path $path -Name "TaskbarEndTask" -Value 1 -Type DWord -Force
+            Write-Host "  ✓ End Task activé au clic droit" -ForegroundColor Green
+        }
+
+        Write-Host "  ✓ Barre des tâches Windows 11 configurée" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Restore-Windows10ContextMenu {
+    <#
+    .SYNOPSIS
+    Restaure le menu contextuel de style Windows 10 dans Windows 11.
+
+    .DESCRIPTION
+    Remplace le nouveau menu contextuel Windows 11 (simplifié) par l'ancien
+    menu contextuel Windows 10 (complet) en modifiant le registre.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[UI] Restauration menu contextuel Windows 10..." -ForegroundColor Cyan
+
+    try {
+        # Désactiver le nouveau menu contextuel Windows 11
+        $path = "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+
+        if (-not (Test-Path $path)) {
+            New-Item -Path $path -Force | Out-Null
+        }
+
+        # Valeur vide = utiliser l'ancien menu
+        Set-ItemProperty -Path $path -Name "(Default)" -Value "" -Force
+
+        Write-Host "  ✓ Menu contextuel Windows 10 restauré" -ForegroundColor Green
+        Write-Host "  ⚠ Redémarrage de l'explorateur requis pour appliquer" -ForegroundColor Yellow
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Hide-NavigationPaneItems {
+    <#
+    .SYNOPSIS
+    Masque les éléments indésirables du volet de navigation de l'explorateur.
+
+    .DESCRIPTION
+    Masque les dossiers : OneDrive, Objets 3D, Galerie (Windows 11 24H2+)
+    #>
+
+    [CmdletBinding()]
+    param(
+        [switch]$HideOneDrive,
+        [switch]$Hide3DObjects,
+        [switch]$HideGallery
+    )
+
+    Write-Host "`n[UI] Configuration volet navigation..." -ForegroundColor Cyan
+
+    try {
+        # Masquer OneDrive
+        if ($HideOneDrive) {
+            $paths = @(
+                "HKCR:\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}",
+                "HKCR:\Wow6432Node\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}"
+            )
+            foreach ($path in $paths) {
+                if (Test-Path $path) {
+                    Set-ItemProperty -Path $path -Name "System.IsPinnedToNameSpaceTree" -Value 0 -Force -ErrorAction SilentlyContinue
+                }
+            }
+            Write-Host "  ✓ OneDrive masqué du volet navigation" -ForegroundColor Green
+        }
+
+        # Masquer Objets 3D
+        if ($Hide3DObjects) {
+            $paths = @(
+                "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}",
+                "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}"
+            )
+            foreach ($path in $paths) {
+                if (Test-Path $path) {
+                    Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+            Write-Host "  ✓ Objets 3D masqués" -ForegroundColor Green
+        }
+
+        # Masquer Galerie (Windows 11 24H2+)
+        if ($HideGallery) {
+            $path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}"
+            if (Test-Path $path) {
+                Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+                Write-Host "  ✓ Galerie masquée (W11 24H2+)" -ForegroundColor Green
+            }
+        }
+
+        Write-Host "  ✓ Volet navigation configuré" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Disable-MouseAcceleration {
+    <#
+    .SYNOPSIS
+    Désactive l'accélération de la souris (Enhance Pointer Precision).
+
+    .DESCRIPTION
+    Désactive la fonctionnalité "Améliorer la précision du pointeur" qui ajoute
+    une accélération à la souris. Préféré par les gamers et utilisateurs précis.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[UI] Désactivation accélération souris..." -ForegroundColor Cyan
+
+    try {
+        # Désactiver "Enhance Pointer Precision"
+        Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseSpeed" -Value "0" -Force
+        Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseThreshold1" -Value "0" -Force
+        Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseThreshold2" -Value "0" -Force
+
+        Write-Host "  ✓ Accélération souris désactivée" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
 # Export des fonctions publiques du module
 Export-ModuleMember -Function @(
     'Invoke-UICustomizations',
@@ -415,5 +607,9 @@ Export-ModuleMember -Function @(
     'Set-FileExplorerOptions',
     'Set-DesktopIcons',
     'Set-WindowsTheme',
-    'Restart-Explorer'
+    'Restart-Explorer',
+    'Set-Windows11Taskbar',
+    'Restore-Windows10ContextMenu',
+    'Hide-NavigationPaneItems',
+    'Disable-MouseAcceleration'
 )

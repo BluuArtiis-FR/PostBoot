@@ -461,6 +461,182 @@ function Invoke-PerformanceOptimizations {
     return $results
 }
 
+function Disable-GamingFeatures {
+    <#
+    .SYNOPSIS
+    Désactive les fonctionnalités Xbox et gaming de Windows.
+
+    .DESCRIPTION
+    Désactive Xbox Game Bar, DVR, Game Mode et autres fonctionnalités gaming
+    qui peuvent impacter les performances pour les utilisateurs non-gamers.
+    SÉCURISÉ: Ne supprime pas les services, désactive seulement via registre.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[PERFORMANCE] Désactivation fonctionnalités gaming..." -ForegroundColor Cyan
+
+    try {
+        # Désactiver Xbox Game Bar
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Value 0 -Type DWord -Force
+        Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Value 0 -Type DWord -Force
+        Write-Host "  ✓ Xbox Game Bar désactivée" -ForegroundColor Green
+
+        # Désactiver Game DVR
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AudioCaptureEnabled" -Value 0 -Type DWord -Force
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "CursorCaptureEnabled" -Value 0 -Type DWord -Force
+        Write-Host "  ✓ Game DVR désactivé" -ForegroundColor Green
+
+        # Désactiver Game Mode (optionnel - certains jeux en bénéficient)
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "AutoGameModeEnabled" -Value 0 -Type DWord -Force
+        Write-Host "  ✓ Game Mode désactivé" -ForegroundColor Green
+
+        # Désactiver captures d'écran Game Bar
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "HistoricalCaptureEnabled" -Value 0 -Type DWord -Force
+        Write-Host "  ✓ Captures d'écran Game Bar désactivées" -ForegroundColor Green
+
+        Write-Host "  ✓ Fonctionnalités gaming désactivées" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Enable-UltimatePerformancePlan {
+    <#
+    .SYNOPSIS
+    Active le plan d'alimentation "Ultimate Performance" de Windows.
+
+    .DESCRIPTION
+    Active le plan d'alimentation Ultimate Performance (caché par défaut) qui
+    maximise les performances en désactivant les économies d'énergie.
+    Recommandé pour stations de travail et gaming.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[PERFORMANCE] Activation Ultimate Performance Plan..." -ForegroundColor Cyan
+
+    try {
+        # GUID du plan Ultimate Performance
+        $ultimateGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61"
+
+        # Vérifier si le plan existe déjà
+        $existingPlan = powercfg /l | Select-String $ultimateGuid
+
+        if (-not $existingPlan) {
+            # Activer le plan Ultimate Performance (caché par défaut)
+            powercfg /duplicatescheme $ultimateGuid | Out-Null
+            Write-Host "  ✓ Ultimate Performance Plan créé" -ForegroundColor Green
+        }
+
+        # Activer le plan
+        powercfg /setactive $ultimateGuid
+        Write-Host "  ✓ Ultimate Performance Plan activé" -ForegroundColor Green
+
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  ℹ Utilisation du plan Haute Performance standard" -ForegroundColor Yellow
+
+        # Fallback sur High Performance
+        powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+        return $true
+    }
+}
+
+function Disable-FastStartup {
+    <#
+    .SYNOPSIS
+    Désactive le démarrage rapide (Fast Startup) de Windows.
+
+    .DESCRIPTION
+    Désactive Fast Startup qui peut causer des problèmes avec dual-boot,
+    drivers et SSD. Recommandé pour une meilleure stabilité.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[PERFORMANCE] Désactivation Fast Startup..." -ForegroundColor Cyan
+
+    try {
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name "HiberbootEnabled" -Value 0 -Type DWord -Force
+        Write-Host "  ✓ Fast Startup désactivé" -ForegroundColor Green
+        Write-Host "  ℹ Améliore compatibilité dual-boot et SSD" -ForegroundColor Cyan
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Disable-Animations {
+    <#
+    .SYNOPSIS
+    Désactive les animations système Windows.
+
+    .DESCRIPTION
+    Désactive les animations et transitions pour améliorer les performances
+    graphiques et la réactivité du système.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[PERFORMANCE] Désactivation animations système..." -ForegroundColor Cyan
+
+    try {
+        # Désactiver les animations dans les fenêtres
+        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop\WindowMetrics" -Name "MinAnimate" -Value "0" -Force
+
+        # Désactiver les animations du menu Démarrer
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAnimations" -Value 0 -Type DWord -Force
+
+        # Désactiver les effets de transition
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -Name "VisualFXSetting" -Value 2 -Type DWord -Force
+
+        Write-Host "  ✓ Animations système désactivées" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Disable-Transparency {
+    <#
+    .SYNOPSIS
+    Désactive les effets de transparence Windows.
+
+    .DESCRIPTION
+    Désactive les effets de transparence (Acrylic, Blur) pour améliorer
+    les performances graphiques, surtout sur machines anciennes.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`n[PERFORMANCE] Désactivation transparence..." -ForegroundColor Cyan
+
+    try {
+        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "EnableTransparency" -Value 0 -Type DWord -Force
+        Write-Host "  ✓ Transparence désactivée" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+}
+
 # Export des fonctions publiques du module
 Export-ModuleMember -Function @(
     'Invoke-PerformanceOptimizations',
@@ -470,5 +646,10 @@ Export-ModuleMember -Function @(
     'Set-PowerPlan',
     'Optimize-MemoryManagement',
     'Optimize-StoragePerformance',
-    'Disable-UnnecessaryServices'
+    'Disable-UnnecessaryServices',
+    'Disable-GamingFeatures',
+    'Enable-UltimatePerformancePlan',
+    'Disable-FastStartup',
+    'Disable-Animations',
+    'Disable-Transparency'
 )
