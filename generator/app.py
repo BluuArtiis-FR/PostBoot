@@ -1336,7 +1336,14 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
         'ShowRecycleBin': ui_module.get('ShowRecycleBin', False),
         'RestartExplorer': ui_module.get('RestartExplorer', False),
         'TaskbarPosition': ui_module.get('TaskbarPosition', 'Bottom'),
-        'ThemeColor': ui_module.get('ThemeColor', '0078D7')
+        'ThemeColor': ui_module.get('ThemeColor', '0078D7'),
+        # Windows 11 tweaks
+        'TaskbarAlignLeft': ui_module.get('TaskbarAlignLeft', False),
+        'Windows10ContextMenu': ui_module.get('Windows10ContextMenu', False),
+        'HideWidgets': ui_module.get('HideWidgets', False),
+        'HideTaskView': ui_module.get('HideTaskView', False),
+        'EnableEndTask': ui_module.get('EnableEndTask', False),
+        'HideOneDriveNav': ui_module.get('HideOneDriveNav', False)
     } if 'ui' in modules else {}
 
     return {

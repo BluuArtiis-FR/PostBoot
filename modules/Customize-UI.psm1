@@ -386,6 +386,46 @@ function Invoke-UICustomizations {
             }
         }
 
+        # Tweaks Windows 11 - Barre des tâches
+        if ($Options.ContainsKey("TaskbarAlignLeft") -or $Options.ContainsKey("HideWidgets") -or $Options.ContainsKey("HideTaskView") -or $Options.ContainsKey("EnableEndTask")) {
+            $params = @{}
+            if ($Options.TaskbarAlignLeft) { $params.AlignLeft = $true }
+            if ($Options.HideWidgets) { $params.HideWidgets = $true }
+            if ($Options.HideTaskView) { $params.HideTaskView = $true }
+            if ($Options.EnableEndTask) { $params.EnableEndTask = $true }
+
+            if ($params.Count -gt 0) {
+                if (Set-Windows11Taskbar @params) {
+                    $results.Success += "Windows11Taskbar"
+                } else {
+                    $results.Failed += "Windows11Taskbar"
+                }
+            }
+        }
+
+        # Menu contextuel Windows 10
+        if ($Options.ContainsKey("Windows10ContextMenu") -and $Options.Windows10ContextMenu) {
+            if (Restore-Windows10ContextMenu) {
+                $results.Success += "Windows10ContextMenu"
+            } else {
+                $results.Failed += "Windows10ContextMenu"
+            }
+        }
+
+        # Masquer éléments du volet de navigation
+        if ($Options.ContainsKey("HideOneDriveNav")) {
+            $navParams = @{}
+            if ($Options.HideOneDriveNav) { $navParams.HideOneDrive = $true }
+
+            if ($navParams.Count -gt 0) {
+                if (Hide-NavigationPaneItems @navParams) {
+                    $results.Success += "NavigationPane"
+                } else {
+                    $results.Failed += "NavigationPane"
+                }
+            }
+        }
+
         # Redémarrer l'explorateur si demandé
         if ($RestartExplorer) {
             Restart-Explorer

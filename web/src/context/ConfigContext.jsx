@@ -47,6 +47,13 @@ export const ConfigProvider = ({ children }) => {
         RestartExplorer: true,
         TaskbarPosition: 'Bottom',
         ThemeColor: '0078D7',
+        // Windows 11 tweaks
+        TaskbarAlignLeft: false,
+        Windows10ContextMenu: false,
+        HideWidgets: false,
+        HideTaskView: false,
+        EnableEndTask: false,
+        HideOneDriveNav: false,
       },
     },
   });

@@ -558,6 +558,142 @@ const Optimizations = () => {
                 </div>
               </div>
             </div>
+
+            {/* Nouvelle section Windows 11 - Pleine largeur */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-4 mt-4">
+              <h3 className="font-semibold text-purple-900 mb-3 flex items-center">
+                <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs mr-2">WINDOWS 11</span>
+                Tweaks spécifiques Windows 11
+              </h3>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {/* Barre des tâches à gauche */}
+                <div className="bg-white border border-purple-200 rounded-lg p-4">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userConfig.modules.ui.TaskbarAlignLeft || false}
+                      onChange={(e) => updateModule('ui', { TaskbarAlignLeft: e.target.checked })}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Icônes barre des tâches à gauche</span>
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">🎯 Style W10</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Aligne les icônes à gauche comme Windows 10 (vs centre par défaut W11)
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Menu contextuel Windows 10 */}
+                <div className="bg-white border border-purple-200 rounded-lg p-4">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userConfig.modules.ui.Windows10ContextMenu || false}
+                      onChange={(e) => updateModule('ui', { Windows10ContextMenu: e.target.checked })}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Menu contextuel Windows 10</span>
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">📋 Complet</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Restaure l'ancien menu contextuel complet (vs simplifié W11)
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Masquer widgets */}
+                <div className="bg-white border border-purple-200 rounded-lg p-4">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userConfig.modules.ui.HideWidgets || false}
+                      onChange={(e) => updateModule('ui', { HideWidgets: e.target.checked })}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Masquer widgets barre des tâches</span>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">🧹 Épuré</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Supprime le bouton Widgets/Actualités de la barre des tâches
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Masquer Task View */}
+                <div className="bg-white border border-purple-200 rounded-lg p-4">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userConfig.modules.ui.HideTaskView || false}
+                      onChange={(e) => updateModule('ui', { HideTaskView: e.target.checked })}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Masquer Task View</span>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">🧹 Épuré</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Supprime le bouton "Affichage des tâches" de la barre des tâches
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Activer End Task */}
+                <div className="bg-white border border-purple-200 rounded-lg p-4">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userConfig.modules.ui.EnableEndTask || false}
+                      onChange={(e) => updateModule('ui', { EnableEndTask: e.target.checked })}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Activer "Fin de tâche" clic droit</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">⚡ Productivité</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Ajoute "Fin de tâche" au clic droit sur barre des tâches (fermeture rapide)
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Masquer OneDrive navigation */}
+                <div className="bg-white border border-purple-200 rounded-lg p-4">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userConfig.modules.ui.HideOneDriveNav || false}
+                      onChange={(e) => updateModule('ui', { HideOneDriveNav: e.target.checked })}
+                      className="checkbox mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Masquer OneDrive du volet navigation</span>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">🧹 Épuré</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Retire OneDrive du volet de gauche de l'explorateur
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
