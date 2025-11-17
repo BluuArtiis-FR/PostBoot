@@ -57,74 +57,6 @@ function Disable-VisualEffects {
     }
 }
 
-function Optimize-PageFile {
-    <#
-    .SYNOPSIS
-    Configure le fichier d'échange (pagefile) pour des performances optimales.
-
-    .DESCRIPTION
-    Ajuste intelligemment la taille et l'emplacement du fichier d'échange Windows
-    selon la RAM disponible et les recommandations 2025 pour Windows 11.
-    #>
-
-    [CmdletBinding()]
-    param()
-
-    Write-Host "`n[PERFORMANCE] Optimisation du fichier d'échange..." -ForegroundColor Cyan
-
-    try {
-        # Obtenir la quantité de RAM installée
-        $ram = (Get-CimInstance -ClassName Win32_ComputerSystem).TotalPhysicalMemory / 1GB
-
-        # Calcul optimisé 2025:
-        # - RAM < 8GB: 1.5x RAM (compatibilité anciennes machines)
-        # - RAM 8-16GB: 1x RAM (équilibre optimal)
-        # - RAM 16-32GB: 8GB fixe (suffisant pour la plupart des cas)
-        # - RAM > 32GB: 16GB fixe (requis pour crash dumps complets - recommandation Microsoft)
-
-        if ($ram -lt 8) {
-            $pageFileSize = [Math]::Round($ram * 1.5 * 1024)
-        }
-        elseif ($ram -lt 16) {
-            $pageFileSize = [Math]::Round($ram * 1024)
-        }
-        elseif ($ram -lt 32) {
-            $pageFileSize = 8192
-        }
-        else {
-            $pageFileSize = 16384  # 16GB pour diagnostic et crash dumps (au lieu de 4GB)
-        }
-
-        Write-Host "  RAM détectée: $([Math]::Round($ram, 2)) GB" -ForegroundColor Yellow
-        Write-Host "  Taille du pagefile: $($pageFileSize / 1024) GB" -ForegroundColor Yellow
-
-        # Configuration via WMI
-        # Désactiver la gestion automatique du pagefile
-        $computersys = Get-CimInstance -ClassName Win32_ComputerSystem
-        $computersys | Set-CimInstance -Property @{AutomaticManagedPagefile = $false}
-
-        # Supprimer l'ancien pagefile si existant
-        $pagefile = Get-CimInstance -ClassName Win32_PageFileSetting -ErrorAction SilentlyContinue
-        if ($pagefile) {
-            Remove-CimInstance -InputObject $pagefile
-        }
-
-        # Créer le nouveau pagefile
-        New-CimInstance -ClassName Win32_PageFileSetting -Property @{
-            Name = "C:\pagefile.sys"
-            InitialSize = [uint32]$pageFileSize
-            MaximumSize = [uint32]$pageFileSize
-        } | Out-Null
-
-        Write-Host "  ✓ Fichier d'échange optimisé" -ForegroundColor Green
-        return $true
-    }
-    catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
-        return $false
-    }
-}
-
 function Disable-StartupPrograms {
     <#
     .SYNOPSIS
@@ -336,9 +268,6 @@ function Optimize-MemoryManagement {
         # Préchargement des applications (Page combining)
         Enable-MMAgent -PageCombining -ErrorAction SilentlyContinue
 
-        # Désactiver Clear Page File at Shutdown (accélère l'arrêt)
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" -Name "ClearPageFileAtShutdown" -Value 0 -Type DWord -Force
-
         Write-Host "  ✓ Gestion mémoire optimisée" -ForegroundColor Green
         return $true
     }
@@ -463,7 +392,6 @@ function Invoke-PerformanceOptimizations {
     .EXAMPLE
     Invoke-PerformanceOptimizations -Options @{
         VisualEffects = $true
-        PageFile = $true
         StartupPrograms = $true
         Network = $true
         PowerPlan = $true
@@ -492,7 +420,6 @@ function Invoke-PerformanceOptimizations {
     # Mapper les options aux fonctions
     $optimizationMap = @{
         "VisualEffects" = { Disable-VisualEffects }
-        "PageFile" = { Optimize-PageFile }
         "StartupPrograms" = { Disable-StartupPrograms }
         "Network" = { Optimize-NetworkSettings }
         "PowerPlan" = { Set-PowerPlan }
@@ -538,7 +465,6 @@ function Invoke-PerformanceOptimizations {
 Export-ModuleMember -Function @(
     'Invoke-PerformanceOptimizations',
     'Disable-VisualEffects',
-    'Optimize-PageFile',
     'Disable-StartupPrograms',
     'Optimize-NetworkSettings',
     'Set-PowerPlan',

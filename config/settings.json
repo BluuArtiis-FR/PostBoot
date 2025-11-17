@@ -26,12 +26,6 @@
           "enabled": false,
           "recommended": false
         },
-        "PageFile": {
-          "name": "Optimiser fichier d'échange",
-          "description": "Configure la taille optimale du pagefile",
-          "enabled": true,
-          "recommended": true
-        },
         "StartupPrograms": {
           "name": "Désactiver programmes au démarrage",
           "description": "Accélère le temps de boot",
