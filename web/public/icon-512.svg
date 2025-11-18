@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#002E5D" rx="80"/>
+  <rect x="56" y="56" width="400" height="400" fill="#0052A5" rx="60"/>
+  <text x="256" y="340" font-family="Arial, sans-serif" font-size="220" font-weight="bold" text-anchor="middle" fill="#FFFFFF">PB</text>
+  <circle cx="400" cy="112" r="48" fill="#00D4FF"/>
+  <path d="M 400,78 L 408,82 L 408,98 L 400,102 L 392,98 L 392,82 Z
+           M 434,112 L 430,120 L 414,120 L 410,112 L 414,104 L 430,104 Z
+           M 400,146 L 392,142 L 392,126 L 400,122 L 408,126 L 408,142 Z
+           M 366,112 L 370,104 L 386,104 L 390,112 L 386,120 L 370,120 Z" fill="#002E5D"/>
+  <circle cx="400" cy="112" r="16" fill="#002E5D"/>
+</svg>

@@ -162,9 +162,9 @@ class ScriptGenerator:
 
                 try:
                     jsonschema.validate(data, schema)
-                    logger.info(f"✓ Validation JSON Schema réussie: {{filepath.name}}")
+                    logger.info(f"[OK] Validation JSON Schema réussie: {{filepath.name}}")
                 except jsonschema.ValidationError as e:
-                    logger.warning(f"⚠ Validation JSON Schema échouée pour {{filepath.name}}: {{e.message}}")
+                    logger.warning(f"[ATTENTION] Validation JSON Schema échouée pour {{filepath.name}}: {{e.message}}")
 
             return data
         except json.JSONDecodeError as e:
@@ -503,93 +503,93 @@ function Install-NotepadPlusPlusPlugins {
     #>
     param([array]$Plugins)
 
-    if (-not $Plugins -or $Plugins.Count -eq 0) {{
+    if (-not $Plugins -or $Plugins.Count -eq 0) {
         return $true
-    }}
+    }
 
     # Déterminer le chemin d'installation de Notepad++
     $nppPath = $null
     $possiblePaths = @(
         "$env:ProgramFiles\\Notepad++",
-        "${{env:ProgramFiles(x86)}}\\Notepad++",
+        "${env:ProgramFiles(x86)}\\Notepad++",
         "$env:LOCALAPPDATA\\Programs\\Notepad++"
     )
 
-    foreach ($path in $possiblePaths) {{
-        if (Test-Path "$path\\notepad++.exe") {{
+    foreach ($path in $possiblePaths) {
+        if (Test-Path "$path\\notepad++.exe") {
             $nppPath = $path
             break
-        }}
-    }}
+        }
+    }
 
-    if (-not $nppPath) {{
-        Write-ScriptLog "  ✗ Notepad++ non trouvé, impossible d'installer les plugins" -Level WARNING
+    if (-not $nppPath) {
+        Write-ScriptLog "  [ERREUR] Notepad++ non trouvé, impossible d'installer les plugins" -Level WARNING
         return $false
-    }}
+    }
 
     $pluginsDir = Join-Path $nppPath "plugins"
-    if (-not (Test-Path $pluginsDir)) {{
+    if (-not (Test-Path $pluginsDir)) {
         New-Item -ItemType Directory -Path $pluginsDir -Force | Out-Null
-    }}
+    }
 
-    Write-ScriptLog "  → Installation des plugins Notepad++..." -Level INFO
+    Write-ScriptLog "  -> Installation des plugins Notepad++..." -Level INFO
 
     # Mapping des plugins avec leurs URLs de téléchargement (liste exhaustive des plugins supportés)
-    $pluginUrls = @{{
-        "XML Tools" = @{{
+    $pluginUrls = @{
+        "XML Tools" = @{
             Url = "https://github.com/morbac/xmltools/releases/latest/download/xmltools.zip"
             Folder = "XMLTools"
-        }}
-        "Compare" = @{{
+        }
+        "Compare" = @{
             Url = "https://github.com/pnedev/compare-plugin/releases/latest/download/ComparePlus.zip"
             Folder = "ComparePlus"
-        }}
-    }}
+        }
+    }
 
     # Valider que tous les plugins demandés sont supportés
-    $unsupportedPlugins = $Plugins | Where-Object {{ -not $pluginUrls.ContainsKey($_) }}
-    if ($unsupportedPlugins) {{
-        Write-ScriptLog "  ✗ Plugins non supportés détectés: $($unsupportedPlugins -join ', ')" -Level ERROR
-        Write-ScriptLog "  ℹ Plugins supportés: $($pluginUrls.Keys -join ', ')" -Level INFO
+    $unsupportedPlugins = $Plugins | Where-Object { -not $pluginUrls.ContainsKey($_) }
+    if ($unsupportedPlugins) {
+        Write-ScriptLog "  [ERREUR] Plugins non supportés détectés: $($unsupportedPlugins -join ', ')" -Level ERROR
+        Write-ScriptLog "  [INFO] Plugins supportés: $($pluginUrls.Keys -join ', ')" -Level INFO
         return $false
-    }}
+    }
 
     $installed = 0
-    foreach ($plugin in $Plugins) {{
-        if ($pluginUrls.ContainsKey($plugin)) {{
-            try {{
+    foreach ($plugin in $Plugins) {
+        if ($pluginUrls.ContainsKey($plugin)) {
+            try {
                 $pluginInfo = $pluginUrls[$plugin]
                 $tempZip = Join-Path $env:TEMP "$($pluginInfo.Folder).zip"
                 $pluginTargetDir = Join-Path $pluginsDir $pluginInfo.Folder
 
-                Write-ScriptLog "    • Téléchargement de $plugin..." -Level INFO
+                Write-ScriptLog "    * Téléchargement de $plugin..." -Level INFO
                 Invoke-WebRequest -Uri $pluginInfo.Url -OutFile $tempZip -UseBasicParsing -ErrorAction Stop
 
                 # Extraire le plugin
-                if (Test-Path $pluginTargetDir) {{
+                if (Test-Path $pluginTargetDir) {
                     Remove-Item $pluginTargetDir -Recurse -Force
-                }}
+                }
                 Expand-Archive -Path $tempZip -DestinationPath $pluginTargetDir -Force
 
                 # Nettoyer
                 Remove-Item $tempZip -Force
 
-                Write-ScriptLog "    ✓ Plugin $plugin installé" -Level SUCCESS
+                Write-ScriptLog "    [OK] Plugin $plugin installé" -Level SUCCESS
                 $installed++
-            }} catch {{
-                Write-ScriptLog "    ✗ Échec installation $plugin : $($_.Exception.Message)" -Level WARNING
-            }}
-        }} else {{
-            Write-ScriptLog "    ⚠ Plugin $plugin non supporté (installation manuelle requise)" -Level WARNING
-        }}
-    }}
+            } catch {
+                Write-ScriptLog "    [ERREUR] Échec installation $plugin : $($_.Exception.Message)" -Level WARNING
+            }
+        } else {
+            Write-ScriptLog "    [ATTENTION] Plugin $plugin non supporté (installation manuelle requise)" -Level WARNING
+        }
+    }
 
-    if ($installed -gt 0) {{
-        Write-ScriptLog "  ✓ $installed plugin(s) Notepad++ installé(s)" -Level SUCCESS
-    }}
+    if ($installed -gt 0) {
+        Write-ScriptLog "  [OK] $installed plugin(s) Notepad++ installé(s)" -Level SUCCESS
+    }
 
     return $true
-}}
+}
 
 function Install-WingetApp {
     <#
@@ -600,12 +600,12 @@ function Install-WingetApp {
 
     # Vérifier si déjà installé
     if (Test-AppInstalled -WingetId $App.winget -AppName $App.name) {
-        Write-ScriptLog "→ $($App.name) déjà installé (ignoré)" -Level INFO
+        Write-ScriptLog "-> $($App.name) déjà installé (ignoré)" -Level INFO
 
         # Installer les plugins si c'est Notepad++ et qu'ils sont spécifiés
-        if ($App.name -eq "Notepad++" -and $App.plugins) {{
+        if ($App.name -eq "Notepad++" -and $App.plugins) {
             Install-NotepadPlusPlusPlugins -Plugins $App.plugins
-        }}
+        }
 
         return $true
     }
@@ -620,12 +620,12 @@ function Install-WingetApp {
             $output = winget install --id $App.winget --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-String
 
             if ($LASTEXITCODE -eq 0 -or $output -match 'successfully installed') {
-                Write-ScriptLog "✓ $($App.name) installé" -Level SUCCESS -Metadata @{ Winget = $App.winget; Retries = $retryCount }
+                Write-ScriptLog "[OK] $($App.name) installé" -Level SUCCESS -Metadata @{ Winget = $App.winget; Retries = $retryCount }
 
                 # Installer les plugins si c'est Notepad++ et qu'ils sont spécifiés
-                if ($App.name -eq "Notepad++" -and $App.plugins) {{
+                if ($App.name -eq "Notepad++" -and $App.plugins) {
                     Install-NotepadPlusPlusPlugins -Plugins $App.plugins
-                }}
+                }
 
                 return $true
             } else {
@@ -644,7 +644,7 @@ function Install-WingetApp {
         }
     }
 
-    Write-ScriptLog "✗ Échec $($App.name) après $maxRetries tentatives" -Level ERROR
+    Write-ScriptLog "[ERREUR] Échec $($App.name) après $maxRetries tentatives" -Level ERROR
     return $false
 }
 
@@ -708,7 +708,7 @@ function Install-CustomApp {
 
     # Vérifier si déjà installé
     if (Test-AppInstalled -AppName $App.name) {
-        Write-ScriptLog "→ $($App.name) déjà installé (ignoré)" -Level INFO
+        Write-ScriptLog "-> $($App.name) déjà installé (ignoré)" -Level INFO
         return $true
     }
 
@@ -724,9 +724,9 @@ function Install-CustomApp {
             try {
                 $testRequest = Invoke-WebRequest -Uri $httpsUrl -Method Head -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
                 $downloadUrl = $httpsUrl
-                Write-ScriptLog "✓ HTTPS disponible, utilisation de la connexion sécurisée" -Level SUCCESS
+                Write-ScriptLog "[OK] HTTPS disponible, utilisation de la connexion sécurisée" -Level SUCCESS
             } catch {
-                Write-ScriptLog "⚠ HTTPS non disponible, utilisation de HTTP (non sécurisé)" -Level WARNING
+                Write-ScriptLog "[ATTENTION] HTTPS non disponible, utilisation de HTTP (non sécurisé)" -Level WARNING
             }
         }
 
@@ -751,7 +751,7 @@ function Install-CustomApp {
 
                 if (Test-Path $tempPath) {
                     $fileSize = (Get-Item $tempPath).Length
-                    Write-ScriptLog "✓ Téléchargement réussi ($([math]::Round($fileSize / 1MB, 2)) MB)" -Level SUCCESS
+                    Write-ScriptLog "[OK] Téléchargement réussi ($([math]::Round($fileSize / 1MB, 2)) MB)" -Level SUCCESS
                     $downloaded = $true
                 } else {
                     throw "Fichier non créé"
@@ -777,7 +777,7 @@ function Install-CustomApp {
         $installArgs = Get-InstallArguments -FilePath $tempPath -CustomArgs $App.installArgs
 
         if ($null -eq $installArgs) {
-            Write-ScriptLog "⚠ Type de fichier non supporté pour installation automatique" -Level WARNING
+            Write-ScriptLog "[ATTENTION] Type de fichier non supporté pour installation automatique" -Level WARNING
             Remove-Item $tempPath -ErrorAction SilentlyContinue
             return $false
         }
@@ -791,15 +791,15 @@ function Install-CustomApp {
 
         # Codes de sortie acceptables (0 = succès, 3010 = redémarrage requis)
         if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
-            Write-ScriptLog "✓ $($App.name) installé (code: $($process.ExitCode))" -Level SUCCESS -Metadata @{ ExitCode = $process.ExitCode; URL = $App.url }
+            Write-ScriptLog "[OK] $($App.name) installé (code: $($process.ExitCode))" -Level SUCCESS -Metadata @{ ExitCode = $process.ExitCode; URL = $App.url }
             return $true
         } else {
-            Write-ScriptLog "✗ $($App.name) - Code erreur: $($process.ExitCode)" -Level ERROR -Metadata @{ ExitCode = $process.ExitCode }
+            Write-ScriptLog "[ERREUR] $($App.name) - Code erreur: $($process.ExitCode)" -Level ERROR -Metadata @{ ExitCode = $process.ExitCode }
             return $false
         }
     } catch {
-        Write-ScriptLog "✗ Erreur $($App.name): $_" -Level ERROR
-        Write-ScriptLog "→ Installation manuelle requise: $($App.url)" -Level WARNING
+        Write-ScriptLog "[ERREUR] Erreur $($App.name): $_" -Level ERROR
+        Write-ScriptLog "-> Installation manuelle requise: $($App.url)" -Level WARNING
         return $false
     }
 }
@@ -908,14 +908,14 @@ try {{
         exit 1
     }}
 
-    Write-ScriptLog "✓ Droits administrateur validés" -Level SUCCESS
+    Write-ScriptLog "[OK] Droits administrateur validés" -Level SUCCESS
 
     # Vérification Winget
     try {{
         $null = winget --version
-        Write-ScriptLog "✓ Winget disponible" -Level SUCCESS
+        Write-ScriptLog "[OK] Winget disponible" -Level SUCCESS
     }} catch {{
-        Write-ScriptLog "✗ Winget non disponible" -Level ERROR
+        Write-ScriptLog "[ERREUR] Winget non disponible" -Level ERROR
         exit 1
     }}
 
@@ -924,14 +924,14 @@ try {{
     $totalProfileApps = $Global:EmbeddedConfig.apps.profile.Count
     $totalApps = $totalMasterApps + $totalProfileApps
 
-    Write-Host "`n📦 Configuration:" -ForegroundColor Cyan
+    Write-Host "`n[PACKAGE] Configuration:" -ForegroundColor Cyan
     Write-Host "   - Applications Master: $totalMasterApps" -ForegroundColor White
     Write-Host "   - Applications Profil: $totalProfileApps" -ForegroundColor White
     Write-Host "   - Total: $totalApps applications`n" -ForegroundColor White
 
     # Confirmation utilisateur (sauf en mode silencieux)
     if (-not $Silent) {{
-        Write-Host "⚠ Cette opération va installer $totalApps applications." -ForegroundColor Yellow
+        Write-Host "[ATTENTION] Cette opération va installer $totalApps applications." -ForegroundColor Yellow
         $confirmation = Read-Host "Voulez-vous continuer? (O/N)"
 
         if ($confirmation -notmatch '^[OoYy]') {{
@@ -1120,11 +1120,11 @@ class PS2EXECompiler:
             )
 
             if result.returncode == 0 and exe_path.exists():
-                logger.info(f"✓ Compilation réussie: {exe_path}")
+                logger.info(f"[OK] Compilation réussie: {exe_path}")
                 return True, None
             else:
                 error = result.stderr or "Erreur inconnue lors de la compilation"
-                logger.error(f"✗ Compilation échouée: {error}")
+                logger.error(f"[ERREUR] Compilation échouée: {error}")
                 return False, error
 
         except subprocess.TimeoutExpired:
@@ -1401,7 +1401,7 @@ def generate():
         with open(script_path, 'w', encoding='utf-8-sig') as f:
             f.write(script_content)
 
-        logger.info(f"✓ Script généré: {script_filename} ({len(script_content)} chars)")
+        logger.info(f"[OK] Script généré: {script_filename} ({len(script_content)} chars)")
 
         # Retourner directement le contenu du script pour téléchargement
         return send_file(
@@ -1476,7 +1476,7 @@ def generate_executable():
         ps1_path.unlink(missing_ok=True)
 
         if success:
-            logger.info(f"✓ EXE généré: {exe_filename}")
+            logger.info(f"[OK] EXE généré: {exe_filename}")
 
             return jsonify({
                 'success': True,

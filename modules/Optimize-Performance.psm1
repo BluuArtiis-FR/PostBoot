@@ -48,11 +48,11 @@ function Disable-VisualEffects {
         # Windows 11: Garder la transparence Start/Taskbar mais réduire les effets
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "EnableTransparency" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
 
-        Write-Host "  ✓ Effets visuels désactivés (transparence Win11 préservée)" -ForegroundColor Green
+        Write-Host "  [OK] Effets visuels désactivés (transparence Win11 préservée)" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -117,11 +117,11 @@ function Disable-StartupPrograms {
             }
         }
 
-        Write-Host "  ✓ $disabledCount programmes au démarrage désactivés" -ForegroundColor Green
+        Write-Host "  [OK] $disabledCount programmes au démarrage désactivés" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -167,11 +167,11 @@ function Optimize-NetworkSettings {
         netsh int ipv4 set dynamicport tcp start=10000 num=55535 2>$null
         netsh int ipv6 set dynamicport tcp start=10000 num=55535 2>$null
 
-        Write-Host "  ✓ Paramètres réseau optimisés (Windows 11 24H2+)" -ForegroundColor Green
+        Write-Host "  [OK] Paramètres réseau optimisés (Windows 11 24H2+)" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -206,7 +206,7 @@ function Set-PowerPlan {
 
         if ($highPerfGuid -and $highPerfGuid.Length -eq 36) {
             powercfg -setactive $highPerfGuid 2>$null
-            Write-Host "  ✓ Plan 'Performances élevées' activé" -ForegroundColor Green
+            Write-Host "  [OK] Plan 'Performances élevées' activé" -ForegroundColor Green
         }
         else {
             # Si le plan n'existe pas, créer un plan Ultimate Performance (Windows 10 1803+)
@@ -219,7 +219,7 @@ function Set-PowerPlan {
                 powercfg -duplicatescheme $highPerfScheme 2>$null
             }
 
-            Write-Host "  ✓ Plan de performance créé et activé" -ForegroundColor Green
+            Write-Host "  [OK] Plan de performance créé et activé" -ForegroundColor Green
         }
 
         # Désactiver la mise en veille du disque dur
@@ -232,7 +232,7 @@ function Set-PowerPlan {
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -258,21 +258,21 @@ function Optimize-MemoryManagement {
         $sysMain = Get-Service -Name "SysMain" -ErrorAction SilentlyContinue
         if ($sysMain) {
             Set-Service -Name "SysMain" -StartupType Automatic -ErrorAction SilentlyContinue
-            Write-Host "  ✓ SysMain (Superfetch) activé (recommandé pour SSD)" -ForegroundColor Green
+            Write-Host "  [OK] SysMain (Superfetch) activé (recommandé pour SSD)" -ForegroundColor Green
         }
 
         # Compression mémoire Windows 11: GARDER ACTIVÉE (améliore les perfs)
         Enable-MMAgent -MemoryCompression -ErrorAction SilentlyContinue
-        Write-Host "  ✓ Compression mémoire activée" -ForegroundColor Green
+        Write-Host "  [OK] Compression mémoire activée" -ForegroundColor Green
 
         # Préchargement des applications (Page combining)
         Enable-MMAgent -PageCombining -ErrorAction SilentlyContinue
 
-        Write-Host "  ✓ Gestion mémoire optimisée" -ForegroundColor Green
+        Write-Host "  [OK] Gestion mémoire optimisée" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -295,11 +295,11 @@ function Optimize-StoragePerformance {
     try {
         # Activer TRIM pour les SSD (si applicable)
         fsutil behavior set DisableDeleteNotify 0 2>$null
-        Write-Host "  ✓ TRIM activé pour les SSD" -ForegroundColor Green
+        Write-Host "  [OK] TRIM activé pour les SSD" -ForegroundColor Green
 
         # Désactiver l'heure du dernier accès (améliore les perfs SSD)
         fsutil behavior set DisableLastAccess 1 2>$null
-        Write-Host "  ✓ Timestamp dernier accès désactivé" -ForegroundColor Green
+        Write-Host "  [OK] Timestamp dernier accès désactivé" -ForegroundColor Green
 
         # Optimiser le write caching pour les disques
         Get-PhysicalDisk | Where-Object { $_.MediaType -eq "SSD" -or $_.MediaType -eq "SCM" } | ForEach-Object {
@@ -310,11 +310,11 @@ function Optimize-StoragePerformance {
             }
         }
 
-        Write-Host "  ✓ Stockage optimisé" -ForegroundColor Green
+        Write-Host "  [OK] Stockage optimisé" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -367,11 +367,11 @@ function Disable-UnnecessaryServices {
             }
         }
 
-        Write-Host "  ✓ $disabledCount services non essentiels désactivés" -ForegroundColor Green
+        Write-Host "  [OK] $disabledCount services non essentiels désactivés" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -442,7 +442,7 @@ function Invoke-PerformanceOptimizations {
             }
             catch {
                 $results.Failed += $option
-                Write-Host "  ⚠ Échec de $option : $($_.Exception.Message)" -ForegroundColor Red
+                Write-Host "  [ATTENTION] Échec de $option : $($_.Exception.Message)" -ForegroundColor Red
             }
         }
         else {
@@ -481,26 +481,26 @@ function Disable-GamingFeatures {
         # Désactiver Xbox Game Bar
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Value 0 -Type DWord -Force
         Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Value 0 -Type DWord -Force
-        Write-Host "  ✓ Xbox Game Bar désactivée" -ForegroundColor Green
+        Write-Host "  [OK] Xbox Game Bar désactivée" -ForegroundColor Green
 
         # Désactiver Game DVR
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AudioCaptureEnabled" -Value 0 -Type DWord -Force
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "CursorCaptureEnabled" -Value 0 -Type DWord -Force
-        Write-Host "  ✓ Game DVR désactivé" -ForegroundColor Green
+        Write-Host "  [OK] Game DVR désactivé" -ForegroundColor Green
 
         # Désactiver Game Mode (optionnel - certains jeux en bénéficient)
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "AutoGameModeEnabled" -Value 0 -Type DWord -Force
-        Write-Host "  ✓ Game Mode désactivé" -ForegroundColor Green
+        Write-Host "  [OK] Game Mode désactivé" -ForegroundColor Green
 
         # Désactiver captures d'écran Game Bar
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "HistoricalCaptureEnabled" -Value 0 -Type DWord -Force
-        Write-Host "  ✓ Captures d'écran Game Bar désactivées" -ForegroundColor Green
+        Write-Host "  [OK] Captures d'écran Game Bar désactivées" -ForegroundColor Green
 
-        Write-Host "  ✓ Fonctionnalités gaming désactivées" -ForegroundColor Green
+        Write-Host "  [OK] Fonctionnalités gaming désactivées" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -531,18 +531,18 @@ function Enable-UltimatePerformancePlan {
         if (-not $existingPlan) {
             # Activer le plan Ultimate Performance (caché par défaut)
             powercfg /duplicatescheme $ultimateGuid | Out-Null
-            Write-Host "  ✓ Ultimate Performance Plan créé" -ForegroundColor Green
+            Write-Host "  [OK] Ultimate Performance Plan créé" -ForegroundColor Green
         }
 
         # Activer le plan
         powercfg /setactive $ultimateGuid
-        Write-Host "  ✓ Ultimate Performance Plan activé" -ForegroundColor Green
+        Write-Host "  [OK] Ultimate Performance Plan activé" -ForegroundColor Green
 
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
-        Write-Host "  ℹ Utilisation du plan Haute Performance standard" -ForegroundColor Yellow
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [INFO] Utilisation du plan Haute Performance standard" -ForegroundColor Yellow
 
         # Fallback sur High Performance
         powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
@@ -567,12 +567,12 @@ function Disable-FastStartup {
 
     try {
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name "HiberbootEnabled" -Value 0 -Type DWord -Force
-        Write-Host "  ✓ Fast Startup désactivé" -ForegroundColor Green
-        Write-Host "  ℹ Améliore compatibilité dual-boot et SSD" -ForegroundColor Cyan
+        Write-Host "  [OK] Fast Startup désactivé" -ForegroundColor Green
+        Write-Host "  [INFO] Améliore compatibilité dual-boot et SSD" -ForegroundColor Cyan
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -602,11 +602,11 @@ function Disable-Animations {
         # Désactiver les effets de transition
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -Name "VisualFXSetting" -Value 2 -Type DWord -Force
 
-        Write-Host "  ✓ Animations système désactivées" -ForegroundColor Green
+        Write-Host "  [OK] Animations système désactivées" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -628,11 +628,11 @@ function Disable-Transparency {
 
     try {
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "EnableTransparency" -Value 0 -Type DWord -Force
-        Write-Host "  ✓ Transparence désactivée" -ForegroundColor Green
+        Write-Host "  [OK] Transparence désactivée" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }

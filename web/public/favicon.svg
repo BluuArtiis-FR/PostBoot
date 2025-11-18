@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background circle with Tenor blue -->
+  <circle cx="256" cy="256" r="256" fill="#002E5D"/>
+
+  <!-- Lighter blue background for better contrast -->
+  <circle cx="256" cy="256" r="220" fill="#0052A5"/>
+
+  <!-- Computer/settings icon concept with "PB" -->
+  <g fill="#FFFFFF">
+    <!-- Monitor/screen outline -->
+    <rect x="130" y="160" width="252" height="180" rx="8" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+
+    <!-- Screen content - "PB" text -->
+    <text x="256" y="280" font-family="Arial, sans-serif" font-size="140" font-weight="bold" text-anchor="middle" fill="#FFFFFF">PB</text>
+
+    <!-- Base stand -->
+    <rect x="230" y="340" width="52" height="20" rx="4"/>
+    <rect x="200" y="360" width="112" height="12" rx="6"/>
+  </g>
+
+  <!-- Small settings gear accent in corner -->
+  <g transform="translate(380, 120)">
+    <circle cx="0" cy="0" r="35" fill="#00D4FF"/>
+    <path d="M 0,-25 L 5,-20 L 5,-10 L 0,-5 L -5,-10 L -5,-20 Z
+             M 25,0 L 20,5 L 10,5 L 5,0 L 10,-5 L 20,-5 Z
+             M 0,25 L -5,20 L -5,10 L 0,5 L 5,10 L 5,20 Z
+             M -25,0 L -20,-5 L -10,-5 L -5,0 L -10,5 L -20,5 Z" fill="#002E5D"/>
+    <circle cx="0" cy="0" r="10" fill="#002E5D"/>
+  </g>
+</svg>

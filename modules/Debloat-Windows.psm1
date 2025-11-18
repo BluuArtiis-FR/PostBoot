@@ -168,7 +168,7 @@ function Remove-BloatwareApps {
                 # Supprimer également le package provisionné (pour les nouveaux utilisateurs)
                 Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq $app | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
 
-                Write-Host "  ✓ $app supprimé" -ForegroundColor Green
+                Write-Host "  [OK] $app supprimé" -ForegroundColor Green
                 $removedCount++
             }
             else {
@@ -176,7 +176,7 @@ function Remove-BloatwareApps {
             }
         }
         catch {
-            Write-Host "  ⚠ Erreur lors de la suppression de $app : $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "  [ATTENTION] Erreur lors de la suppression de $app : $($_.Exception.Message)" -ForegroundColor Red
         }
     }
 
@@ -238,12 +238,12 @@ function Disable-TelemetryServices {
                 # Désactiver le service de manière permanente
                 Set-Service -Name $serviceName -StartupType Disabled -ErrorAction Stop
 
-                Write-Host "  ✓ $serviceName désactivé" -ForegroundColor Green
+                Write-Host "  [OK] $serviceName désactivé" -ForegroundColor Green
                 $disabledCount++
             }
         }
         catch {
-            Write-Host "  ⚠ Erreur lors de la désactivation de $serviceName : $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "  [ATTENTION] Erreur lors de la désactivation de $serviceName : $($_.Exception.Message)" -ForegroundColor Red
         }
     }
 
@@ -433,11 +433,11 @@ function Set-PrivacyRegistry {
             # Appliquer la valeur du registre
             Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
 
-            Write-Host "  ✓ $($setting.Description) appliqué" -ForegroundColor Green
+            Write-Host "  [OK] $($setting.Description) appliqué" -ForegroundColor Green
             $appliedCount++
         }
         catch {
-            Write-Host "  ⚠ Erreur: $($setting.Description) - $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "  [ATTENTION] Erreur: $($setting.Description) - $($_.Exception.Message)" -ForegroundColor Red
         }
     }
 
@@ -469,15 +469,15 @@ function Optimize-WindowsFeatures {
             # Cela permet une indexation optimale sans impact au démarrage
             Set-Service -Name 'WSearch' -StartupType Automatic -ErrorAction SilentlyContinue
             sc.exe config WSearch start=delayed-auto | Out-Null
-            Write-Host "  ✓ Windows Search configuré en Automatique (Début différé)" -ForegroundColor Green
+            Write-Host "  [OK] Windows Search configuré en Automatique (Début différé)" -ForegroundColor Green
         }
 
         # NOTE: L'hibernation et la restauration système sont PRÉSERVÉS pour la sécurité
-        Write-Host "  ℹ Hibernation et points de restauration préservés (sécurité)" -ForegroundColor Cyan
+        Write-Host "  [INFO] Hibernation et points de restauration préservés (sécurité)" -ForegroundColor Cyan
 
     }
     catch {
-        Write-Host "  ⚠ Erreur lors de l'optimisation: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur lors de l'optimisation: $($_.Exception.Message)" -ForegroundColor Red
     }
 
     Write-Host "`n[DEBLOAT] Optimisations système appliquées" -ForegroundColor Green
@@ -522,25 +522,25 @@ function Remove-OfficeLanguagePacks {
 
             if (-not $isKeepLang) {
                 try {
-                    Write-Host "  → Suppression de $($lang.Name)..." -ForegroundColor Gray
+                    Write-Host "  -> Suppression de $($lang.Name)..." -ForegroundColor Gray
                     Remove-AppxPackage -Package $lang.PackageFullName -ErrorAction Stop
                     $removed++
                 } catch {
-                    Write-Host "  ✗ Échec: $($lang.Name)" -ForegroundColor Yellow
+                    Write-Host "  [ERREUR] Échec: $($lang.Name)" -ForegroundColor Yellow
                 }
             } else {
-                Write-Host "  ✓ Conservation de $($lang.Name)" -ForegroundColor Green
+                Write-Host "  [OK] Conservation de $($lang.Name)" -ForegroundColor Green
             }
         }
 
         if ($removed -gt 0) {
-            Write-Host "  ✓ $removed pack(s) de langues Office supprimés" -ForegroundColor Green
+            Write-Host "  [OK] $removed pack(s) de langues Office supprimés" -ForegroundColor Green
         } else {
-            Write-Host "  ℹ Aucun pack de langue à supprimer" -ForegroundColor Gray
+            Write-Host "  [INFO] Aucun pack de langue à supprimer" -ForegroundColor Gray
         }
 
     } catch {
-        Write-Host "  ✗ Erreur lors du nettoyage des langues: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "  [ERREUR] Erreur lors du nettoyage des langues: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 }
 
@@ -683,18 +683,18 @@ function Disable-AIFeatures {
                 }
 
                 Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
-                Write-Host "  ✓ $($setting.Description)" -ForegroundColor Green
+                Write-Host "  [OK] $($setting.Description)" -ForegroundColor Green
             }
             catch {
-                Write-Host "  ⚠ Échec: $($setting.Description)" -ForegroundColor Yellow
+                Write-Host "  [ATTENTION] Échec: $($setting.Description)" -ForegroundColor Yellow
             }
         }
 
-        Write-Host "  ✓ Fonctionnalités IA désactivées" -ForegroundColor Green
+        Write-Host "  [OK] Fonctionnalités IA désactivées" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -775,7 +775,7 @@ function Disable-ThirdPartyTelemetry {
                 }
 
                 Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
-                Write-Host "  ✓ $($setting.Description)" -ForegroundColor Green
+                Write-Host "  [OK] $($setting.Description)" -ForegroundColor Green
                 $settingsApplied++
             }
             catch {
@@ -784,11 +784,11 @@ function Disable-ThirdPartyTelemetry {
             }
         }
 
-        Write-Host "  ✓ Télémétrie tierces désactivée ($settingsApplied paramètres appliqués)" -ForegroundColor Green
+        Write-Host "  [OK] Télémétrie tierces désactivée ($settingsApplied paramètres appliqués)" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }

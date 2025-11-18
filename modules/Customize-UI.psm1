@@ -49,17 +49,17 @@ function Set-TaskbarPosition {
                 $value[12] = $positionMap[$Position]
                 Set-ItemProperty -Path $registryPath -Name "Settings" -Value $value -Force
 
-                Write-Host "  ✓ Barre des tâches positionnée: $Position" -ForegroundColor Green
-                Write-Host "  ⚠ Redémarrage de l'explorateur nécessaire pour appliquer" -ForegroundColor Yellow
+                Write-Host "  [OK] Barre des tâches positionnée: $Position" -ForegroundColor Green
+                Write-Host "  [ATTENTION] Redémarrage de l'explorateur nécessaire pour appliquer" -ForegroundColor Yellow
                 return $true
             }
         }
 
-        Write-Host "  ⚠ Impossible de modifier la position (registre non trouvé)" -ForegroundColor Yellow
+        Write-Host "  [ATTENTION] Impossible de modifier la position (registre non trouvé)" -ForegroundColor Yellow
         return $false
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -93,11 +93,11 @@ function Set-DarkMode {
         # Mode sombre pour le système
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "SystemUsesLightTheme" -Value $themeValue -Type DWord -Force
 
-        Write-Host "  ✓ Mode $mode activé" -ForegroundColor Green
+        Write-Host "  [OK] Mode $mode activé" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -147,7 +147,7 @@ function Set-FileExplorerOptions {
         # Ouvrir l'explorateur sur "Ce PC" au lieu de "Accès rapide"
         Set-ItemProperty -Path $explorerPath -Name "LaunchTo" -Value 1 -Type DWord -Force
 
-        Write-Host "  ✓ Explorateur configuré" -ForegroundColor Green
+        Write-Host "  [OK] Explorateur configuré" -ForegroundColor Green
         Write-Host "    - Fichiers cachés: $($ShowHiddenFiles)" -ForegroundColor Gray
         Write-Host "    - Extensions visibles: $($ShowFileExtensions)" -ForegroundColor Gray
         Write-Host "    - Chemin complet: $($ShowFullPath)" -ForegroundColor Gray
@@ -155,7 +155,7 @@ function Set-FileExplorerOptions {
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -212,11 +212,11 @@ function Set-DesktopIcons {
         Set-ItemProperty -Path $iconPath -Name $icons.UserFolder -Value $(if ($ShowUserFolder) { 0 } else { 1 }) -Type DWord -Force
         Set-ItemProperty -Path $iconPath -Name $icons.Network -Value $(if ($ShowNetwork) { 0 } else { 1 }) -Type DWord -Force
 
-        Write-Host "  ✓ Icônes du bureau configurées" -ForegroundColor Green
+        Write-Host "  [OK] Icônes du bureau configurées" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -255,11 +255,11 @@ function Set-WindowsTheme {
         # Activer la couleur d'accentuation sur la barre des tâches et les bordures
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "ColorPrevalence" -Value 1 -Type DWord -Force
 
-        Write-Host "  ✓ Thème de couleur appliqué" -ForegroundColor Green
+        Write-Host "  [OK] Thème de couleur appliqué" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -284,11 +284,11 @@ function Restart-Explorer {
         Start-Sleep -Seconds 2
         Start-Process "explorer.exe"
 
-        Write-Host "  ✓ Explorateur redémarré" -ForegroundColor Green
+        Write-Host "  [OK] Explorateur redémarré" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur lors du redémarrage: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur lors du redémarrage: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -493,19 +493,19 @@ function Set-Windows11Taskbar {
         # Aligner les icônes à gauche (Windows 11)
         if ($AlignLeft) {
             Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 0 -Type DWord -Force
-            Write-Host "  ✓ Icônes alignées à gauche" -ForegroundColor Green
+            Write-Host "  [OK] Icônes alignées à gauche" -ForegroundColor Green
         }
 
         # Masquer les widgets
         if ($HideWidgets) {
             Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force
-            Write-Host "  ✓ Widgets masqués" -ForegroundColor Green
+            Write-Host "  [OK] Widgets masqués" -ForegroundColor Green
         }
 
         # Masquer Task View
         if ($HideTaskView) {
             Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value 0 -Type DWord -Force
-            Write-Host "  ✓ Task View masqué" -ForegroundColor Green
+            Write-Host "  [OK] Task View masqué" -ForegroundColor Green
         }
 
         # Activer "End Task" au clic droit
@@ -515,14 +515,14 @@ function Set-Windows11Taskbar {
                 New-Item -Path $path -Force | Out-Null
             }
             Set-ItemProperty -Path $path -Name "TaskbarEndTask" -Value 1 -Type DWord -Force
-            Write-Host "  ✓ End Task activé au clic droit" -ForegroundColor Green
+            Write-Host "  [OK] End Task activé au clic droit" -ForegroundColor Green
         }
 
-        Write-Host "  ✓ Barre des tâches Windows 11 configurée" -ForegroundColor Green
+        Write-Host "  [OK] Barre des tâches Windows 11 configurée" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -553,12 +553,12 @@ function Restore-Windows10ContextMenu {
         # Valeur vide = utiliser l'ancien menu
         Set-ItemProperty -Path $path -Name "(Default)" -Value "" -Force
 
-        Write-Host "  ✓ Menu contextuel Windows 10 restauré" -ForegroundColor Green
-        Write-Host "  ⚠ Redémarrage de l'explorateur requis pour appliquer" -ForegroundColor Yellow
+        Write-Host "  [OK] Menu contextuel Windows 10 restauré" -ForegroundColor Green
+        Write-Host "  [ATTENTION] Redémarrage de l'explorateur requis pour appliquer" -ForegroundColor Yellow
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -593,7 +593,7 @@ function Hide-NavigationPaneItems {
                     Set-ItemProperty -Path $path -Name "System.IsPinnedToNameSpaceTree" -Value 0 -Force -ErrorAction SilentlyContinue
                 }
             }
-            Write-Host "  ✓ OneDrive masqué du volet navigation" -ForegroundColor Green
+            Write-Host "  [OK] OneDrive masqué du volet navigation" -ForegroundColor Green
         }
 
         # Masquer Objets 3D
@@ -607,7 +607,7 @@ function Hide-NavigationPaneItems {
                     Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
                 }
             }
-            Write-Host "  ✓ Objets 3D masqués" -ForegroundColor Green
+            Write-Host "  [OK] Objets 3D masqués" -ForegroundColor Green
         }
 
         # Masquer Galerie (Windows 11 24H2+)
@@ -615,15 +615,15 @@ function Hide-NavigationPaneItems {
             $path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}"
             if (Test-Path $path) {
                 Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
-                Write-Host "  ✓ Galerie masquée (W11 24H2+)" -ForegroundColor Green
+                Write-Host "  [OK] Galerie masquée (W11 24H2+)" -ForegroundColor Green
             }
         }
 
-        Write-Host "  ✓ Volet navigation configuré" -ForegroundColor Green
+        Write-Host "  [OK] Volet navigation configuré" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -649,11 +649,11 @@ function Disable-MouseAcceleration {
         Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseThreshold1" -Value "0" -Force
         Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseThreshold2" -Value "0" -Force
 
-        Write-Host "  ✓ Accélération souris désactivée" -ForegroundColor Green
+        Write-Host "  [OK] Accélération souris désactivée" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -692,30 +692,30 @@ function Set-TenorWallpaper {
         $wallpaperPath = Join-Path $wallpaperDir "tenor_wallpaper.jpg"
 
         # Télécharger l'image
-        Write-Host "  → Téléchargement de l'image..." -ForegroundColor Cyan
+        Write-Host "  -> Téléchargement de l'image..." -ForegroundColor Cyan
         try {
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
             Invoke-WebRequest -Uri $WallpaperUrl -OutFile $wallpaperPath -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
-            Write-Host "  ✓ Image téléchargée" -ForegroundColor Green
+            Write-Host "  [OK] Image téléchargée" -ForegroundColor Green
         } catch {
-            Write-Host "  ⚠ Échec téléchargement, utilisation de l'image par défaut Windows" -ForegroundColor Yellow
+            Write-Host "  [ATTENTION] Échec téléchargement, utilisation de l'image par défaut Windows" -ForegroundColor Yellow
             return $false
         }
 
         # Vérifier que le fichier existe et est valide
         if (-not (Test-Path $wallpaperPath)) {
-            Write-Host "  ⚠ Fichier image introuvable" -ForegroundColor Yellow
+            Write-Host "  [ATTENTION] Fichier image introuvable" -ForegroundColor Yellow
             return $false
         }
 
         $fileSize = (Get-Item $wallpaperPath).Length
         if ($fileSize -lt 10KB) {
-            Write-Host "  ⚠ Fichier image trop petit (possible erreur)" -ForegroundColor Yellow
+            Write-Host "  [ATTENTION] Fichier image trop petit (possible erreur)" -ForegroundColor Yellow
             return $false
         }
 
         # Définir le fond d'écran du bureau
-        Write-Host "  → Configuration du fond d'écran..." -ForegroundColor Cyan
+        Write-Host "  -> Configuration du fond d'écran..." -ForegroundColor Cyan
 
         # Méthode 1: Via API Windows (plus fiable)
         Add-Type -TypeDefinition @"
@@ -738,10 +738,10 @@ public class Wallpaper {
         Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "WallpaperStyle" -Value "10" -Force  # 10 = Fill (remplir)
         Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "TileWallpaper" -Value "0" -Force
 
-        Write-Host "  ✓ Fond d'écran défini" -ForegroundColor Green
+        Write-Host "  [OK] Fond d'écran défini" -ForegroundColor Green
 
         # Définir l'écran de verrouillage (Windows 10/11)
-        Write-Host "  → Configuration de l'écran de verrouillage..." -ForegroundColor Cyan
+        Write-Host "  -> Configuration de l'écran de verrouillage..." -ForegroundColor Cyan
 
         try {
             # Copier l'image pour l'écran de verrouillage
@@ -762,16 +762,16 @@ public class Wallpaper {
             Set-ItemProperty -Path $lockScreenPath -Name "LockScreenImage" -Value $wallpaperPath -Type String -Force -ErrorAction Stop
             Set-ItemProperty -Path $lockScreenPath -Name "PersonalColors_Background" -Value "#002E5D" -Type String -Force -ErrorAction SilentlyContinue
 
-            Write-Host "  ✓ Écran de verrouillage défini" -ForegroundColor Green
+            Write-Host "  [OK] Écran de verrouillage défini" -ForegroundColor Green
         } catch {
-            Write-Host "  ⚠ Configuration écran de verrouillage nécessite droits admin" -ForegroundColor Yellow
+            Write-Host "  [ATTENTION] Configuration écran de verrouillage nécessite droits admin" -ForegroundColor Yellow
         }
 
-        Write-Host "  ✓ Configuration Tenor appliquée avec succès" -ForegroundColor Green
+        Write-Host "  [OK] Configuration Tenor appliquée avec succès" -ForegroundColor Green
         return $true
     }
     catch {
-        Write-Host "  ⚠ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "  [ATTENTION] Erreur: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
