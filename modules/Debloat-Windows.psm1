@@ -511,92 +511,34 @@ function Remove-OfficeLanguagePacks {
 
     Write-Host "`n[DEBLOAT] Suppression des applications Office préinstallées..." -ForegroundColor Cyan
 
-    # Liste des applications Office préinstallées à supprimer via winget
-    $preinstalledOfficeApps = @(
-        # Packs de langues Microsoft 365 (installés avec Windows)
-        "Microsoft.365 - de-de"
-        "Microsoft.365 - en-us"
-        "Microsoft.365 - fr-fr"
-        "Microsoft.365 - it-it"
-        "Microsoft.365 - nl-nl"
-        "Microsoft.365 - es-es"
-        "Microsoft.365 - pt-br"
-
-        # Packs de langues OneNote
-        "Microsoft OneNote - de-de"
-        "Microsoft OneNote - en-us"
-        "Microsoft OneNote - fr-fr"
-        "Microsoft OneNote - it-it"
-        "Microsoft OneNote - nl-nl"
-        "Microsoft OneNote - es-es"
-        "Microsoft OneNote - pt-br"
-
-        # OneDrive consumer (sera remplacé par version entreprise)
-        "Microsoft OneDrive"
-    )
-
     $removedCount = 0
     $skippedCount = 0
 
-    foreach ($appName in $preinstalledOfficeApps) {
-        try {
-            # Chercher dans le registre Windows (méthode la plus fiable)
-            $uninstallKeys = @(
-                "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
-                "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-            )
+    # Pattern regex pour identifier les applications Office à supprimer
+    # Inclut: Microsoft 365 (toutes langues), OneNote (toutes langues), OneDrive consumer
+    $officePattern = "Microsoft\.365|Microsoft\.Office\.OneNote|Microsoft\.MicrosoftOfficeHub|Microsoft\.OneNote|Microsoft\.OneDrive"
 
-            $found = $false
-            foreach ($key in $uninstallKeys) {
-                $apps = Get-ItemProperty $key -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "*$appName*" }
-
-                foreach ($app in $apps) {
-                    if ($app.UninstallString) {
-                        $uninstallCmd = $app.UninstallString
-
-                        # Si c'est un MSI (contient msiexec ou un GUID)
-                        if ($uninstallCmd -match 'msiexec' -or $uninstallCmd -match '\{[A-Z0-9\-]+\}') {
-                            if ($uninstallCmd -match '\{[A-Z0-9\-]+\}') {
-                                $productCode = $matches[0]
-                                # Désinstaller silencieusement via msiexec
-                                Start-Process "msiexec.exe" -ArgumentList "/x `"$productCode`" /qn /norestart" -Wait -NoNewWindow -ErrorAction SilentlyContinue
-                                $found = $true
-                                $removedCount++
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (-not $found) {
-                $skippedCount++
-            }
-        }
-        catch {
-            $skippedCount++
-        }
-    }
-
-    # Gestion des packs de langues AppX (ancienne méthode, conservée pour compatibilité)
     try {
-        $officeLanguages = Get-AppxPackage | Where-Object {
-            $_.Name -like "*Microsoft.Office.Desktop.LanguagePack*" -or
-            $_.Name -like "*Microsoft.LanguageExperiencePack*"
-        }
+        # Récupérer toutes les applications AppX pour tous les utilisateurs
+        $appxPackages = Get-AppxPackage -AllUsers -ErrorAction SilentlyContinue
 
-        foreach ($lang in $officeLanguages) {
-            # Garder uniquement fr-fr et en-us
-            if ($lang.Name -notmatch 'fr-fr' -and $lang.Name -notmatch 'en-us') {
+        foreach ($app in $appxPackages) {
+            # Vérifier si le nom correspond au pattern Office
+            if ($app.Name -match $officePattern) {
                 try {
-                    Remove-AppxPackage -Package $lang.PackageFullName -ErrorAction SilentlyContinue
-                    if ($?) { $removedCount++ }
+                    Remove-AppxPackage -Package $app.PackageFullName -AllUsers -ErrorAction SilentlyContinue
+                    if ($?) {
+                        $removedCount++
+                    } else {
+                        $skippedCount++
+                    }
                 } catch {
-                    # Erreur silencieuse
+                    $skippedCount++
                 }
             }
         }
     } catch {
-        # Erreur silencieuse pour AppX (peut ne pas exister)
+        # Erreur silencieuse
     }
 
     Write-Host "`n[DEBLOAT] Office préinstallé: $removedCount applications désinstallées, $skippedCount absentes/ignorées" -ForegroundColor Green
