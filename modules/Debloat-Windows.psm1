@@ -498,62 +498,98 @@ function Optimize-WindowsFeatures {
 function Remove-OfficeLanguagePacks {
     <#
     .SYNOPSIS
-    Supprime les packs de langues Office inutiles pour garder uniquement Français et Anglais.
+    Supprime les applications Microsoft 365 et packs de langues Office préinstallés avec Windows.
 
     .DESCRIPTION
-    Cette fonction détecte et supprime tous les packs de langues Office préinstallés
-    sauf le français (fr-fr) et l'anglais (en-us). Cela libère de l'espace disque et
-    évite l'encombrement dans les menus Office.
+    Cette fonction désinstalle les applications Office préinstallées (Microsoft 365, OneNote, packs de langues)
+    qui ne sont pas des packages UWP mais des applications Win32 installées avec Windows 11.
+    Elle utilise winget pour les supprimer proprement avant l'installation de la suite Office 365 entreprise.
     #>
 
     [CmdletBinding()]
     param()
 
-    Write-Host "`n[DEBLOAT] Nettoyage des langues Office inutiles..." -ForegroundColor Cyan
+    Write-Host "`n[DEBLOAT] Suppression des applications Office préinstallées..." -ForegroundColor Cyan
 
-    # Langues à conserver (français et anglais)
-    $keepLanguages = @('fr-fr', 'en-us')
+    # Liste des applications Office préinstallées à supprimer via winget
+    $preinstalledOfficeApps = @(
+        # Packs de langues Microsoft 365 (installés avec Windows)
+        "Microsoft.365 - de-de"
+        "Microsoft.365 - en-us"
+        "Microsoft.365 - fr-fr"
+        "Microsoft.365 - it-it"
+        "Microsoft.365 - nl-nl"
+        "Microsoft.365 - es-es"
+        "Microsoft.365 - pt-br"
 
+        # Packs de langues OneNote
+        "Microsoft OneNote - de-de"
+        "Microsoft OneNote - en-us"
+        "Microsoft OneNote - fr-fr"
+        "Microsoft OneNote - it-it"
+        "Microsoft OneNote - nl-nl"
+        "Microsoft OneNote - es-es"
+        "Microsoft OneNote - pt-br"
+
+        # OneDrive consumer (sera remplacé par version entreprise)
+        "Microsoft OneDrive"
+    )
+
+    $removedCount = 0
+    $skippedCount = 0
+
+    foreach ($appName in $preinstalledOfficeApps) {
+        try {
+            # Vérifier si l'application est installée via winget
+            $installed = winget list --name "$appName" --accept-source-agreements 2>&1 | Out-String
+
+            if ($installed -match [regex]::Escape($appName)) {
+                Write-Host "  Désinstallation: $appName..." -ForegroundColor Yellow
+
+                # Désinstaller avec winget en mode silencieux
+                $result = winget uninstall --name "$appName" --silent --accept-source-agreements 2>&1 | Out-String
+
+                if ($LASTEXITCODE -eq 0 -or $result -match 'successfully uninstalled') {
+                    Write-Host "  [OK] $appName désinstallé" -ForegroundColor Green
+                    $removedCount++
+                } else {
+                    Write-Host "  [ATTENTION] Impossible de désinstaller $appName" -ForegroundColor Yellow
+                    $skippedCount++
+                }
+            } else {
+                $skippedCount++
+            }
+        }
+        catch {
+            Write-Host "  [ATTENTION] Erreur lors de la désinstallation de $appName : $($_.Exception.Message)" -ForegroundColor Yellow
+            $skippedCount++
+        }
+    }
+
+    # Gestion des packs de langues AppX (ancienne méthode, conservée pour compatibilité)
     try {
-        # Chercher les packs de langues Office installés via AppX
         $officeLanguages = Get-AppxPackage | Where-Object {
             $_.Name -like "*Microsoft.Office.Desktop.LanguagePack*" -or
             $_.Name -like "*Microsoft.LanguageExperiencePack*"
         }
 
-        $removed = 0
         foreach ($lang in $officeLanguages) {
-            # Vérifier si c'est une langue à garder
-            $isKeepLang = $false
-            foreach ($keepLang in $keepLanguages) {
-                if ($lang.Name -match $keepLang) {
-                    $isKeepLang = $true
-                    break
-                }
-            }
-
-            if (-not $isKeepLang) {
+            # Garder uniquement fr-fr et en-us
+            if ($lang.Name -notmatch 'fr-fr' -and $lang.Name -notmatch 'en-us') {
                 try {
-                    Write-Host "  -> Suppression de $($lang.Name)..." -ForegroundColor Gray
+                    Write-Host "  -> Suppression AppX: $($lang.Name)..." -ForegroundColor Gray
                     Remove-AppxPackage -Package $lang.PackageFullName -ErrorAction Stop
-                    $removed++
+                    $removedCount++
                 } catch {
-                    Write-Host "  [ERREUR] Échec: $($lang.Name)" -ForegroundColor Yellow
+                    Write-Host "  [ATTENTION] Échec AppX: $($lang.Name)" -ForegroundColor Yellow
                 }
-            } else {
-                Write-Host "  [OK] Conservation de $($lang.Name)" -ForegroundColor Green
             }
         }
-
-        if ($removed -gt 0) {
-            Write-Host "  [OK] $removed pack(s) de langues Office supprimés" -ForegroundColor Green
-        } else {
-            Write-Host "  [INFO] Aucun pack de langue à supprimer" -ForegroundColor Gray
-        }
-
     } catch {
-        Write-Host "  [ERREUR] Erreur lors du nettoyage des langues: $($_.Exception.Message)" -ForegroundColor Yellow
+        # Erreur silencieuse pour AppX (peut ne pas exister)
     }
+
+    Write-Host "`n[DEBLOAT] Office préinstallé: $removedCount applications désinstallées, $skippedCount absentes/ignorées" -ForegroundColor Green
 }
 
 function Invoke-WindowsDebloat {
