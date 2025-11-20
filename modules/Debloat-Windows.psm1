@@ -434,15 +434,19 @@ function Set-PrivacyRegistry {
                 New-Item -Path $setting.Path -Force | Out-Null
             }
 
-            # Appliquer la valeur du registre
-            Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force -ErrorAction Stop
+            # Appliquer la valeur du registre avec gestion silencieuse des erreurs de permission
+            $prevErrorAction = $ErrorActionPreference
+            $ErrorActionPreference = 'SilentlyContinue'
+            Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
+            $ErrorActionPreference = $prevErrorAction
 
-            Write-Host "  [OK] $($setting.Description) appliqué" -ForegroundColor Green
-            $appliedCount++
-        }
-        catch [System.UnauthorizedAccessException] {
-            Write-Host "  [ATTENTION] $($setting.Description) - Permission refusée (ignore)" -ForegroundColor Yellow
-            $appliedCount++  # Compter comme appliqué pour ne pas bloquer
+            if ($?) {
+                Write-Host "  [OK] $($setting.Description) appliqué" -ForegroundColor Green
+                $appliedCount++
+            } else {
+                Write-Host "  [ATTENTION] $($setting.Description) - Permission refusée (ignoré)" -ForegroundColor Yellow
+                $appliedCount++  # Compter comme appliqué pour ne pas bloquer
+            }
         }
         catch {
             Write-Host "  [ATTENTION] Erreur: $($setting.Description) - $($_.Exception.Message)" -ForegroundColor Red

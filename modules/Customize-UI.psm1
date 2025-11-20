@@ -486,8 +486,12 @@ function Set-Windows11Taskbar {
         # Masquer les widgets
         if ($HideWidgets) {
             try {
-                Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force -ErrorAction Stop
-                Write-Host "  [OK] Widgets masqués" -ForegroundColor Green
+                Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+                if ($?) {
+                    Write-Host "  [OK] Widgets masqués" -ForegroundColor Green
+                } else {
+                    Write-Host "  [ATTENTION] Impossible de masquer les widgets (permission refusée)" -ForegroundColor Yellow
+                }
             } catch {
                 Write-Host "  [ATTENTION] Impossible de masquer les widgets (permission refusée)" -ForegroundColor Yellow
             }
