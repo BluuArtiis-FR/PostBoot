@@ -544,8 +544,8 @@ function Remove-OfficeLanguagePacks {
             $installed = winget list --name "$appName" --accept-source-agreements 2>&1 | Out-String
 
             if ($installed -match [regex]::Escape($appName)) {
-                # Désinstaller avec winget en mode silencieux (sans affichage)
-                winget uninstall --name "$appName" --silent --accept-source-agreements 2>&1 | Out-Null
+                # Désinstaller avec winget en mode silencieux (sans interaction utilisateur)
+                winget uninstall --name "$appName" --silent --force --accept-source-agreements --disable-interactivity 2>&1 | Out-Null
 
                 if ($LASTEXITCODE -eq 0) {
                     $removedCount++
