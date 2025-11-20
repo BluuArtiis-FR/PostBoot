@@ -612,26 +612,12 @@ function Install-WingetApp {
 
     Write-ScriptLog "Installation: $($App.name)..." -Level INFO
 
-    # Avertissement spécial pour Office 365 (installation longue)
-    if ($App.name -match "Office" -or $App.winget -match "Office") {
-        Write-ScriptLog "[INFO] Office 365 est une installation volumineuse (3 GB)" -Level INFO
-        Write-ScriptLog "[INFO] L'installation peut prendre 15-30 minutes, veuillez patienter..." -Level INFO
-        Write-Host "`n[ATTENTION] Installation Office en cours - NE PAS INTERROMPRE" -ForegroundColor Yellow
-        Write-Host "Progression visible dans le Gestionnaire de tâches (winget.exe / OfficeClickToRun.exe)`n" -ForegroundColor Cyan
-    }
-
     $maxRetries = 3
     $retryCount = 0
 
     while ($retryCount -lt $maxRetries) {
         try {
-            # Pour Office, ne pas utiliser --silent pour voir la progression
-            if ($App.name -match "Office" -or $App.winget -match "Office") {
-                Write-Host "[INFO] Lancement de l'installation Office (affichage progression)..." -ForegroundColor Cyan
-                $output = winget install --id $App.winget --accept-package-agreements --accept-source-agreements 2>&1 | Out-String
-            } else {
-                $output = winget install --id $App.winget --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-String
-            }
+            $output = winget install --id $App.winget --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-String
 
             if ($LASTEXITCODE -eq 0 -or $output -match 'successfully installed') {
                 Write-ScriptLog "[OK] $($App.name) installé" -Level SUCCESS -Metadata @{ Winget = $App.winget; Retries = $retryCount }
