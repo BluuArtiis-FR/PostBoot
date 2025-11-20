@@ -540,35 +540,35 @@ function Remove-OfficeLanguagePacks {
 
     foreach ($appName in $preinstalledOfficeApps) {
         try {
-            # Chercher le package MSI installé
-            $package = Get-Package -Name "*$appName*" -ErrorAction SilentlyContinue | Select-Object -First 1
+            # Chercher dans le registre Windows (méthode la plus fiable)
+            $uninstallKeys = @(
+                "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
+                "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+            )
 
-            if ($package) {
-                # Extraire le ProductCode du MSI si disponible
-                $uninstallString = $package.Meta.Attributes["UninstallString"]
+            $found = $false
+            foreach ($key in $uninstallKeys) {
+                $apps = Get-ItemProperty $key -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "*$appName*" }
 
-                if ($uninstallString -and $uninstallString -match '\{[A-Z0-9\-]+\}') {
-                    $productCode = $matches[0]
+                foreach ($app in $apps) {
+                    if ($app.UninstallString) {
+                        $uninstallCmd = $app.UninstallString
 
-                    # Désinstaller via msiexec en mode totalement silencieux
-                    Start-Process -FilePath "msiexec.exe" -ArgumentList "/x $productCode /qn /norestart" -Wait -WindowStyle Hidden -ErrorAction SilentlyContinue
-
-                    if ($?) {
-                        $removedCount++
-                    } else {
-                        $skippedCount++
-                    }
-                } else {
-                    # Fallback: essayer avec winget mais en supprimant l'interactivité via Start-Process
-                    $process = Start-Process -FilePath "winget.exe" -ArgumentList "uninstall --name `"$appName`" --silent --force --accept-source-agreements" -Wait -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
-
-                    if ($process.ExitCode -eq 0) {
-                        $removedCount++
-                    } else {
-                        $skippedCount++
+                        # Si c'est un MSI (contient msiexec ou un GUID)
+                        if ($uninstallCmd -match 'msiexec' -or $uninstallCmd -match '\{[A-Z0-9\-]+\}') {
+                            if ($uninstallCmd -match '\{[A-Z0-9\-]+\}') {
+                                $productCode = $matches[0]
+                                # Désinstaller silencieusement via msiexec
+                                Start-Process "msiexec.exe" -ArgumentList "/x `"$productCode`" /qn /norestart" -Wait -NoNewWindow -ErrorAction SilentlyContinue
+                                $found = $true
+                                $removedCount++
+                            }
+                        }
                     }
                 }
-            } else {
+            }
+
+            if (-not $found) {
                 $skippedCount++
             }
         }
