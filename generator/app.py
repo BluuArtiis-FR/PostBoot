@@ -481,6 +481,16 @@ function Get-FileHash-Safe {
     #>
     param([string]$FilePath)
 
+    if ([string]::IsNullOrWhiteSpace($FilePath)) {
+        Write-ScriptLog "FilePath vide, impossible de calculer le hash" -Level WARNING
+        return $null
+    }
+
+    if (-not (Test-Path $FilePath)) {
+        Write-ScriptLog "Fichier introuvable: $FilePath" -Level WARNING
+        return $null
+    }
+
     try {
         $hash = Get-FileHash -Path $FilePath -Algorithm SHA256 -ErrorAction Stop
         return $hash.Hash
