@@ -54,10 +54,15 @@ function Remove-BloatwareApps {
         "Microsoft.Messaging"
         "Microsoft.SkypeApp"
 
-        # Applications Office Hub
+        # Applications Office Hub et Microsoft 365
         "Microsoft.MicrosoftOfficeHub"
         "Microsoft.Office.OneNote"              # Si OneNote desktop installé
         "Microsoft.Office.Sway"
+        "Microsoft.MicrosoftEdge.Stable"        # Edge (si Chrome/Firefox installé)
+        "Microsoft.OneDrive"                    # OneDrive (si non utilisé)
+        "Microsoft.OneNote"                     # OneNote UWP
+        "Microsoft.Outlook"                     # Outlook UWP
+        "Microsoft.365"                         # Application Microsoft 365
 
         # Jeux et divertissement
         "Microsoft.MicrosoftSolitaireCollection"
@@ -431,10 +436,14 @@ function Set-PrivacyRegistry {
             }
 
             # Appliquer la valeur du registre
-            Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
+            Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force -ErrorAction Stop
 
             Write-Host "  [OK] $($setting.Description) appliqué" -ForegroundColor Green
             $appliedCount++
+        }
+        catch [System.UnauthorizedAccessException] {
+            Write-Host "  [ATTENTION] $($setting.Description) - Permission refusée (ignore)" -ForegroundColor Yellow
+            $appliedCount++  # Compter comme appliqué pour ne pas bloquer
         }
         catch {
             Write-Host "  [ATTENTION] Erreur: $($setting.Description) - $($_.Exception.Message)" -ForegroundColor Red

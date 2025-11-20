@@ -498,8 +498,12 @@ function Set-Windows11Taskbar {
 
         # Masquer les widgets
         if ($HideWidgets) {
-            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force
-            Write-Host "  [OK] Widgets masqués" -ForegroundColor Green
+            try {
+                Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force -ErrorAction Stop
+                Write-Host "  [OK] Widgets masqués" -ForegroundColor Green
+            } catch {
+                Write-Host "  [ATTENTION] Impossible de masquer les widgets (permission refusée)" -ForegroundColor Yellow
+            }
         }
 
         # Masquer Task View
@@ -691,26 +695,28 @@ function Set-TenorWallpaper {
 
         $wallpaperPath = Join-Path $wallpaperDir "tenor_wallpaper.jpg"
 
-        # Télécharger l'image
-        Write-Host "  -> Téléchargement de l'image..." -ForegroundColor Cyan
-        try {
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
-            Invoke-WebRequest -Uri $WallpaperUrl -OutFile $wallpaperPath -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
-            Write-Host "  [OK] Image téléchargée" -ForegroundColor Green
-        } catch {
-            Write-Host "  [ATTENTION] Échec téléchargement, utilisation de l'image par défaut Windows" -ForegroundColor Yellow
-            return $false
+        # Utiliser l'image par défaut Windows (C:\Windows\Web\Wallpaper\Windows\img0.jpg)
+        # OU télécharger depuis une URL si fournie
+        if ($WallpaperUrl -ne "https://raw.githubusercontent.com/tenorsolutions/postboot/main/assets/wallpaper.jpg") {
+            Write-Host "  -> Téléchargement de l'image personnalisée..." -ForegroundColor Cyan
+            try {
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+                Invoke-WebRequest -Uri $WallpaperUrl -OutFile $wallpaperPath -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
+                Write-Host "  [OK] Image téléchargée" -ForegroundColor Green
+            } catch {
+                Write-Host "  [ATTENTION] Échec téléchargement, utilisation de l'image Windows par défaut" -ForegroundColor Yellow
+                # Utiliser l'image par défaut Windows
+                $wallpaperPath = "C:\Windows\Web\Wallpaper\Windows\img0.jpg"
+            }
+        } else {
+            # Pas d'URL personnalisée fournie, utiliser l'image Windows par défaut
+            Write-Host "  [INFO] Utilisation du fond d'écran Windows par défaut (bleu)" -ForegroundColor Cyan
+            $wallpaperPath = "C:\Windows\Web\Wallpaper\Windows\img0.jpg"
         }
 
         # Vérifier que le fichier existe et est valide
         if (-not (Test-Path $wallpaperPath)) {
-            Write-Host "  [ATTENTION] Fichier image introuvable" -ForegroundColor Yellow
-            return $false
-        }
-
-        $fileSize = (Get-Item $wallpaperPath).Length
-        if ($fileSize -lt 10KB) {
-            Write-Host "  [ATTENTION] Fichier image trop petit (possible erreur)" -ForegroundColor Yellow
+            Write-Host "  [ERREUR] Fichier image introuvable: $wallpaperPath" -ForegroundColor Red
             return $false
         }
 
