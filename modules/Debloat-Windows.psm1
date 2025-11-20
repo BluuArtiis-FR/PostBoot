@@ -514,9 +514,42 @@ function Remove-OfficeLanguagePacks {
     $removedCount = 0
     $skippedCount = 0
 
-    # Pattern regex pour identifier les applications Office à supprimer
-    # Inclut: Microsoft 365 (toutes langues), OneNote (toutes langues), OneDrive consumer
-    $officePattern = "Microsoft\.365|Microsoft\.Office\.OneNote|Microsoft\.MicrosoftOfficeHub|Microsoft\.OneNote|Microsoft\.OneDrive"
+    # === PARTIE 1: Applications Win32 MSI (dans Programmes et fonctionnalités) ===
+    # Pattern pour identifier les applications Office MSI (Microsoft 365, OneNote avec packs de langues)
+    $msiOfficePattern = "Microsoft\.365|Microsoft OneNote"
+
+    try {
+        # Chercher dans le registre Windows (applications MSI)
+        $uninstallKeys = @(
+            "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
+            "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+        )
+
+        foreach ($key in $uninstallKeys) {
+            $apps = Get-ItemProperty $key -ErrorAction SilentlyContinue | Where-Object {
+                $_.DisplayName -and $_.DisplayName -match $msiOfficePattern
+            }
+
+            foreach ($app in $apps) {
+                if ($app.UninstallString -and $app.UninstallString -match '\{[A-Z0-9\-]+\}') {
+                    $productCode = $matches[0]
+                    # Désinstaller silencieusement via msiexec
+                    Start-Process "msiexec.exe" -ArgumentList "/x `"$productCode`" /qn /norestart" -Wait -NoNewWindow -ErrorAction SilentlyContinue
+                    if ($?) {
+                        $removedCount++
+                    } else {
+                        $skippedCount++
+                    }
+                }
+            }
+        }
+    } catch {
+        # Erreur silencieuse
+    }
+
+    # === PARTIE 2: Applications UWP AppX (apps Microsoft Store) ===
+    # Pattern pour identifier les applications Office UWP
+    $appxOfficePattern = "Microsoft\.Office\.OneNote|Microsoft\.MicrosoftOfficeHub|Microsoft\.OneNote|Microsoft\.OneDrive"
 
     try {
         # Récupérer toutes les applications AppX pour tous les utilisateurs
@@ -524,7 +557,7 @@ function Remove-OfficeLanguagePacks {
 
         foreach ($app in $appxPackages) {
             # Vérifier si le nom correspond au pattern Office
-            if ($app.Name -match $officePattern) {
+            if ($app.Name -match $appxOfficePattern) {
                 try {
                     Remove-AppxPackage -Package $app.PackageFullName -AllUsers -ErrorAction SilentlyContinue
                     if ($?) {
