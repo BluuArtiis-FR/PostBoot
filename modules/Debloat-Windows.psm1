@@ -58,7 +58,6 @@ function Remove-BloatwareApps {
         "Microsoft.MicrosoftOfficeHub"
         "Microsoft.Office.OneNote"              # Si OneNote desktop installé
         "Microsoft.Office.Sway"
-        "Microsoft.MicrosoftEdge.Stable"        # Edge (si Chrome/Firefox installé)
         "Microsoft.OneDrive"                    # OneDrive (si non utilisé)
         "Microsoft.OneNote"                     # OneNote UWP
         "Microsoft.Outlook"                     # Outlook UWP
