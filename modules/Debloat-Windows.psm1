@@ -540,20 +540,16 @@ function Remove-OfficeLanguagePacks {
 
     foreach ($appName in $preinstalledOfficeApps) {
         try {
-            # Vérifier si l'application est installée via winget
+            # Vérifier si l'application est installée via winget (mode silencieux)
             $installed = winget list --name "$appName" --accept-source-agreements 2>&1 | Out-String
 
             if ($installed -match [regex]::Escape($appName)) {
-                Write-Host "  Désinstallation: $appName..." -ForegroundColor Yellow
+                # Désinstaller avec winget en mode silencieux (sans affichage)
+                winget uninstall --name "$appName" --silent --accept-source-agreements 2>&1 | Out-Null
 
-                # Désinstaller avec winget en mode silencieux
-                $result = winget uninstall --name "$appName" --silent --accept-source-agreements 2>&1 | Out-String
-
-                if ($LASTEXITCODE -eq 0 -or $result -match 'successfully uninstalled') {
-                    Write-Host "  [OK] $appName désinstallé" -ForegroundColor Green
+                if ($LASTEXITCODE -eq 0) {
                     $removedCount++
                 } else {
-                    Write-Host "  [ATTENTION] Impossible de désinstaller $appName" -ForegroundColor Yellow
                     $skippedCount++
                 }
             } else {
@@ -561,7 +557,6 @@ function Remove-OfficeLanguagePacks {
             }
         }
         catch {
-            Write-Host "  [ATTENTION] Erreur lors de la désinstallation de $appName : $($_.Exception.Message)" -ForegroundColor Yellow
             $skippedCount++
         }
     }
@@ -577,11 +572,10 @@ function Remove-OfficeLanguagePacks {
             # Garder uniquement fr-fr et en-us
             if ($lang.Name -notmatch 'fr-fr' -and $lang.Name -notmatch 'en-us') {
                 try {
-                    Write-Host "  -> Suppression AppX: $($lang.Name)..." -ForegroundColor Gray
-                    Remove-AppxPackage -Package $lang.PackageFullName -ErrorAction Stop
-                    $removedCount++
+                    Remove-AppxPackage -Package $lang.PackageFullName -ErrorAction SilentlyContinue
+                    if ($?) { $removedCount++ }
                 } catch {
-                    Write-Host "  [ATTENTION] Échec AppX: $($lang.Name)" -ForegroundColor Yellow
+                    # Erreur silencieuse
                 }
             }
         }
