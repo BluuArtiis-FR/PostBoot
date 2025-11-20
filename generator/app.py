@@ -955,7 +955,15 @@ try {{
     foreach ($app in $Global:EmbeddedConfig.apps.master) {{
         $currentApp++
         $percentComplete = [math]::Round(($currentApp / $totalApps) * 100)
-        Write-Progress -Activity "Installation des applications" -Status "Installation: $($app.name) ($currentApp/$totalApps)" -PercentComplete $percentComplete
+
+        # Message spécial pour Office 365 (installation longue)
+        $statusMessage = if ($app.name -match "Office" -or $app.winget -match "Office") {{
+            "Installation: $($app.name) ($currentApp/$totalApps) - Téléchargement 3 GB, peut prendre 15-30 min..."
+        }} else {{
+            "Installation: $($app.name) ($currentApp/$totalApps)"
+        }}
+
+        Write-Progress -Activity "Installation des applications" -Status $statusMessage -PercentComplete $percentComplete
 
         if ($app.winget) {{
             $success = Install-WingetApp -App $app
@@ -970,7 +978,15 @@ try {{
     foreach ($app in $Global:EmbeddedConfig.apps.profile) {{
         $currentApp++
         $percentComplete = [math]::Round(($currentApp / $totalApps) * 100)
-        Write-Progress -Activity "Installation des applications" -Status "Installation: $($app.name) ($currentApp/$totalApps)" -PercentComplete $percentComplete
+
+        # Message spécial pour Office 365 (installation longue)
+        $statusMessage = if ($app.name -match "Office" -or $app.winget -match "Office") {{
+            "Installation: $($app.name) ($currentApp/$totalApps) - Téléchargement 3 GB, peut prendre 15-30 min..."
+        }} else {{
+            "Installation: $($app.name) ($currentApp/$totalApps)"
+        }}
+
+        Write-Progress -Activity "Installation des applications" -Status $statusMessage -PercentComplete $percentComplete
 
         if ($app.winget) {{
             $success = Install-WingetApp -App $app
