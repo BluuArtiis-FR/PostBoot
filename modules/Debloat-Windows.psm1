@@ -540,17 +540,33 @@ function Remove-OfficeLanguagePacks {
 
     foreach ($appName in $preinstalledOfficeApps) {
         try {
-            # Vérifier si l'application est installée via winget (mode silencieux)
-            $installed = winget list --name "$appName" --accept-source-agreements 2>&1 | Out-String
+            # Chercher le package MSI installé
+            $package = Get-Package -Name "*$appName*" -ErrorAction SilentlyContinue | Select-Object -First 1
 
-            if ($installed -match [regex]::Escape($appName)) {
-                # Désinstaller avec winget en mode silencieux (sans interaction utilisateur)
-                winget uninstall --name "$appName" --silent --force --accept-source-agreements --disable-interactivity 2>&1 | Out-Null
+            if ($package) {
+                # Extraire le ProductCode du MSI si disponible
+                $uninstallString = $package.Meta.Attributes["UninstallString"]
 
-                if ($LASTEXITCODE -eq 0) {
-                    $removedCount++
+                if ($uninstallString -and $uninstallString -match '\{[A-Z0-9\-]+\}') {
+                    $productCode = $matches[0]
+
+                    # Désinstaller via msiexec en mode totalement silencieux
+                    Start-Process -FilePath "msiexec.exe" -ArgumentList "/x $productCode /qn /norestart" -Wait -WindowStyle Hidden -ErrorAction SilentlyContinue
+
+                    if ($?) {
+                        $removedCount++
+                    } else {
+                        $skippedCount++
+                    }
                 } else {
-                    $skippedCount++
+                    # Fallback: essayer avec winget mais en supprimant l'interactivité via Start-Process
+                    $process = Start-Process -FilePath "winget.exe" -ArgumentList "uninstall --name `"$appName`" --silent --force --accept-source-agreements" -Wait -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
+
+                    if ($process.ExitCode -eq 0) {
+                        $removedCount++
+                    } else {
+                        $skippedCount++
+                    }
                 }
             } else {
                 $skippedCount++
