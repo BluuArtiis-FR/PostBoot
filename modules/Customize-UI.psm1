@@ -412,19 +412,6 @@ function Invoke-UICustomizations {
             }
         }
 
-        # Masquer éléments du volet de navigation
-        if ($Options.ContainsKey("HideOneDriveNav")) {
-            $navParams = @{}
-            if ($Options.HideOneDriveNav) { $navParams.HideOneDrive = $true }
-
-            if ($navParams.Count -gt 0) {
-                if (Hide-NavigationPaneItems @navParams) {
-                    $results.Success += "NavigationPane"
-                } else {
-                    $results.Failed += "NavigationPane"
-                }
-            }
-        }
 
         # Fond d'écran et écran de verrouillage Tenor
         if ($Options.ContainsKey("TenorWallpaper") -and $Options.TenorWallpaper) {

@@ -697,26 +697,6 @@ const Optimizations = () => {
                   </label>
                 </div>
 
-                {/* Masquer OneDrive navigation */}
-                <div className="bg-white border border-purple-200 rounded-lg p-4">
-                  <label className="flex items-start space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={userConfig.modules.ui.HideOneDriveNav || false}
-                      onChange={(e) => updateModule('ui', { HideOneDriveNav: e.target.checked })}
-                      className="checkbox mt-1"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-900">Masquer OneDrive du volet navigation</span>
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">🧹 Épuré</span>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        Retire OneDrive du volet de gauche de l'explorateur
-                      </p>
-                    </div>
-                  </label>
-                </div>
               </div>
             </div>
           </div>

@@ -1343,8 +1343,7 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
         'Windows10ContextMenu': ui_module.get('Windows10ContextMenu', False),
         'HideWidgets': ui_module.get('HideWidgets', False),
         'HideTaskView': ui_module.get('HideTaskView', False),
-        'EnableEndTask': ui_module.get('EnableEndTask', False),
-        'HideOneDriveNav': ui_module.get('HideOneDriveNav', False)
+        'EnableEndTask': ui_module.get('EnableEndTask', False)
     } if 'ui' in modules else {}
 
     return {

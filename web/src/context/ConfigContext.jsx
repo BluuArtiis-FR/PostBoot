@@ -53,7 +53,6 @@ export const ConfigProvider = ({ children }) => {
         HideWidgets: false,
         HideTaskView: false,
         EnableEndTask: false,
-        HideOneDriveNav: false,
       },
     },
   });
