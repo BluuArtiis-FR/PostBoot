@@ -461,12 +461,22 @@ function Test-AppInstalled {
             'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
         )
 
-        foreach ($path in $registryPaths) {
-            $installed = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue |
-                         Where-Object { $_.DisplayName -like "*$AppName*" }
+        # Patterns de recherche alternatifs pour certaines applications
+        $searchPatterns = @($AppName)
 
-            if ($installed) {
-                return $true
+        # Office 365 a plusieurs noms possibles dans le registre
+        if ($AppName -like "*Office*365*" -or $AppName -like "*Microsoft*Office*") {
+            $searchPatterns += @("Microsoft 365 Apps", "Office 365", "Microsoft Office")
+        }
+
+        foreach ($path in $registryPaths) {
+            foreach ($pattern in $searchPatterns) {
+                $installed = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue |
+                             Where-Object { $_.DisplayName -like "*$pattern*" }
+
+                if ($installed) {
+                    return $true
+                }
             }
         }
     }
