@@ -516,7 +516,7 @@ function Remove-OfficeLanguagePacks {
 
     # === PARTIE 1: Applications Win32 MSI (dans Programmes et fonctionnalités) ===
     # Pattern pour identifier les applications Office MSI (Microsoft 365, OneNote avec packs de langues)
-    $msiOfficePattern = "Microsoft\.365|Microsoft OneNote"
+    $msiOfficePattern = "Microsoft 365|Microsoft OneNote"
 
     try {
         # Chercher dans le registre Windows (applications MSI)
