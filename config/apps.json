@@ -137,7 +137,7 @@
       "description": "Traduction et gestion des messages EDI"
     },
     "gestiontemps": {
-      "name": "Gestion Temps",
+      "name": "GestionTemps",
       "url": "http://85.90.48.117/GestionTemps/INSTALL/INSTALL.EXE",
       "size": "40 MB",
       "category": "Métier TENOR",
