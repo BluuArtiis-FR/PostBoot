@@ -664,6 +664,20 @@ function Install-WingetApp {
         }
     }
 
+    # Si winget a échoué et qu'une URL de fallback est disponible, essayer l'installation directe
+    if ($App.fallbackUrl) {
+        Write-ScriptLog "[INFO] Tentative d'installation via URL de fallback..." -Level INFO
+
+        # Créer un objet app temporaire pour Install-CustomApp
+        $fallbackApp = @{
+            name = $App.name
+            url = $App.fallbackUrl
+            installArgs = $App.installArgs
+        }
+
+        return Install-CustomApp -App $fallbackApp
+    }
+
     Write-ScriptLog "[ERREUR] Échec $($App.name) après $maxRetries tentatives" -Level ERROR
     return $false
 }

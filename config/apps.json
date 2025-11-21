@@ -153,6 +153,7 @@
     "filezilla": {
       "name": "FileZilla",
       "winget": "FileZilla.FileZilla",
+      "fallbackUrl": "https://download.filezilla-project.org/client/FileZilla_3.69.5_win64_sponsored2-setup.exe",
       "size": "15 MB",
       "category": "FTP",
       "description": "Client FTP/SFTP"
