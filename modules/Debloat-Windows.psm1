@@ -515,34 +515,47 @@ function Remove-OfficeLanguagePacks {
     $skippedCount = 0
 
     # === PARTIE 1: Applications Win32 MSI (dans Programmes et fonctionnalités) ===
-    # Pattern pour identifier les applications Office MSI (Microsoft 365, OneNote avec packs de langues)
-    $msiOfficePattern = "Microsoft 365|Microsoft OneNote"
-
+    # Désinstallation des applications Microsoft 365 et OneNote préinstallées
     try {
-        # Chercher dans le registre Windows (applications MSI)
-        $uninstallKeys = @(
-            "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
-            "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-        )
+        # Microsoft 365 (tous les packs de langues)
+        Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* -ErrorAction SilentlyContinue |
+            Where-Object { $_.DisplayName -like "Microsoft 365*" } |
+            Select-Object -ExpandProperty UninstallString |
+            ForEach-Object {
+                try {
+                    # Parser l'UninstallString pour extraire l'exécutable et les arguments
+                    $exe = ($_ -split '"')[1]
+                    $arguments = ($_ -split '"')[2] + " displaylevel=False"
 
-        foreach ($key in $uninstallKeys) {
-            $apps = Get-ItemProperty $key -ErrorAction SilentlyContinue | Where-Object {
-                $_.DisplayName -and $_.DisplayName -match $msiOfficePattern
-            }
-
-            foreach ($app in $apps) {
-                if ($app.UninstallString -and $app.UninstallString -match '\{[A-Z0-9\-]+\}') {
-                    $productCode = $matches[0]
-                    # Désinstaller silencieusement via msiexec
-                    Start-Process "msiexec.exe" -ArgumentList "/x `"$productCode`" /qn /norestart" -Wait -NoNewWindow -ErrorAction SilentlyContinue
+                    # Désinstaller silencieusement
+                    Start-Process -FilePath $exe -ArgumentList $arguments -Wait -NoNewWindow -ErrorAction SilentlyContinue
                     if ($?) {
                         $removedCount++
-                    } else {
-                        $skippedCount++
                     }
+                } catch {
+                    # Erreur silencieuse
                 }
             }
-        }
+
+        # Microsoft OneNote (tous les packs de langues)
+        Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* -ErrorAction SilentlyContinue |
+            Where-Object { $_.DisplayName -like "Microsoft OneNote*" } |
+            Select-Object -ExpandProperty UninstallString |
+            ForEach-Object {
+                try {
+                    # Parser l'UninstallString pour extraire l'exécutable et les arguments
+                    $exe = ($_ -split '"')[1]
+                    $arguments = ($_ -split '"')[2] + " displaylevel=False"
+
+                    # Désinstaller silencieusement
+                    Start-Process -FilePath $exe -ArgumentList $arguments -Wait -NoNewWindow -ErrorAction SilentlyContinue
+                    if ($?) {
+                        $removedCount++
+                    }
+                } catch {
+                    # Erreur silencieuse
+                }
+            }
     } catch {
         # Erreur silencieuse
     }
