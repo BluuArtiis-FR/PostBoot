@@ -764,6 +764,34 @@ function Install-CustomApp {
             }
         }
 
+        # Si l'URL est un répertoire avec filePattern, chercher le fichier correspondant
+        if ($App.filePattern -and $downloadUrl.EndsWith('/')) {
+            try {
+                $dirContent = Invoke-WebRequest -Uri $downloadUrl -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
+                $pattern = $App.filePattern -replace '\*', '.*'
+                $matches = [regex]::Matches($dirContent.Content, 'href="([^"]+)"')
+                $foundFile = $null
+
+                foreach ($match in $matches) {
+                    $href = $match.Groups[1].Value
+                    if ($href -match $pattern -and $href -notmatch '^\.\.' -and $href -notmatch '^/') {
+                        $foundFile = $href
+                        break
+                    }
+                }
+
+                if ($foundFile) {
+                    $downloadUrl = $downloadUrl + $foundFile
+                    Write-ScriptLog "[OK] Fichier trouvé: $foundFile" -Level SUCCESS
+                } else {
+                    throw "Aucun fichier correspondant à $($App.filePattern) trouvé dans $downloadUrl"
+                }
+            } catch {
+                Write-ScriptLog "[ERREUR] Impossible de lister le répertoire: $_" -Level ERROR
+                throw $_
+            }
+        }
+
         $uri = [System.Uri]$downloadUrl
         $fileName = Split-Path $uri.LocalPath -Leaf
         if (-not $fileName -or $fileName -notmatch '\\.[a-zA-Z0-9]+$') {

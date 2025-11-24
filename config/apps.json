@@ -51,13 +51,13 @@
     },
     {
       "name": "VPN Stormshield",
-      "manualUrl": "https://vpn.stormshield.eu/",
+      "url": "http://85.90.48.117/vpnssl/",
+      "filePattern": "*.msi",
       "size": "45 MB",
       "category": "VPN",
       "required": true,
       "preselected": true,
-      "installArgs": "/qn /norestart REBOOT=ReallySuppress",
-      "note": "INSTALLATION MANUELLE REQUISE - Le téléchargement automatique n'est pas possible. Télécharger la dernière version depuis https://vpn.stormshield.eu/ et installer manuellement."
+      "installArgs": "/qn /norestart REBOOT=ReallySuppress"
     },
     {
       "name": "Microsoft PowerToys",
