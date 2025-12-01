@@ -9,11 +9,12 @@
   "master": [
     {
       "name": "Microsoft Office 365",
-      "winget": "Microsoft.Office",
       "size": "3 GB",
       "category": "Bureautique",
       "required": true,
-      "preselected": true
+      "preselected": true,
+      "customInstall": true,
+      "installScript": "# Installation Microsoft Office 365 via Office Deployment Tool\n$odtUrl = 'https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_17830-20162.exe'\n$odtPath = \"$env:TEMP\\ODTSetup.exe\"\n$odtExtractPath = \"$env:TEMP\\ODT\"\n$configXml = \"$odtExtractPath\\config.xml\"\n\nWrite-Host \"  Téléchargement Office Deployment Tool...\" -ForegroundColor Gray\nInvoke-WebRequest -Uri $odtUrl -OutFile $odtPath -UseBasicParsing\n\nWrite-Host \"  Extraction ODT...\" -ForegroundColor Gray\nNew-Item -Path $odtExtractPath -ItemType Directory -Force | Out-Null\nStart-Process -FilePath $odtPath -ArgumentList \"/quiet\",\"/extract:$odtExtractPath\" -Wait -NoNewWindow\n\n# Configuration Office 365 Business\n$xmlContent = @'\n<Configuration>\n  <Add OfficeClientEdition=\"64\" Channel=\"Current\">\n    <Product ID=\"O365BusinessRetail\">\n      <Language ID=\"fr-fr\" />\n      <ExcludeApp ID=\"Groove\" />\n      <ExcludeApp ID=\"Lync\" />\n    </Product>\n  </Add>\n  <Display Level=\"None\" AcceptEULA=\"TRUE\" />\n  <Property Name=\"AUTOACTIVATE\" Value=\"1\" />\n</Configuration>\n'@\n\nSet-Content -Path $configXml -Value $xmlContent -Encoding UTF8\n\nWrite-Host \"  Installation Office 365 (15-30 minutes)...\" -ForegroundColor Yellow\n$setupPath = \"$odtExtractPath\\setup.exe\"\n$installProc = Start-Process -FilePath $setupPath -ArgumentList \"/configure\",\"`\"$configXml`\"\" -Wait -NoNewWindow -PassThru\n\nif ($installProc.ExitCode -eq 0) {\n    Write-Host \"    [OK] Office 365 installé\" -ForegroundColor Green\n    # Nettoyage\n    Remove-Item -Path $odtPath -Force -ErrorAction SilentlyContinue\n    Remove-Item -Path $odtExtractPath -Recurse -Force -ErrorAction SilentlyContinue\n} else {\n    Write-Host \"    [ERREUR] Échec installation Office 365 (Exit Code: $($installProc.ExitCode))\" -ForegroundColor Red\n}\n"
     },
     {
       "name": "Microsoft Teams",
