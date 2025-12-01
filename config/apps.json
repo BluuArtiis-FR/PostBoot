@@ -90,14 +90,6 @@
       "preselected": true
     },
     {
-      "name": "Microsoft OneDrive Entreprise",
-      "winget": "Microsoft.OneDrive",
-      "size": "100 MB",
-      "category": "Cloud",
-      "required": true,
-      "preselected": true
-    },
-    {
       "name": "7-Zip",
       "winget": "7zip.7zip",
       "size": "2 MB",

@@ -8,11 +8,11 @@ Ce document détaille **exactement** ce qui est proposé par chaque profil et to
 
 ## 📦 Applications Master (Obligatoires pour tous)
 
-Ces 13 applications sont **précochées automatiquement** dans tous les profils (sauf Custom) :
+Ces 12 applications sont **précochées automatiquement** dans tous les profils (sauf Custom) :
 
 | Application | Taille | Catégorie | Description |
 |-------------|--------|-----------|-------------|
-| **Microsoft Office 365** | 3 GB | Bureautique | Suite bureautique complète (Word, Excel, PowerPoint, Outlook) |
+| **Microsoft Office 365** | 3 GB | Bureautique | Suite bureautique complète (Word, Excel, PowerPoint, Outlook, OneDrive) |
 | **Microsoft Teams** | 150 MB | Communication | Plateforme collaboration et visioconférence |
 | **Notepad++** | 8 MB | Éditeur | Éditeur de texte avancé avec coloration syntaxique |
 | **Visual Studio Code** | 85 MB | Éditeur | Éditeur de code Microsoft, extensible via plugins |
@@ -21,12 +21,11 @@ Ces 13 applications sont **précochées automatiquement** dans tous les profils 
 | **Microsoft PowerToys** | 25 MB | Utilitaires | Ensemble d'outils système (FancyZones, PowerRename, etc.) |
 | **PDF Gear** | 150 MB | PDF | Lecteur et éditeur PDF gratuit |
 | **Winget** | 5 MB | Gestionnaire | Gestionnaire de paquets Windows (App Installer) |
-| **Microsoft OneDrive** | 100 MB | Cloud | Stockage cloud synchronisé entreprise |
 | **7-Zip** | 2 MB | Compression | Logiciel de compression/décompression archives |
 | **VAULT** | <1 MB | PWA | Progressive Web App - Tenor Password Manager |
 | **DOCS** | <1 MB | PWA | Progressive Web App - Tenor Documentation |
 
-**Total Master** : ~3.6 GB
+**Total Master** : ~3.5 GB (OneDrive Entreprise inclus dans Office 365)
 
 ---
 

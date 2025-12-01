@@ -234,7 +234,7 @@ curl -X POST http://localhost:5000/api/generate \
 
 ### 🌟 Applications Master (obligatoires)
 
-- Microsoft Office 365
+- Microsoft Office 365 (inclut OneDrive Entreprise)
 - Microsoft Teams
 - Notepad++
 - Visual Studio Code
@@ -243,7 +243,6 @@ curl -X POST http://localhost:5000/api/generate \
 - Microsoft PowerToys
 - PDF Gear
 - Winget
-- Microsoft OneDrive
 - 7-Zip
 - **VAULT** (PWA Tenor Password Manager)
 - **DOCS** (PWA Tenor Documentation)
