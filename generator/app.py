@@ -1664,9 +1664,19 @@ def generate():
         profile_name = user_config.get('profile', user_config.get('custom_name', 'Custom'))
 
         logger.info(f"Requête génération - Profil: {profile_name} - Types: {script_types} - IP: {request.remote_addr}")
+        logger.debug(f"User config reçue: master_apps={len(user_config.get('master_apps', []))}, profile_apps={len(user_config.get('profile_apps', []))}, optional_apps={len(user_config.get('optional_apps', []))}")
 
         # Transformer la config utilisateur en config pour le générateur
         api_config = transform_user_config_to_api_config(user_config, script_types)
+
+        logger.debug(f"API config générée: master={len(api_config.get('apps', {}).get('master', []))}, profile={len(api_config.get('apps', {}).get('profile', []))}")
+
+        # Validation supplémentaire : au moins 1 app si 'installation' est demandé
+        if 'installation' in script_types:
+            total_apps = len(api_config.get('apps', {}).get('master', [])) + len(api_config.get('apps', {}).get('profile', []))
+            if total_apps == 0:
+                logger.warning(f"Aucune application sélectionnée pour le profil {profile_name}")
+                return jsonify({'success': False, 'error': 'Vous devez sélectionner au moins une application'}), 400
 
         # Gérer diagnostic (à implémenter plus tard)
         include_diagnostic = 'diagnostic' in script_types

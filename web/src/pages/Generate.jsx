@@ -120,7 +120,25 @@ const Generate = () => {
       navigate('/success', { state: { filename } });
     } catch (err) {
       console.error('Erreur génération:', err);
-      setError('Erreur lors de la génération du script. Veuillez réessayer.');
+
+      // Extraire le message d'erreur du backend si disponible
+      let errorMessage = 'Erreur lors de la génération du script. Veuillez réessayer.';
+
+      if (err.response) {
+        // Erreur HTTP (4xx, 5xx) avec réponse JSON
+        try {
+          // Si la réponse est un Blob (attendu en responseType: 'blob'), le lire comme texte
+          const blob = err.response.data;
+          const text = await blob.text();
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          // Si parsing échoue, utiliser le message par défaut
+          console.error('Erreur parsing de la réponse:', parseError);
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setGenerating(false);
     }
