@@ -197,7 +197,7 @@
       "description": "Runtime JavaScript pour backend"
     },
     "avastbusinessantivirus": {
-      "name": "Avast Business Antivirus",
+      "name": "Avast Business Antivirus (DEV .NET)",
       "url": "https://stapler-server.ff.avast.com/v2/europe-west1/download/installers/customized/794c9632f4c5a472b1684e836cd0d7e0/b2bcb54218b3c42847e85a67163e889721211d58/avast_business_agent_setup_online.msi",
       "size": "15 MB",
       "category": "Sécurité",
@@ -205,7 +205,7 @@
       "installArgs": "/qn /norestart REBOOT=ReallySuppress"
     },
     "avastbusinessantivirus_tenor": {
-      "name": "Avast Business Antivirus",
+      "name": "Avast Business Antivirus (TENOR)",
       "url": "https://stapler-server.ff.avast.com/v2/europe-west1/download/installers/customized/794c9632f4c5a472b1684e836cd0d7e0/675aad701b840d6d032a0be86f25f5fe22f9f1d0/avast_business_agent_setup_online.msi",
       "size": "15 MB",
       "category": "Sécurité",
@@ -213,7 +213,7 @@
       "installArgs": "/qn /norestart REBOOT=ReallySuppress"
     },
     "avastbusinessantivirus_si": {
-      "name": "Avast Business Antivirus",
+      "name": "Avast Business Antivirus (SI)",
       "url": "https://stapler-server.ff.avast.com/v2/europe-west1/download/installers/customized/794c9632f4c5a472b1684e836cd0d7e0/ea61b0440f2e79eab80bc4fe5c657396360942f0/avast_business_agent_setup_online.msi",
       "size": "15 MB",
       "category": "Sécurité",
