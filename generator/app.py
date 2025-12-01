@@ -469,6 +469,11 @@ function Test-AppInstalled {
             $searchPatterns += @("Microsoft 365 Apps", "Office 365", "Microsoft Office")
         }
 
+        # Teams a plusieurs noms possibles dans le registre
+        if ($AppName -like "*Teams*") {
+            $searchPatterns += @("Microsoft Teams", "Teams Machine-Wide Installer")
+        }
+
         foreach ($path in $registryPaths) {
             foreach ($pattern in $searchPatterns) {
                 $installed = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue |

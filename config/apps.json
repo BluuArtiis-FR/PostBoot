@@ -18,11 +18,12 @@
     },
     {
       "name": "Microsoft Teams",
-      "winget": "Microsoft.Teams",
       "size": "150 MB",
       "category": "Communication",
       "required": true,
-      "preselected": true
+      "preselected": true,
+      "customInstall": true,
+      "installScript": "# Installation Microsoft Teams (nouveau Teams)\n$teamsUrl = 'https://go.microsoft.com/fwlink/?linkid=2187327&Lmsrc=groupChatMarketingPageWeb&Cmpid=directDownloadWin64&clcid=0x40c'\n$teamsInstaller = \"$env:TEMP\\Teams_windows_x64.exe\"\n\nWrite-Host \"  Téléchargement Microsoft Teams...\" -ForegroundColor Gray\ntry {\n    Invoke-WebRequest -Uri $teamsUrl -OutFile $teamsInstaller -UseBasicParsing -ErrorAction Stop\n    \n    Write-Host \"  Installation Teams (mode silencieux)...\" -ForegroundColor Gray\n    $installProc = Start-Process -FilePath $teamsInstaller -ArgumentList '-s' -Wait -NoNewWindow -PassThru\n    \n    if ($installProc.ExitCode -eq 0) {\n        Write-Host \"    [OK] Microsoft Teams installé\" -ForegroundColor Green\n    } else {\n        Write-Host \"    [ERREUR] Échec installation Teams (Exit Code: $($installProc.ExitCode))\" -ForegroundColor Red\n    }\n    \n    # Nettoyage\n    Remove-Item -Path $teamsInstaller -Force -ErrorAction SilentlyContinue\n} catch {\n    Write-Host \"    [ERREUR] Impossible de télécharger Teams: $_\" -ForegroundColor Red\n}\n"
     },
     {
       "name": "Notepad++",
