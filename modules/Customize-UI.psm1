@@ -1,6 +1,6 @@
 # Module: Customize-UI.psm1
 # Description: Personnalisation de l'interface utilisateur Windows
-# Version: 1.0
+# Version: 1.1 - Application aux futurs utilisateurs
 # Requis: Non (sélectionnable par l'utilisateur)
 
 <#
@@ -10,7 +10,84 @@ Module de personnalisation de l'interface Windows.
 .DESCRIPTION
 Ce module offre des fonctions pour personnaliser l'apparence et le comportement
 de l'interface utilisateur Windows selon les préférences de l'utilisateur.
+Les paramètres sont appliqués à l'utilisateur courant ET aux futurs utilisateurs.
 #>
+
+function Set-RegistryForAllUsers {
+    <#
+    .SYNOPSIS
+    Applique un paramètre de registre à l'utilisateur courant et aux futurs utilisateurs.
+
+    .DESCRIPTION
+    Cette fonction applique un paramètre de registre HKCU à:
+    - L'utilisateur courant (HKCU)
+    - Le profil par défaut (HKU\.DEFAULT) pour les futurs utilisateurs
+    - Optionnellement, charge et modifie C:\Users\Default\NTUSER.DAT
+
+    .PARAMETER Path
+    Chemin du registre (doit commencer par HKCU:\)
+
+    .PARAMETER Name
+    Nom de la valeur
+
+    .PARAMETER Value
+    Valeur à définir
+
+    .PARAMETER Type
+    Type de la valeur (DWord, String, etc.)
+    #>
+
+    [CmdletBinding()]
+    param(
+        [string]$Path,
+        [string]$Name,
+        $Value,
+        [string]$Type = "DWord"
+    )
+
+    # 1. Appliquer à l'utilisateur courant (HKCU)
+    try {
+        if (-not (Test-Path $Path)) {
+            New-Item -Path $Path -Force | Out-Null
+        }
+        Set-ItemProperty -Path $Path -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+    } catch { }
+
+    # 2. Appliquer au profil par défaut (HKU\.DEFAULT) pour les futurs utilisateurs
+    try {
+        # Convertir le chemin HKCU en HKU\.DEFAULT
+        $defaultPath = $Path -replace '^HKCU:\\', 'Registry::HKU\.DEFAULT\'
+
+        if (-not (Test-Path $defaultPath)) {
+            New-Item -Path $defaultPath -Force -ErrorAction SilentlyContinue | Out-Null
+        }
+        Set-ItemProperty -Path $defaultPath -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+    } catch { }
+
+    # 3. Appliquer au NTUSER.DAT du profil Default (template pour nouveaux utilisateurs)
+    try {
+        $defaultNtUser = "C:\Users\Default\NTUSER.DAT"
+        if (Test-Path $defaultNtUser) {
+            # Charger la ruche du profil par défaut
+            $regLoadResult = reg load "HKU\DefaultUserTemplate" $defaultNtUser 2>&1
+
+            if ($LASTEXITCODE -eq 0 -or $regLoadResult -match "already in use") {
+                # Convertir le chemin HKCU en chemin pour la ruche chargée
+                $templatePath = $Path -replace '^HKCU:\\', 'Registry::HKU\DefaultUserTemplate\'
+
+                if (-not (Test-Path $templatePath)) {
+                    New-Item -Path $templatePath -Force -ErrorAction SilentlyContinue | Out-Null
+                }
+                Set-ItemProperty -Path $templatePath -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+
+                # Décharger la ruche
+                [gc]::Collect()
+                Start-Sleep -Milliseconds 100
+                reg unload "HKU\DefaultUserTemplate" 2>&1 | Out-Null
+            }
+        }
+    } catch { }
+}
 
 function Set-TaskbarPosition {
     <#
@@ -86,14 +163,15 @@ function Set-DarkMode {
 
     try {
         $themeValue = if ($Enable) { 0 } else { 1 }
+        $themePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
 
-        # Mode sombre pour les applications
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "AppsUseLightTheme" -Value $themeValue -Type DWord -Force
+        # Mode sombre pour les applications (utilisateur courant + futurs utilisateurs)
+        Set-RegistryForAllUsers -Path $themePath -Name "AppsUseLightTheme" -Value $themeValue -Type DWord
 
-        # Mode sombre pour le système
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "SystemUsesLightTheme" -Value $themeValue -Type DWord -Force
+        # Mode sombre pour le système (utilisateur courant + futurs utilisateurs)
+        Set-RegistryForAllUsers -Path $themePath -Name "SystemUsesLightTheme" -Value $themeValue -Type DWord
 
-        Write-Host "  [OK] Mode $mode activé" -ForegroundColor Green
+        Write-Host "  [OK] Mode $mode activé (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -131,23 +209,24 @@ function Set-FileExplorerOptions {
 
     try {
         $explorerPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        $cabinetPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState"
 
-        # Afficher les fichiers cachés
+        # Afficher les fichiers cachés (utilisateur courant + futurs utilisateurs)
         $hiddenValue = if ($ShowHiddenFiles) { 1 } else { 2 }
-        Set-ItemProperty -Path $explorerPath -Name "Hidden" -Value $hiddenValue -Type DWord -Force
+        Set-RegistryForAllUsers -Path $explorerPath -Name "Hidden" -Value $hiddenValue -Type DWord
 
-        # Afficher les extensions de fichiers
+        # Afficher les extensions de fichiers (utilisateur courant + futurs utilisateurs)
         $extValue = if ($ShowFileExtensions) { 0 } else { 1 }
-        Set-ItemProperty -Path $explorerPath -Name "HideFileExt" -Value $extValue -Type DWord -Force
+        Set-RegistryForAllUsers -Path $explorerPath -Name "HideFileExt" -Value $extValue -Type DWord
 
-        # Afficher le chemin complet
+        # Afficher le chemin complet (utilisateur courant + futurs utilisateurs)
         $pathValue = if ($ShowFullPath) { 1 } else { 0 }
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState" -Name "FullPath" -Value $pathValue -Type DWord -Force -ErrorAction SilentlyContinue
+        Set-RegistryForAllUsers -Path $cabinetPath -Name "FullPath" -Value $pathValue -Type DWord
 
-        # Ouvrir l'explorateur sur "Ce PC" au lieu de "Accès rapide"
-        Set-ItemProperty -Path $explorerPath -Name "LaunchTo" -Value 1 -Type DWord -Force
+        # Ouvrir l'explorateur sur "Ce PC" au lieu de "Accès rapide" (utilisateur courant + futurs utilisateurs)
+        Set-RegistryForAllUsers -Path $explorerPath -Name "LaunchTo" -Value 1 -Type DWord
 
-        Write-Host "  [OK] Explorateur configuré" -ForegroundColor Green
+        Write-Host "  [OK] Explorateur configuré (tous utilisateurs)" -ForegroundColor Green
         Write-Host "    - Fichiers cachés: $($ShowHiddenFiles)" -ForegroundColor Gray
         Write-Host "    - Extensions visibles: $($ShowFileExtensions)" -ForegroundColor Gray
         Write-Host "    - Chemin complet: $($ShowFullPath)" -ForegroundColor Gray
@@ -194,10 +273,6 @@ function Set-DesktopIcons {
     try {
         $iconPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel"
 
-        if (-not (Test-Path $iconPath)) {
-            New-Item -Path $iconPath -Force | Out-Null
-        }
-
         # GUIDs des icônes système
         $icons = @{
             "ThisPC" = "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
@@ -206,13 +281,13 @@ function Set-DesktopIcons {
             "Network" = "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}"
         }
 
-        # 0 = affiché, 1 = masqué
-        Set-ItemProperty -Path $iconPath -Name $icons.ThisPC -Value $(if ($ShowThisPC) { 0 } else { 1 }) -Type DWord -Force
-        Set-ItemProperty -Path $iconPath -Name $icons.RecycleBin -Value $(if ($ShowRecycleBin) { 0 } else { 1 }) -Type DWord -Force
-        Set-ItemProperty -Path $iconPath -Name $icons.UserFolder -Value $(if ($ShowUserFolder) { 0 } else { 1 }) -Type DWord -Force
-        Set-ItemProperty -Path $iconPath -Name $icons.Network -Value $(if ($ShowNetwork) { 0 } else { 1 }) -Type DWord -Force
+        # 0 = affiché, 1 = masqué (utilisateur courant + futurs utilisateurs)
+        Set-RegistryForAllUsers -Path $iconPath -Name $icons.ThisPC -Value $(if ($ShowThisPC) { 0 } else { 1 }) -Type DWord
+        Set-RegistryForAllUsers -Path $iconPath -Name $icons.RecycleBin -Value $(if ($ShowRecycleBin) { 0 } else { 1 }) -Type DWord
+        Set-RegistryForAllUsers -Path $iconPath -Name $icons.UserFolder -Value $(if ($ShowUserFolder) { 0 } else { 1 }) -Type DWord
+        Set-RegistryForAllUsers -Path $iconPath -Name $icons.Network -Value $(if ($ShowNetwork) { 0 } else { 1 }) -Type DWord
 
-        Write-Host "  [OK] Icônes du bureau configurées" -ForegroundColor Green
+        Write-Host "  [OK] Icônes du bureau configurées (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -249,13 +324,16 @@ function Set-WindowsTheme {
         $colorValue = $b * 65536 + $g * 256 + $r
 
         $themePath = "HKCU:\Software\Microsoft\Windows\DWM"
-        Set-ItemProperty -Path $themePath -Name "AccentColor" -Value $colorValue -Type DWord -Force
-        Set-ItemProperty -Path $themePath -Name "ColorizationColor" -Value $colorValue -Type DWord -Force
+        $personalizePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+
+        # Appliquer les couleurs (utilisateur courant + futurs utilisateurs)
+        Set-RegistryForAllUsers -Path $themePath -Name "AccentColor" -Value $colorValue -Type DWord
+        Set-RegistryForAllUsers -Path $themePath -Name "ColorizationColor" -Value $colorValue -Type DWord
 
         # Activer la couleur d'accentuation sur la barre des tâches et les bordures
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "ColorPrevalence" -Value 1 -Type DWord -Force
+        Set-RegistryForAllUsers -Path $personalizePath -Name "ColorPrevalence" -Value 1 -Type DWord
 
-        Write-Host "  [OK] Thème de couleur appliqué" -ForegroundColor Green
+        Write-Host "  [OK] Thème de couleur appliqué (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -477,43 +555,34 @@ function Set-Windows11Taskbar {
     Write-Host "`n[UI] Configuration barre des tâches Windows 11..." -ForegroundColor Cyan
 
     try {
-        # Aligner les icônes à gauche (Windows 11)
+        $explorerPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        $taskbarDevPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings"
+
+        # Aligner les icônes à gauche (Windows 11) - utilisateur courant + futurs utilisateurs
         if ($AlignLeft) {
-            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 0 -Type DWord -Force
-            Write-Host "  [OK] Icônes alignées à gauche" -ForegroundColor Green
+            Set-RegistryForAllUsers -Path $explorerPath -Name "TaskbarAl" -Value 0 -Type DWord
+            Write-Host "  [OK] Icônes alignées à gauche (tous utilisateurs)" -ForegroundColor Green
         }
 
-        # Masquer les widgets
+        # Masquer les widgets - utilisateur courant + futurs utilisateurs
         if ($HideWidgets) {
-            try {
-                Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
-                if ($?) {
-                    Write-Host "  [OK] Widgets masqués" -ForegroundColor Green
-                } else {
-                    Write-Host "  [ATTENTION] Impossible de masquer les widgets (permission refusée)" -ForegroundColor Yellow
-                }
-            } catch {
-                Write-Host "  [ATTENTION] Impossible de masquer les widgets (permission refusée)" -ForegroundColor Yellow
-            }
+            Set-RegistryForAllUsers -Path $explorerPath -Name "TaskbarDa" -Value 0 -Type DWord
+            Write-Host "  [OK] Widgets masqués (tous utilisateurs)" -ForegroundColor Green
         }
 
-        # Masquer Task View
+        # Masquer Task View - utilisateur courant + futurs utilisateurs
         if ($HideTaskView) {
-            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value 0 -Type DWord -Force
-            Write-Host "  [OK] Task View masqué" -ForegroundColor Green
+            Set-RegistryForAllUsers -Path $explorerPath -Name "ShowTaskViewButton" -Value 0 -Type DWord
+            Write-Host "  [OK] Task View masqué (tous utilisateurs)" -ForegroundColor Green
         }
 
-        # Activer "End Task" au clic droit
+        # Activer "End Task" au clic droit - utilisateur courant + futurs utilisateurs
         if ($EnableEndTask) {
-            $path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings"
-            if (-not (Test-Path $path)) {
-                New-Item -Path $path -Force | Out-Null
-            }
-            Set-ItemProperty -Path $path -Name "TaskbarEndTask" -Value 1 -Type DWord -Force
-            Write-Host "  [OK] End Task activé au clic droit" -ForegroundColor Green
+            Set-RegistryForAllUsers -Path $taskbarDevPath -Name "TaskbarEndTask" -Value 1 -Type DWord
+            Write-Host "  [OK] End Task activé au clic droit (tous utilisateurs)" -ForegroundColor Green
         }
 
-        Write-Host "  [OK] Barre des tâches Windows 11 configurée" -ForegroundColor Green
+        Write-Host "  [OK] Barre des tâches Windows 11 configurée (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -538,17 +607,42 @@ function Restore-Windows10ContextMenu {
     Write-Host "`n[UI] Restauration menu contextuel Windows 10..." -ForegroundColor Cyan
 
     try {
-        # Désactiver le nouveau menu contextuel Windows 11
+        # Désactiver le nouveau menu contextuel Windows 11 pour l'utilisateur courant
         $path = "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
 
         if (-not (Test-Path $path)) {
             New-Item -Path $path -Force | Out-Null
         }
-
-        # Valeur vide = utiliser l'ancien menu
         Set-ItemProperty -Path $path -Name "(Default)" -Value "" -Force
 
-        Write-Host "  [OK] Menu contextuel Windows 10 restauré" -ForegroundColor Green
+        # Appliquer aussi aux futurs utilisateurs via le profil par défaut
+        try {
+            $defaultPath = "Registry::HKU\.DEFAULT\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+            if (-not (Test-Path $defaultPath)) {
+                New-Item -Path $defaultPath -Force -ErrorAction SilentlyContinue | Out-Null
+            }
+            Set-ItemProperty -Path $defaultPath -Name "(Default)" -Value "" -Force -ErrorAction SilentlyContinue
+        } catch { }
+
+        # Appliquer au NTUSER.DAT du profil Default
+        try {
+            $defaultNtUser = "C:\Users\Default\NTUSER.DAT"
+            if (Test-Path $defaultNtUser) {
+                $regLoadResult = reg load "HKU\DefaultUserTemplate" $defaultNtUser 2>&1
+                if ($LASTEXITCODE -eq 0 -or $regLoadResult -match "already in use") {
+                    $templatePath = "Registry::HKU\DefaultUserTemplate\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+                    if (-not (Test-Path $templatePath)) {
+                        New-Item -Path $templatePath -Force -ErrorAction SilentlyContinue | Out-Null
+                    }
+                    Set-ItemProperty -Path $templatePath -Name "(Default)" -Value "" -Force -ErrorAction SilentlyContinue
+                    [gc]::Collect()
+                    Start-Sleep -Milliseconds 100
+                    reg unload "HKU\DefaultUserTemplate" 2>&1 | Out-Null
+                }
+            }
+        } catch { }
+
+        Write-Host "  [OK] Menu contextuel Windows 10 restauré (tous utilisateurs)" -ForegroundColor Green
         Write-Host "  [ATTENTION] Redémarrage de l'explorateur requis pour appliquer" -ForegroundColor Yellow
         return $true
     }
@@ -686,22 +780,15 @@ function Set-TenorWallpaper {
 
         $wallpaperPath = Join-Path $wallpaperDir "tenor_wallpaper.jpg"
 
-        # Utiliser l'image par défaut Windows (C:\Windows\Web\Wallpaper\Windows\img0.jpg)
-        # OU télécharger depuis une URL si fournie
-        if ($WallpaperUrl -ne "https://raw.githubusercontent.com/tenorsolutions/postboot/main/assets/wallpaper.jpg") {
-            Write-Host "  -> Téléchargement de l'image personnalisée..." -ForegroundColor Cyan
-            try {
-                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
-                Invoke-WebRequest -Uri $WallpaperUrl -OutFile $wallpaperPath -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
-                Write-Host "  [OK] Image téléchargée" -ForegroundColor Green
-            } catch {
-                Write-Host "  [ATTENTION] Échec téléchargement, utilisation de l'image Windows par défaut" -ForegroundColor Yellow
-                # Utiliser l'image par défaut Windows
-                $wallpaperPath = "C:\Windows\Web\Wallpaper\Windows\img0.jpg"
-            }
-        } else {
-            # Pas d'URL personnalisée fournie, utiliser l'image Windows par défaut
-            Write-Host "  [INFO] Utilisation du fond d'écran Windows par défaut (bleu)" -ForegroundColor Cyan
+        # Télécharger le fond d'écran Tenor depuis l'URL (par défaut ou personnalisée)
+        Write-Host "  -> Téléchargement du fond d'écran Tenor..." -ForegroundColor Cyan
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+            Invoke-WebRequest -Uri $WallpaperUrl -OutFile $wallpaperPath -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
+            Write-Host "  [OK] Fond d'écran Tenor téléchargé" -ForegroundColor Green
+        } catch {
+            Write-Host "  [ATTENTION] Échec téléchargement ($($_.Exception.Message)), utilisation de l'image Windows par défaut" -ForegroundColor Yellow
+            # Fallback sur l'image par défaut Windows
             $wallpaperPath = "C:\Windows\Web\Wallpaper\Windows\img0.jpg"
         }
 
@@ -773,6 +860,123 @@ public class Wallpaper {
     }
 }
 
+function Clear-TaskbarPins {
+    <#
+    .SYNOPSIS
+    Supprime toutes les applications épinglées à la barre des tâches
+
+    .DESCRIPTION
+    Cette fonction supprime tous les raccourcis de la barre des tâches pour l'utilisateur
+    courant et configure les futurs utilisateurs pour avoir une barre des tâches vide.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    try {
+        Write-Host "`n[TASKBAR] Nettoyage de la barre des tâches..." -ForegroundColor Cyan
+
+        # Supprimer les épinglages de l'utilisateur courant
+        $taskbarPath = "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+        if (Test-Path $taskbarPath) {
+            Get-ChildItem $taskbarPath -Filter "*.lnk" | Remove-Item -Force -ErrorAction SilentlyContinue
+            Write-Host "  [OK] Épinglages actuels supprimés" -ForegroundColor Green
+        }
+
+        # Configurer pour les futurs utilisateurs
+        $defaultTaskbarPath = "C:\Users\Default\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+        if (Test-Path $defaultTaskbarPath) {
+            Get-ChildItem $defaultTaskbarPath -Filter "*.lnk" | Remove-Item -Force -ErrorAction SilentlyContinue
+        }
+
+        # Réinitialiser le layout de la barre des tâches via registre
+        $taskbarSettingsPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband"
+        if (Test-Path $taskbarSettingsPath) {
+            Remove-ItemProperty -Path $taskbarSettingsPath -Name "Favorites" -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $taskbarSettingsPath -Name "FavoritesResolve" -ErrorAction SilentlyContinue
+        }
+
+        Write-Host "  [OK] Barre des tâches nettoyée" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  [ATTENTION] Erreur lors du nettoyage de la barre des tâches: $_" -ForegroundColor Yellow
+        return $false
+    }
+}
+
+function Set-CustomPinnedApps {
+    <#
+    .SYNOPSIS
+    Nettoie les épinglages par défaut Windows 11
+
+    .DESCRIPTION
+    Windows 11 25H2+ ne permet plus l'épinglage programmatique.
+    Cette fonction nettoie les pins par défaut et informe l'utilisateur.
+    #>
+
+    [CmdletBinding()]
+    param()
+
+    try {
+        Write-Host "`n[PINNING] Nettoyage des épinglages par défaut..." -ForegroundColor Cyan
+
+        # === NETTOYAGE BARRE DES TÂCHES ===
+        Write-Host "  Nettoyage barre des tâches..." -ForegroundColor Gray
+
+        $taskbarPath = "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+        if (Test-Path $taskbarPath) {
+            Get-ChildItem $taskbarPath -Filter "*.lnk" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+            Write-Host "    [OK] Barre des tâches nettoyée" -ForegroundColor Green
+        }
+
+        # Futurs utilisateurs
+        $defaultTaskbarPath = "C:\Users\Default\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+        if (Test-Path $defaultTaskbarPath) {
+            Get-ChildItem $defaultTaskbarPath -Filter "*.lnk" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+        }
+
+        # === NETTOYAGE MENU DÉMARRER (Windows 11 25H2) ===
+        Write-Host "  Nettoyage menu Démarrer..." -ForegroundColor Gray
+
+        # Nettoyer PinnedList
+        $pinnedPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Start\PinnedList"
+        if (Test-Path $pinnedPath) {
+            Remove-Item -Path $pinnedPath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+
+        # Nettoyer CloudStore StartMenu
+        $cloudStorePath = "$env:LOCALAPPDATA\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState"
+        if (Test-Path $cloudStorePath) {
+            # Arrêter StartMenuExperienceHost
+            Get-Process -Name StartMenuExperienceHost -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 500
+
+            # Supprimer les fichiers de cache
+            Remove-Item "$cloudStorePath\*.dat" -Force -ErrorAction SilentlyContinue
+            Remove-Item "$cloudStorePath\*.db" -Force -ErrorAction SilentlyContinue
+            Remove-Item "$cloudStorePath\*.db-*" -Force -ErrorAction SilentlyContinue
+        }
+
+        # Supprimer pins OEM
+        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "LayoutXMLPath" -Force -ErrorAction SilentlyContinue
+
+        Write-Host "    [OK] Menu Démarrer nettoyé" -ForegroundColor Green
+
+        # === INFORMATION UTILISATEUR ===
+        Write-Host "`n  [INFO] Windows 11 25H2 ne permet pas l'épinglage automatique." -ForegroundColor Cyan
+        Write-Host "  [INFO] Après reconnexion, épinglez manuellement ces applications:" -ForegroundColor Cyan
+        Write-Host "    - Barre des tâches: Explorateur, Edge, Outlook, VAULT, DOCS" -ForegroundColor White
+        Write-Host "    - Menu Démarrer: Applications installées disponibles" -ForegroundColor White
+
+        return $true
+    }
+    catch {
+        Write-Host "  [ATTENTION] Erreur nettoyage: $_" -ForegroundColor Yellow
+        return $false
+    }
+}
+
 # Export des fonctions publiques du module
 Export-ModuleMember -Function @(
     'Invoke-UICustomizations',
@@ -786,5 +990,7 @@ Export-ModuleMember -Function @(
     'Restore-Windows10ContextMenu',
     'Hide-NavigationPaneItems',
     'Disable-MouseAcceleration',
-    'Set-TenorWallpaper'
+    'Set-TenorWallpaper',
+    'Clear-TaskbarPins',
+    'Set-CustomPinnedApps'
 )

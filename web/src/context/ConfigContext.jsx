@@ -20,6 +20,7 @@ export const ConfigProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   // Configuration utilisateur
+  // Par défaut: optimisations cochées (l'utilisateur décoche si besoin)
   const [userConfig, setUserConfig] = useState({
     profile: null,
     custom_name: '',
@@ -33,11 +34,11 @@ export const ConfigProvider = ({ children }) => {
         PageFile: true,
         PowerPlan: true,
         StartupPrograms: true,
-        Network: false,
-        VisualEffects: false,
+        Network: true,
+        VisualEffects: true,
       },
       ui: {
-        enabled: false,
+        enabled: true,
         DarkMode: true,
         ShowFileExtensions: true,
         ShowFullPath: true,
@@ -48,11 +49,11 @@ export const ConfigProvider = ({ children }) => {
         TaskbarPosition: 'Bottom',
         ThemeColor: '0078D7',
         // Windows 11 tweaks
-        TaskbarAlignLeft: false,
-        Windows10ContextMenu: false,
-        HideWidgets: false,
-        HideTaskView: false,
-        EnableEndTask: false,
+        TaskbarAlignLeft: true,
+        Windows10ContextMenu: true,
+        HideWidgets: true,
+        HideTaskView: true,
+        EnableEndTask: true,
       },
     },
   });
@@ -115,11 +116,11 @@ export const ConfigProvider = ({ children }) => {
             PageFile: true,
             PowerPlan: true,
             StartupPrograms: true,
-            Network: false,
-            VisualEffects: false,
+            Network: true,
+            VisualEffects: true,
           },
           ui: {
-            enabled: false,
+            enabled: true,
             DarkMode: true,
             ShowFileExtensions: true,
             ShowFullPath: true,
@@ -129,6 +130,11 @@ export const ConfigProvider = ({ children }) => {
             RestartExplorer: true,
             TaskbarPosition: 'Bottom',
             ThemeColor: '0078D7',
+            TaskbarAlignLeft: true,
+            Windows10ContextMenu: true,
+            HideWidgets: true,
+            HideTaskView: true,
+            EnableEndTask: true,
           },
         },
       });
@@ -179,11 +185,11 @@ export const ConfigProvider = ({ children }) => {
           PageFile: true,
           PowerPlan: true,
           StartupPrograms: true,
-          Network: false,
-          VisualEffects: false,
+          Network: true,
+          VisualEffects: true,
         },
         ui: {
-          enabled: false,
+          enabled: true,
           DarkMode: true,
           ShowFileExtensions: true,
           ShowFullPath: true,
@@ -193,6 +199,11 @@ export const ConfigProvider = ({ children }) => {
           RestartExplorer: true,
           TaskbarPosition: 'Bottom',
           ThemeColor: '0078D7',
+          TaskbarAlignLeft: true,
+          Windows10ContextMenu: true,
+          HideWidgets: true,
+          HideTaskView: true,
+          EnableEndTask: true,
         },
       },
     });

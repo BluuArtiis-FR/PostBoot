@@ -7,6 +7,42 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [5.2.0] - 2025-11-26
+
+### ✨ Ajouté
+
+#### Applications et Installation
+- **PWA Edge natives** : Installation VAULT et DOCS via `msedge.exe --install-app=URL` avec favicons automatiques
+- **VPN Stormshield 2 VPN** : Import automatique AddressBook (Lyon + Paris) via `sslvpn-cli.exe import-addressbook`
+- **WinSCP** : Remplacement de FileZilla dans tous les profils
+- **MSI Auto-Detection** : Détection automatique `.msi` et utilisation `msiexec.exe` avec arguments appropriés
+
+#### Optimisations Windows 11 25H2
+- **Nettoyage Build 26xxx** : Suppression épinglages menu Démarrer et barre tâches par défaut
+- **CloudStore cleanup** : Nettoyage base de données StartMenuExperienceHost
+- **PinnedList cleanup** : Suppression registre épinglages obsolètes
+- **Information utilisateur** : Message explicite que Windows 11 25H2 bloque l'épinglage programmatique
+
+#### Corrections et Améliorations
+- **Validation fichiers** : Magic bytes check pour détecter HTML vs EXE/MSI
+- **Avast arguments** : Correction `/qn` au lieu de `/silent` pour installation MSI
+- **Stormshield CLI path** : Chemin corrigé v5.1.2+ (`Modules\ssl-vpn\Services\`)
+- **Web Apps nommées** : VAULT (Tenor Password) et DOCS (Tenor Documentation)
+
+### 🔄 Modifié
+
+- **README.md** : Mise à jour complète v5.2 avec toutes les nouvelles fonctionnalités
+- **GitHub URLs** : Migration `BluuArtiis-FR` → `TenorDataSolutions`
+- **Master apps** : Ajout 7-Zip, VAULT et DOCS aux 13 applications obligatoires
+- **Customize-UI module** : Simplification `Set-CustomPinnedApps` (cleanup-only sur Win11 25H2)
+
+### 🗑️ Supprimé
+
+- **Fichiers de test** : Suppression de tous les scripts de test et diagnostic temporaires
+- **Favicon handling manuel** : Supprimé au profit du système PWA natif Edge
+
+---
+
 ## [5.0.0] - 2025-10-02
 
 ### 🎉 Refonte Majeure - Architecture 3 Espaces

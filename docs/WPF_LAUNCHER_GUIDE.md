@@ -365,7 +365,7 @@ Invoke-WPFLog "========== TERMINÉ ==========" -Level SUCCESS
 
 **Contact :** si@tenorsolutions.com
 **Documentation :** [README.md](../README.md)
-**GitHub :** [PostBoot Issues](https://github.com/BluuArtiis-FR/PostBoot/issues)
+**GitHub :** [PostBoot Issues](https://github.com/TenorDataSolutions/PostBoot/issues)
 
 ---
 

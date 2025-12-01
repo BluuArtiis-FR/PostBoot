@@ -489,7 +489,7 @@ $asyncResult = $powershell.BeginInvoke()  # ✅ Correct
 
 - **Email Support :** si@tenorsolutions.com
 - **Équipe SI :** Tenor Data Solutions
-- **GitHub Issues :** [PostBoot Issues](https://github.com/BluuArtiis-FR/PostBoot/issues)
+- **GitHub Issues :** [PostBoot Issues](https://github.com/TenorDataSolutions/PostBoot/issues)
 
 ### Ressources
 

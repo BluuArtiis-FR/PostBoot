@@ -1,6 +1,6 @@
 # Module: Debloat-Windows.psm1
 # Description: Suppression des applications préinstallées Windows et optimisations système obligatoires
-# Version: 1.0
+# Version: 1.1 - Application aux futurs utilisateurs
 # Requis: Oui (toujours exécuté)
 
 <#
@@ -11,7 +11,58 @@ Module de nettoyage Windows qui supprime les applications inutiles et désactive
 Ce module fait partie des optimisations obligatoires et sera toujours exécuté lors du déploiement.
 Il effectue un debloat complet de Windows en supprimant les applications préinstallées non essentielles,
 en désactivant la télémétrie intrusive, et en optimisant les services système.
+Les paramètres HKCU sont appliqués à l'utilisateur courant ET aux futurs utilisateurs.
 #>
+
+function Set-RegistryForAllUsersDebloat {
+    <#
+    .SYNOPSIS
+    Applique un paramètre de registre à l'utilisateur courant et aux futurs utilisateurs.
+    #>
+
+    [CmdletBinding()]
+    param(
+        [string]$Path,
+        [string]$Name,
+        $Value,
+        [string]$Type = "DWord"
+    )
+
+    # 1. Appliquer à l'utilisateur courant (HKCU)
+    try {
+        if (-not (Test-Path $Path)) {
+            New-Item -Path $Path -Force | Out-Null
+        }
+        Set-ItemProperty -Path $Path -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+    } catch { }
+
+    # 2. Appliquer au profil par défaut (HKU\.DEFAULT)
+    try {
+        $defaultPath = $Path -replace '^HKCU:\\', 'Registry::HKU\.DEFAULT\'
+        if (-not (Test-Path $defaultPath)) {
+            New-Item -Path $defaultPath -Force -ErrorAction SilentlyContinue | Out-Null
+        }
+        Set-ItemProperty -Path $defaultPath -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+    } catch { }
+
+    # 3. Appliquer au NTUSER.DAT du profil Default
+    try {
+        $defaultNtUser = "C:\Users\Default\NTUSER.DAT"
+        if (Test-Path $defaultNtUser) {
+            $regLoadResult = reg load "HKU\DefaultUserDebloatTemplate" $defaultNtUser 2>&1
+            if ($LASTEXITCODE -eq 0 -or $regLoadResult -match "already in use") {
+                $templatePath = $Path -replace '^HKCU:\\', 'Registry::HKU\DefaultUserDebloatTemplate\'
+                if (-not (Test-Path $templatePath)) {
+                    New-Item -Path $templatePath -Force -ErrorAction SilentlyContinue | Out-Null
+                }
+                Set-ItemProperty -Path $templatePath -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+                [gc]::Collect()
+                Start-Sleep -Milliseconds 100
+                reg unload "HKU\DefaultUserDebloatTemplate" 2>&1 | Out-Null
+            }
+        }
+    } catch { }
+}
 
 function Remove-BloatwareApps {
     <#
@@ -429,23 +480,29 @@ function Set-PrivacyRegistry {
         try {
             Write-Host "  Application: $($setting.Description)..." -ForegroundColor Yellow
 
-            # Créer le chemin du registre s'il n'existe pas
-            if (-not (Test-Path $setting.Path)) {
-                New-Item -Path $setting.Path -Force | Out-Null
-            }
-
-            # Appliquer la valeur du registre avec gestion silencieuse des erreurs de permission
-            $prevErrorAction = $ErrorActionPreference
-            $ErrorActionPreference = 'SilentlyContinue'
-            Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
-            $ErrorActionPreference = $prevErrorAction
-
-            if ($?) {
-                Write-Host "  [OK] $($setting.Description) appliqué" -ForegroundColor Green
+            # Si c'est un chemin HKCU, utiliser la fonction pour tous les utilisateurs
+            if ($setting.Path -like "HKCU:\*") {
+                Set-RegistryForAllUsersDebloat -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type
+                Write-Host "  [OK] $($setting.Description) appliqué (tous utilisateurs)" -ForegroundColor Green
                 $appliedCount++
             } else {
-                Write-Host "  [ATTENTION] $($setting.Description) - Permission refusée (ignoré)" -ForegroundColor Yellow
-                $appliedCount++  # Compter comme appliqué pour ne pas bloquer
+                # Pour HKLM, application normale
+                if (-not (Test-Path $setting.Path)) {
+                    New-Item -Path $setting.Path -Force | Out-Null
+                }
+
+                $prevErrorAction = $ErrorActionPreference
+                $ErrorActionPreference = 'SilentlyContinue'
+                Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
+                $ErrorActionPreference = $prevErrorAction
+
+                if ($?) {
+                    Write-Host "  [OK] $($setting.Description) appliqué" -ForegroundColor Green
+                    $appliedCount++
+                } else {
+                    Write-Host "  [ATTENTION] $($setting.Description) - Permission refusée (ignoré)" -ForegroundColor Yellow
+                    $appliedCount++
+                }
             }
         }
         catch {
@@ -453,7 +510,7 @@ function Set-PrivacyRegistry {
         }
     }
 
-    Write-Host "`n[DEBLOAT] $appliedCount paramètres de confidentialité appliqués" -ForegroundColor Green
+    Write-Host "`n[DEBLOAT] $appliedCount paramètres de confidentialité appliqués (tous utilisateurs)" -ForegroundColor Green
 }
 
 function Optimize-WindowsFeatures {
@@ -724,19 +781,24 @@ function Disable-AIFeatures {
 
         foreach ($setting in $registrySettings) {
             try {
-                if (-not (Test-Path $setting.Path)) {
-                    New-Item -Path $setting.Path -Force | Out-Null
+                # Si c'est un chemin HKCU, utiliser la fonction pour tous les utilisateurs
+                if ($setting.Path -like "HKCU:\*") {
+                    Set-RegistryForAllUsersDebloat -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type
+                    Write-Host "  [OK] $($setting.Description) (tous utilisateurs)" -ForegroundColor Green
+                } else {
+                    if (-not (Test-Path $setting.Path)) {
+                        New-Item -Path $setting.Path -Force | Out-Null
+                    }
+                    Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
+                    Write-Host "  [OK] $($setting.Description)" -ForegroundColor Green
                 }
-
-                Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
-                Write-Host "  [OK] $($setting.Description)" -ForegroundColor Green
             }
             catch {
                 Write-Host "  [ATTENTION] Échec: $($setting.Description)" -ForegroundColor Yellow
             }
         }
 
-        Write-Host "  [OK] Fonctionnalités IA désactivées" -ForegroundColor Green
+        Write-Host "  [OK] Fonctionnalités IA désactivées (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -816,12 +878,17 @@ function Disable-ThirdPartyTelemetry {
         $settingsApplied = 0
         foreach ($setting in $registrySettings) {
             try {
-                if (-not (Test-Path $setting.Path)) {
-                    New-Item -Path $setting.Path -Force | Out-Null
+                # Si c'est un chemin HKCU, utiliser la fonction pour tous les utilisateurs
+                if ($setting.Path -like "HKCU:\*") {
+                    Set-RegistryForAllUsersDebloat -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type
+                    Write-Host "  [OK] $($setting.Description) (tous utilisateurs)" -ForegroundColor Green
+                } else {
+                    if (-not (Test-Path $setting.Path)) {
+                        New-Item -Path $setting.Path -Force | Out-Null
+                    }
+                    Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
+                    Write-Host "  [OK] $($setting.Description)" -ForegroundColor Green
                 }
-
-                Set-ItemProperty -Path $setting.Path -Name $setting.Name -Value $setting.Value -Type $setting.Type -Force
-                Write-Host "  [OK] $($setting.Description)" -ForegroundColor Green
                 $settingsApplied++
             }
             catch {

@@ -1,6 +1,6 @@
 # Module: Optimize-Performance.psm1
 # Description: Optimisations de performance système optionnelles (Windows 11 optimisé)
-# Version: 2.0 - Novembre 2025
+# Version: 2.1 - Application aux futurs utilisateurs
 # Requis: Non (sélectionnable par l'utilisateur)
 
 <#
@@ -11,7 +11,58 @@ Module d'optimisation des performances Windows 11 avec améliorations 2025.
 Ce module contient des fonctions d'optimisation de performance qui peuvent être activées ou désactivées
 selon les besoins de l'utilisateur. Optimisé pour Windows 11 24H2+ avec nouvelles fonctionnalités.
 Toutes les optimisations sont NON destructives et réversibles.
+Les paramètres HKCU sont appliqués à l'utilisateur courant ET aux futurs utilisateurs.
 #>
+
+function Set-RegistryForAllUsersPerf {
+    <#
+    .SYNOPSIS
+    Applique un paramètre de registre à l'utilisateur courant et aux futurs utilisateurs.
+    #>
+
+    [CmdletBinding()]
+    param(
+        [string]$Path,
+        [string]$Name,
+        $Value,
+        [string]$Type = "DWord"
+    )
+
+    # 1. Appliquer à l'utilisateur courant (HKCU)
+    try {
+        if (-not (Test-Path $Path)) {
+            New-Item -Path $Path -Force | Out-Null
+        }
+        Set-ItemProperty -Path $Path -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+    } catch { }
+
+    # 2. Appliquer au profil par défaut (HKU\.DEFAULT)
+    try {
+        $defaultPath = $Path -replace '^HKCU:\\', 'Registry::HKU\.DEFAULT\'
+        if (-not (Test-Path $defaultPath)) {
+            New-Item -Path $defaultPath -Force -ErrorAction SilentlyContinue | Out-Null
+        }
+        Set-ItemProperty -Path $defaultPath -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+    } catch { }
+
+    # 3. Appliquer au NTUSER.DAT du profil Default
+    try {
+        $defaultNtUser = "C:\Users\Default\NTUSER.DAT"
+        if (Test-Path $defaultNtUser) {
+            $regLoadResult = reg load "HKU\DefaultUserPerfTemplate" $defaultNtUser 2>&1
+            if ($LASTEXITCODE -eq 0 -or $regLoadResult -match "already in use") {
+                $templatePath = $Path -replace '^HKCU:\\', 'Registry::HKU\DefaultUserPerfTemplate\'
+                if (-not (Test-Path $templatePath)) {
+                    New-Item -Path $templatePath -Force -ErrorAction SilentlyContinue | Out-Null
+                }
+                Set-ItemProperty -Path $templatePath -Name $Name -Value $Value -Type $Type -Force -ErrorAction SilentlyContinue
+                [gc]::Collect()
+                Start-Sleep -Milliseconds 100
+                reg unload "HKU\DefaultUserPerfTemplate" 2>&1 | Out-Null
+            }
+        }
+    } catch { }
+}
 
 function Disable-VisualEffects {
     <#
@@ -30,25 +81,24 @@ function Disable-VisualEffects {
     Write-Host "`n[PERFORMANCE] Désactivation des effets visuels..." -ForegroundColor Cyan
 
     try {
-        # Configuration pour les meilleures performances (valeur 2)
         $visualEffectsPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects"
+        $explorerAdvPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        $windowMetricsPath = "HKCU:\Control Panel\Desktop\WindowMetrics"
+        $personalizePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
 
-        if (-not (Test-Path $visualEffectsPath)) {
-            New-Item -Path $visualEffectsPath -Force | Out-Null
-        }
+        # Configuration pour les meilleures performances (valeur 2) - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $visualEffectsPath -Name "VisualFXSetting" -Value 2 -Type DWord
 
-        Set-ItemProperty -Path $visualEffectsPath -Name "VisualFXSetting" -Value 2 -Type DWord -Force
+        # Désactiver les animations dans la barre des tâches - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $explorerAdvPath -Name "TaskbarAnimations" -Value 0 -Type DWord
 
-        # Désactiver les animations dans la barre des tâches
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAnimations" -Value 0 -Type DWord -Force
+        # Désactiver les animations de fenêtres - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $windowMetricsPath -Name "MinAnimate" -Value "0" -Type String
 
-        # Désactiver les animations de fenêtres
-        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop\WindowMetrics" -Name "MinAnimate" -Value "0" -Type String -Force
+        # Windows 11: Garder la transparence Start/Taskbar mais réduire les effets - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $personalizePath -Name "EnableTransparency" -Value 1 -Type DWord
 
-        # Windows 11: Garder la transparence Start/Taskbar mais réduire les effets
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "EnableTransparency" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
-
-        Write-Host "  [OK] Effets visuels désactivés (transparence Win11 préservée)" -ForegroundColor Green
+        Write-Host "  [OK] Effets visuels désactivés (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -478,25 +528,29 @@ function Disable-GamingFeatures {
     Write-Host "`n[PERFORMANCE] Désactivation fonctionnalités gaming..." -ForegroundColor Cyan
 
     try {
-        # Désactiver Xbox Game Bar
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Value 0 -Type DWord -Force
-        Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Value 0 -Type DWord -Force
-        Write-Host "  [OK] Xbox Game Bar désactivée" -ForegroundColor Green
+        $gameDVRPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR"
+        $gameConfigPath = "HKCU:\System\GameConfigStore"
+        $gameBarPath = "HKCU:\Software\Microsoft\GameBar"
 
-        # Désactiver Game DVR
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AudioCaptureEnabled" -Value 0 -Type DWord -Force
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "CursorCaptureEnabled" -Value 0 -Type DWord -Force
-        Write-Host "  [OK] Game DVR désactivé" -ForegroundColor Green
+        # Désactiver Xbox Game Bar - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $gameDVRPath -Name "AppCaptureEnabled" -Value 0 -Type DWord
+        Set-RegistryForAllUsersPerf -Path $gameConfigPath -Name "GameDVR_Enabled" -Value 0 -Type DWord
+        Write-Host "  [OK] Xbox Game Bar désactivée (tous utilisateurs)" -ForegroundColor Green
 
-        # Désactiver Game Mode (optionnel - certains jeux en bénéficient)
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "AutoGameModeEnabled" -Value 0 -Type DWord -Force
-        Write-Host "  [OK] Game Mode désactivé" -ForegroundColor Green
+        # Désactiver Game DVR - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $gameDVRPath -Name "AudioCaptureEnabled" -Value 0 -Type DWord
+        Set-RegistryForAllUsersPerf -Path $gameDVRPath -Name "CursorCaptureEnabled" -Value 0 -Type DWord
+        Write-Host "  [OK] Game DVR désactivé (tous utilisateurs)" -ForegroundColor Green
 
-        # Désactiver captures d'écran Game Bar
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "HistoricalCaptureEnabled" -Value 0 -Type DWord -Force
-        Write-Host "  [OK] Captures d'écran Game Bar désactivées" -ForegroundColor Green
+        # Désactiver Game Mode - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $gameBarPath -Name "AutoGameModeEnabled" -Value 0 -Type DWord
+        Write-Host "  [OK] Game Mode désactivé (tous utilisateurs)" -ForegroundColor Green
 
-        Write-Host "  [OK] Fonctionnalités gaming désactivées" -ForegroundColor Green
+        # Désactiver captures d'écran Game Bar - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $gameDVRPath -Name "HistoricalCaptureEnabled" -Value 0 -Type DWord
+        Write-Host "  [OK] Captures d'écran Game Bar désactivées (tous utilisateurs)" -ForegroundColor Green
+
+        Write-Host "  [OK] Fonctionnalités gaming désactivées (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -593,16 +647,20 @@ function Disable-Animations {
     Write-Host "`n[PERFORMANCE] Désactivation animations système..." -ForegroundColor Cyan
 
     try {
-        # Désactiver les animations dans les fenêtres
-        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop\WindowMetrics" -Name "MinAnimate" -Value "0" -Force
+        $windowMetricsPath = "HKCU:\Control Panel\Desktop\WindowMetrics"
+        $explorerAdvPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        $visualEffectsPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects"
 
-        # Désactiver les animations du menu Démarrer
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAnimations" -Value 0 -Type DWord -Force
+        # Désactiver les animations dans les fenêtres - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $windowMetricsPath -Name "MinAnimate" -Value "0" -Type String
 
-        # Désactiver les effets de transition
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -Name "VisualFXSetting" -Value 2 -Type DWord -Force
+        # Désactiver les animations du menu Démarrer - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $explorerAdvPath -Name "TaskbarAnimations" -Value 0 -Type DWord
 
-        Write-Host "  [OK] Animations système désactivées" -ForegroundColor Green
+        # Désactiver les effets de transition - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $visualEffectsPath -Name "VisualFXSetting" -Value 2 -Type DWord
+
+        Write-Host "  [OK] Animations système désactivées (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {
@@ -627,8 +685,12 @@ function Disable-Transparency {
     Write-Host "`n[PERFORMANCE] Désactivation transparence..." -ForegroundColor Cyan
 
     try {
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "EnableTransparency" -Value 0 -Type DWord -Force
-        Write-Host "  [OK] Transparence désactivée" -ForegroundColor Green
+        $personalizePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+
+        # Désactiver transparence - tous utilisateurs
+        Set-RegistryForAllUsersPerf -Path $personalizePath -Name "EnableTransparency" -Value 0 -Type DWord
+
+        Write-Host "  [OK] Transparence désactivée (tous utilisateurs)" -ForegroundColor Green
         return $true
     }
     catch {

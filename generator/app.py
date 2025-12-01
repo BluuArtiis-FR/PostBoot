@@ -809,11 +809,42 @@ function Install-CustomApp {
             try {
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 
-                Invoke-WebRequest -Uri $downloadUrl -OutFile $tempPath -UseBasicParsing -TimeoutSec 300 -ErrorAction Stop
+                # Supprimer le fichier temporaire précédent si présent
+                if (Test-Path $tempPath) {
+                    Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+                }
+
+                Invoke-WebRequest -Uri $downloadUrl -OutFile $tempPath -UseBasicParsing -TimeoutSec 300 -MaximumRedirection 10 -ErrorAction Stop
 
                 if (Test-Path $tempPath) {
                     $fileSize = (Get-Item $tempPath).Length
                     Write-ScriptLog "[OK] Téléchargement réussi ($([math]::Round($fileSize / 1MB, 2)) MB)" -Level SUCCESS
+
+                    # Vérifier que le fichier n'est pas une page HTML
+                    $header = Get-Content $tempPath -Encoding Byte -TotalCount 512 -ErrorAction SilentlyContinue
+                    if ($header) {
+                        $headerText = [System.Text.Encoding]::ASCII.GetString($header)
+                        if ($headerText -match '<html|<!DOCTYPE|<HTML') {
+                            throw "Le fichier téléchargé est une page HTML, pas un exécutable"
+                        }
+
+                        # Vérifier les signatures de fichiers valides
+                        $validSignature = $false
+                        if ($header[0] -eq 0x4D -and $header[1] -eq 0x5A) {
+                            # MZ header (EXE/MSI)
+                            $validSignature = $true
+                        } elseif ($header[0] -eq 0xD0 -and $header[1] -eq 0xCF) {
+                            # MSI header alternatif
+                            $validSignature = $true
+                        }
+
+                        if (-not $validSignature) {
+                            $headerHex = ($header[0..15] | ForEach-Object { '{0:X2}' -f $_ }) -join ' '
+                            Write-ScriptLog "[ATTENTION] Signature de fichier invalide. Header: $headerHex" -Level WARNING
+                            throw "Le fichier téléchargé n'a pas une signature d'exécutable valide"
+                        }
+                    }
+
                     $downloaded = $true
                 } else {
                     throw "Fichier non créé"
@@ -821,8 +852,8 @@ function Install-CustomApp {
             } catch {
                 $retryCount++
                 if ($retryCount -lt $maxRetries) {
-                    Write-ScriptLog "Tentative $retryCount/$maxRetries échouée, nouvelle tentative dans 5s..." -Level WARNING
-                    Start-Sleep -Seconds 5
+                    Write-ScriptLog "Tentative $retryCount/$maxRetries échouée, nouvelle tentative..." -Level WARNING
+                    Start-Sleep -Seconds 2
                 } else {
                     throw "Échec du téléchargement après $maxRetries tentatives: $_"
                 }
@@ -846,7 +877,13 @@ function Install-CustomApp {
 
         Write-ScriptLog "Installation de $($App.name) avec args: $installArgs" -Level INFO
 
-        $process = Start-Process -FilePath $tempPath -ArgumentList $installArgs -Wait -NoNewWindow -PassThru -ErrorAction Stop
+        # Pour les fichiers MSI, utiliser msiexec.exe
+        $extension = [System.IO.Path]::GetExtension($tempPath).ToLower()
+        if ($extension -eq '.msi') {
+            $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList "/i `"$tempPath`" $installArgs" -Wait -NoNewWindow -PassThru -ErrorAction Stop
+        } else {
+            $process = Start-Process -FilePath $tempPath -ArgumentList $installArgs -Wait -NoNewWindow -PassThru -ErrorAction Stop
+        }
 
         # Nettoyer le fichier temporaire
         Remove-Item $tempPath -ErrorAction SilentlyContinue
@@ -862,6 +899,129 @@ function Install-CustomApp {
     } catch {
         Write-ScriptLog "[ERREUR] Erreur $($App.name): $_" -Level ERROR
         Write-ScriptLog "-> Installation manuelle requise: $($App.url)" -Level WARNING
+        return $false
+    }
+}
+
+function Install-EdgeWebApp {
+    <#
+    .SYNOPSIS
+    Installe une Progressive Web App via Microsoft Edge (méthode officielle PWA)
+    .DESCRIPTION
+    Utilise l'installation native Edge PWA pour une intégration système complète
+    avec favicons automatiques et gestion dans Apps & Features
+    #>
+    param($App)
+
+    try {
+        Write-ScriptLog "Installation PWA Edge: $($App.name)..." -Level INFO
+
+        # Vérifier que Edge est installé
+        $edgePath = "${env:ProgramFiles(x86)}\\Microsoft\\Edge\\Application\\msedge.exe"
+        if (!(Test-Path $edgePath)) {
+            $edgePath = "$env:ProgramFiles\\Microsoft\\Edge\\Application\\msedge.exe"
+        }
+
+        if (!(Test-Path $edgePath)) {
+            Write-ScriptLog "[ATTENTION] Microsoft Edge n'est pas installé" -Level WARNING
+            return $false
+        }
+
+        Write-Host "  Installation de la PWA $($App.name)..." -ForegroundColor Cyan
+
+        # Méthode 1: Installation silencieuse via Edge
+        # Edge va télécharger automatiquement le manifest et les icônes
+        $installArgs = @(
+            "--install-app=$($App.url)",
+            "--headless",
+            "--no-first-run",
+            "--no-default-browser-check"
+        )
+
+        $process = Start-Process -FilePath $edgePath -ArgumentList $installArgs -WindowStyle Hidden -PassThru
+
+        # Attendre que Edge traite l'installation (max 30 secondes)
+        $timeout = 30
+        $elapsed = 0
+        $installed = $false
+
+        while ($elapsed -lt $timeout -and !$installed) {
+            Start-Sleep -Seconds 2
+            $elapsed += 2
+
+            # Vérifier si l'application PWA a été créée
+            # Edge crée des raccourcis dans le menu Démarrer pour les PWA
+            $pwaShortcuts = Get-ChildItem "$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs" -Filter "*.lnk" -ErrorAction SilentlyContinue
+            $appShortcut = $pwaShortcuts | Where-Object {
+                $shell = New-Object -ComObject WScript.Shell
+                $shortcut = $shell.CreateShortcut($_.FullName)
+                $targetArgs = $shortcut.Arguments
+                [System.Runtime.Interopservices.Marshal]::ReleaseComObject($shell) | Out-Null
+                return $targetArgs -like "*--app-id=*" -and $targetArgs -like "*$($App.url)*"
+            }
+
+            if ($appShortcut) {
+                $installed = $true
+                Write-Host "  [OK] PWA installée: $($App.name)" -ForegroundColor Green
+            }
+        }
+
+        # Si l'installation automatique n'a pas fonctionné, créer un raccourci PWA manuel
+        if (!$installed) {
+            Write-Host "  Installation manuelle du raccourci PWA..." -ForegroundColor Yellow
+
+            $startMenuPath = "$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs"
+            $shortcutPath = Join-Path $startMenuPath "$($App.name).lnk"
+
+            $shell = New-Object -ComObject WScript.Shell
+            $shortcut = $shell.CreateShortcut($shortcutPath)
+            $shortcut.TargetPath = $edgePath
+            $shortcut.Arguments = "--app=`"$($App.url)`" --profile-directory=Default"
+            $shortcut.WorkingDirectory = Split-Path $edgePath
+            $shortcut.Description = "$($App.name) (PWA Edge)"
+            $shortcut.IconLocation = $edgePath
+            $shortcut.Save()
+            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($shell) | Out-Null
+
+            # Copier pour futurs utilisateurs
+            $defaultStartMenu = "C:\\Users\\Default\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"
+            if (!(Test-Path $defaultStartMenu)) {
+                New-Item -Path $defaultStartMenu -ItemType Directory -Force | Out-Null
+            }
+            Copy-Item $shortcutPath "$defaultStartMenu\\$($App.name).lnk" -Force -ErrorAction SilentlyContinue
+
+            Write-Host "  [OK] Raccourci PWA créé: $($App.name)" -ForegroundColor Green
+        }
+
+        Write-ScriptLog "[OK] PWA $($App.name) installée avec succès" -Level SUCCESS
+        return $true
+
+    } catch {
+        Write-ScriptLog "[ERREUR] Erreur PWA $($App.name): $_" -Level ERROR
+        Write-Host "  [ERREUR] $_" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Install-CustomScriptApp {
+    <#
+    .SYNOPSIS
+    Exécute un script d'installation personnalisé
+    #>
+    param($App)
+
+    try {
+        Write-ScriptLog "Installation personnalisée: $($App.name)..." -Level INFO
+
+        # Exécuter le script d'installation fourni
+        $scriptBlock = [ScriptBlock]::Create($App.installScript)
+        & $scriptBlock
+
+        Write-ScriptLog "[OK] $($App.name) installé avec succès" -Level SUCCESS
+        return $true
+
+    } catch {
+        Write-ScriptLog "[ERREUR] Erreur installation $($App.name): $_" -Level ERROR
         return $false
     }
 }
@@ -936,7 +1096,7 @@ function Install-CustomApp {
     $uiOptionsJson = '{ui_json}' | ConvertFrom-Json
     $uiOptions = @{{}}
     $uiOptionsJson.PSObject.Properties | ForEach-Object {{ $uiOptions[$_.Name] = $_.Value }}
-    Invoke-UICustomizations -Options $uiOptions
+    Invoke-UICustomizations -Options $uiOptions -RestartExplorer $false
 """)
 
         modules_execution = '\n'.join(modules_calls)
@@ -1007,6 +1167,11 @@ try {{
 
 {modules_execution}
 
+    # Nettoyer la barre des tâches avant installation
+    if ('ui' -in $Global:EmbeddedConfig.modules) {{
+        Clear-TaskbarPins
+    }}
+
     # Installation des applications
     Write-ScriptLog "======== INSTALLATION APPLICATIONS ========" -Level INFO
 
@@ -1027,7 +1192,11 @@ try {{
 
         Write-Progress -Activity "Installation des applications" -Status $statusMessage -PercentComplete $percentComplete
 
-        if ($app.winget) {{
+        if ($app.webApp) {{
+            $success = Install-EdgeWebApp -App $app
+        }} elseif ($app.customInstall) {{
+            $success = Install-CustomScriptApp -App $app
+        }} elseif ($app.winget) {{
             $success = Install-WingetApp -App $app
         }} else {{
             $success = Install-CustomApp -App $app
@@ -1050,7 +1219,11 @@ try {{
 
         Write-Progress -Activity "Installation des applications" -Status $statusMessage -PercentComplete $percentComplete
 
-        if ($app.winget) {{
+        if ($app.webApp) {{
+            $success = Install-EdgeWebApp -App $app
+        }} elseif ($app.customInstall) {{
+            $success = Install-CustomScriptApp -App $app
+        }} elseif ($app.winget) {{
             $success = Install-WingetApp -App $app
         }} else {{
             $success = Install-CustomApp -App $app
@@ -1060,6 +1233,24 @@ try {{
     }}
 
     Write-ScriptLog "Applications: $($stats.Success) installées, $($stats.Failed) échouées" -Level INFO
+
+    # Configurer les épinglages personnalisés (barre des tâches)
+    if ('ui' -in $Global:EmbeddedConfig.modules) {{
+        Set-CustomPinnedApps
+    }}
+
+    # Redémarrer l'explorateur une seule fois à la fin (si des modifications UI ont été faites)
+    if ('ui' -in $Global:EmbeddedConfig.modules) {{
+        Write-Host "`n[UI] Redémarrage de l'explorateur Windows pour appliquer les changements..." -ForegroundColor Cyan
+        try {{
+            Stop-Process -Name "explorer" -Force -ErrorAction Stop
+            Start-Sleep -Seconds 3
+            Start-Process "explorer.exe"
+            Write-Host "  [OK] Explorateur redémarré" -ForegroundColor Green
+        }} catch {{
+            Write-Host "  [ATTENTION] Impossible de redémarrer l'explorateur: $_" -ForegroundColor Yellow
+        }}
+    }}
 
     # Résumé final
     $duration = (Get-Date) - $Global:StartTime
@@ -1180,7 +1371,7 @@ class PS2EXECompiler:
             '-Title', metadata.get('title', 'PostBootSetup'),
             '-Description', metadata.get('description', 'Tenor Data Solutions - Installation automatisée'),
             '-Company', metadata.get('company', 'Tenor Data Solutions'),
-            '-Version', metadata.get('version', '5.0.0'),
+            '-Version', metadata.get('version', '5.2.0'),
             '-NoConsole',
             '-RequireAdmin',
             '-X64',
@@ -1318,7 +1509,12 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
                         'url': app.get('url'),
                         'size': app.get('size'),
                         'category': app.get('category'),
-                        'installArgs': app.get('installArgs')
+                        'installArgs': app.get('installArgs'),
+                        'webApp': app.get('webApp'),
+                        'customInstall': app.get('customInstall'),
+                        'installScript': app.get('installScript'),
+                        'filePattern': app.get('filePattern'),
+                        'networkPath': app.get('networkPath')
                     }
 
     master_apps = list(master_apps_dict.values())
@@ -1340,7 +1536,12 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
                             'url': app.get('url'),
                             'size': app.get('size'),
                             'category': app.get('category'),
-                            'installArgs': app.get('installArgs')
+                            'installArgs': app.get('installArgs'),
+                            'webApp': app.get('webApp'),
+                            'customInstall': app.get('customInstall'),
+                            'installScript': app.get('installScript'),
+                            'filePattern': app.get('filePattern'),
+                            'networkPath': app.get('networkPath')
                         }
 
         # Apps optionnelles
@@ -1354,7 +1555,12 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
                         'winget': app.get('winget'),
                         'size': app.get('size'),
                         'category': app.get('category'),
-                        'installArgs': app.get('installArgs')
+                        'installArgs': app.get('installArgs'),
+                        'webApp': app.get('webApp'),
+                        'customInstall': app.get('customInstall'),
+                        'installScript': app.get('installScript'),
+                        'filePattern': app.get('filePattern'),
+                        'networkPath': app.get('networkPath')
                     }
 
     # Convertir le dictionnaire en liste
@@ -1544,7 +1750,7 @@ def generate_executable():
             'title': f'PostBootSetup - {profile_name}',
             'description': 'Tenor Data Solutions - Installation et configuration automatisée Windows',
             'company': 'Tenor Data Solutions',
-            'version': '5.0.0'
+            'version': '5.2.0'
         }
 
         success, error = PS2EXECompiler.compile_to_exe(ps1_path, exe_path, metadata)

@@ -228,7 +228,7 @@ Exécuter PowerShell en tant qu'**Administrateur**
 
 ### Contact
 - **Email** : si@tenorsolutions.com
-- **Issues GitHub** : https://github.com/BluuArtiis-FR/PostBoot/issues
+- **Issues GitHub** : https://github.com/TenorDataSolutions/PostBoot/issues
 - **Documentation réseau** : `\\tenor.local\data\Déploiement\SI\PostBootSetup\`
 
 ---
@@ -254,5 +254,5 @@ Vous avez une suggestion ? Une application à ajouter ?
 
 ---
 
-**PostBootSetup v5.0** - Tenor Data Solutions
+**PostBootSetup v5.2** - Tenor Data Solutions
 © 2025 - Usage interne uniquement

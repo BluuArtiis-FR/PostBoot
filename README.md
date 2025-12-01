@@ -1,23 +1,20 @@
 <div align="center">
 
-# 🚀 PostBootSetup v5.0
+# 🚀 PostBootSetup v5.2
 
 **Générateur de Scripts d'Installation et Configuration Windows**
 
-[![Version](https://img.shields.io/badge/version-5.0-blue.svg)](https://github.com/BluuArtiis-FR/PostBoot)
+[![Version](https://img.shields.io/badge/version-5.2-blue.svg)](https://github.com/TenorDataSolutions/PostBoot)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)](https://docs.microsoft.com/en-us/powershell/)
 [![License](https://img.shields.io/badge/license-Internal-red.svg)](LICENSE)
 
-*Interface web moderne pour créer des scripts PowerShell personnalisés d'installation d'applications et d'optimisation Windows*
+*Interface web React + Backend Flask pour créer des scripts PowerShell personnalisés d'installation et optimisation Windows*
 
 [🎯 Démarrage Rapide](#-démarrage-rapide) •
 [📖 Documentation](#-documentation) •
-[🏗️ Architecture](#️-architecture) •
-[🛠️ Utilisation](#️-utilisation) •
-[🤝 Contribution](#-contribution)
-
-![PostBootSetup Banner](assets/screenshot.png)
+[✨ Nouveautés v5.2](#-nouveautés-v52) •
+[🛠️ Utilisation](#️-utilisation)
 
 </div>
 
@@ -26,13 +23,12 @@
 ## 📋 Table des Matières
 
 - [🎯 Démarrage Rapide](#-démarrage-rapide)
-- [✨ Fonctionnalités](#-fonctionnalités)
+- [✨ Nouveautés v5.2](#-nouveautés-v52)
 - [🏗️ Architecture](#️-architecture)
 - [📖 Documentation](#-documentation)
 - [🛠️ Utilisation](#️-utilisation)
 - [🎨 Profils Disponibles](#-profils-disponibles)
 - [🔧 Configuration](#-configuration)
-- [🧪 Tests & Validation](#-tests--validation)
 - [🤝 Contribution](#-contribution)
 - [📞 Support](#-support)
 
@@ -50,7 +46,7 @@
 
 ```bash
 # 1. Cloner le projet
-git clone https://github.com/BluuArtiis-FR/PostBoot.git
+git clone https://github.com/TenorDataSolutions/PostBoot.git
 cd PostBoot
 
 # 2. Lancer l'application
@@ -76,52 +72,24 @@ docker-compose logs -f
 
 ---
 
-## ✨ Fonctionnalités
+## ✨ Nouveautés v5.2
 
-<table>
-<tr>
-<td width="33%">
+### 🆕 Fonctionnalités Majeures
 
-### 🎯 **Installation**
-- 40+ applications disponibles
-- 5 profils prédéfinis
-- Sélection personnalisée
-- 11 apps Master obligatoires
+| Feature | Description | Status |
+|---------|-------------|---------|
+| **🌐 PWA Edge** | Installation native Progressive Web Apps (VAULT, DOCS) avec favicons automatiques | ✅ |
+| **🔒 VPN Stormshield** | Import automatique AddressBook (2 VPN: Lyon + Paris) via `sslvpn-cli.exe` | ✅ |
+| **📦 MSI Auto-Detection** | Détection automatique `.msi` et utilisation de `msiexec.exe` | ✅ |
+| **🧹 Nettoyage Win11 25H2** | Nettoyage épinglages menu Démarrer/barre tâches (Build 26xxx) | ✅ |
+| **📝 WinSCP** | Remplacement de FileZilla par WinSCP dans tous les profils | ✅ |
 
-</td>
-<td width="33%">
+### 🔧 Améliorations Techniques
 
-### ⚡ **Optimisations**
-- Debloat Windows (obligatoire)
-- Optimisations Performance
-- Personnalisation UI
-- Compatible PS 5.1+
-
-</td>
-<td width="33%">
-
-### 📊 **Diagnostic**
-- Rapport HTML détaillé
-- État système complet
-- Détection de problèmes
-- Export JSON
-
-</td>
-</tr>
-</table>
-
-### Architecture 3 Espaces
-
-```mermaid
-graph LR
-    A[1️⃣ Installation] --> B[2️⃣ Optimisations]
-    B --> C[3️⃣ Diagnostic]
-    C --> D[Script PowerShell]
-```
-
-1. **Installation** : Sélection profil + applications
-2. **Optimisations** : Debloat, Performance, UI
-3. **Diagnostic** : Rapport HTML de l'état système
+- ✅ **Validation fichiers** - Magic bytes check (détection HTML vs EXE/MSI)
+- ✅ **Avast correction** - Arguments MSI corrigés (`/qn` au lieu de `/silent`)
+- ✅ **Web Apps nommées** - VAULT et DOCS (anciennement "Tenor Password/Docs")
+- ✅ **Stormshield CLI** - Chemin corrigé pour v5.1.2+ (`Modules\ssl-vpn\Services\`)
 
 ---
 
@@ -142,47 +110,40 @@ graph LR
 
 ```
 PostBootSetup/
-├── 📁 web/                  # Frontend React
+├── 📁 web/                     # Frontend React
 │   ├── src/
-│   │   ├── pages/          # Pages (Home, Installation, Optimizations)
-│   │   ├── components/     # Composants réutilisables
-│   │   ├── context/        # State management (Context API)
-│   │   └── services/       # API calls
+│   │   ├── pages/             # Pages (Home, Installation, Optimizations)
+│   │   ├── components/        # Composants réutilisables
+│   │   ├── context/           # State management (ConfigContext)
+│   │   └── services/          # API calls
 │   └── Dockerfile
 │
-├── 📁 generator/            # Backend Flask
-│   └── app.py              # API principale de génération
+├── 📁 generator/               # Backend Flask
+│   └── app.py                 # API de génération PowerShell
 │
-├── 📁 launcher/             # 🆕 Interface WPF
-│   └── PostBootLauncher.ps1 # Lanceur graphique WPF
+├── 📁 config/                  # Configuration
+│   ├── apps.json              # Catalogue 40+ applications
+│   └── settings.json          # Paramètres optimisations
 │
-├── 📁 config/               # Configuration
-│   ├── apps.json           # Catalogue 40+ applications
-│   ├── settings.json       # Paramètres optimisations
-│   └── profiles/           # Profils prédéfinis
-│
-├── 📁 modules/              # Modules PowerShell
-│   ├── Debloat-Windows.psm1
+├── 📁 modules/                 # Modules PowerShell
+│   ├── Debloat-Windows.psm1   # Nettoyage Windows (obligatoire)
 │   ├── Optimize-Performance.psm1
-│   ├── Customize-UI.psm1
-│   └── UIHooks.psm1        # 🆕 Intégration WPF
+│   └── Customize-UI.psm1      # UI + épinglages
 │
-├── 📁 templates/            # Templates PowerShell
-│   └── main_template.ps1   # Template principal
+├── 📁 templates/               # Templates PowerShell
+│   └── main_template.ps1      # Template principal
 │
-├── 📁 docs/                 # Documentation
-│   ├── USER_GUIDE.md       # Guide utilisateur
-│   ├── DEVELOPER.md        # Guide développeur
-│   └── API.md              # Documentation API
+├── 📁 docs/                    # Documentation complète
+│   ├── USER_GUIDE.md
+│   ├── DEVELOPER.md
+│   └── API.md
 │
-├── 📁 generated/            # Scripts générés (gitignored)
-├── 📁 logs/                 # Logs application
+├── 📁 generated/               # Scripts générés (gitignored)
+├── 📁 logs/                    # Logs application
 │
-├── docker-compose.yml       # Dev local
-├── docker-compose.prod.yml  # Production
-├── ValidateScript.ps1       # Validation PowerShell
-├── Lancer PostBoot.bat     # 🆕 Raccourci lanceur WPF
-└── README.md               # Ce fichier
+├── docker-compose.yml          # Dev local
+├── docker-compose.prod.yml     # Production
+└── README.md                  # Ce fichier
 ```
 
 Voir [STRUCTURE.md](STRUCTURE.md) pour une description détaillée.
@@ -195,17 +156,17 @@ Voir [STRUCTURE.md](STRUCTURE.md) pour une description détaillée.
 
 | Document | Description |
 |----------|-------------|
-| [🚀 Guide Utilisateur](docs/USER_GUIDE.md) | Utilisation de l'interface web |
+| [🚀 Guide Utilisateur](docs/USER_GUIDE.md) | Interface web & utilisation |
 | [💻 Guide Développeur](docs/DEVELOPER.md) | Architecture & développement |
-| [🔌 Documentation API](docs/API.md) | Endpoints et intégrations |
+| [🔌 Documentation API](docs/API.md) | Endpoints REST |
 | [🎯 Profils & Optimisations](PROFILS_ET_OPTIMISATIONS.md) | Catalogue complet |
 
 ### 🏗️ Documentation Technique
 
 | Document | Description |
 |----------|-------------|
-| [📐 Architecture](ARCHITECTURE.md) | Architecture détaillée du système |
-| [🚢 Déploiement](DEPLOIEMENT.md) | Guide de déploiement production |
+| [📐 Architecture](ARCHITECTURE.md) | Architecture système détaillée |
+| [🚢 Déploiement](DEPLOIEMENT.md) | Guide production |
 | [🐧 Déploiement Debian 12](DEPLOIEMENT_DEBIAN12.md) | Spécifique Debian |
 | [📝 Changelog](CHANGELOG.md) | Historique des versions |
 | [🆘 Aide](AIDE.md) | FAQ et dépannage |
@@ -217,11 +178,15 @@ Voir [STRUCTURE.md](STRUCTURE.md) pour une description détaillée.
 ### Interface Web
 
 1. **Accéder** à http://localhost:8080
-2. **Sélectionner** un profil ou créer une configuration personnalisée
+2. **Sélectionner** un profil (DEV .NET, WinDev, TENOR, SI, Custom)
 3. **Choisir** les applications à installer
-4. **Configurer** les optimisations (Debloat, Performance, UI)
+4. **Configurer** les optimisations:
+   - ✅ **Debloat Windows** (obligatoire) - Nettoyage bloatware
+   - ⚡ **Optimisations Performance** - CPU, RAM, réseau
+   - 🎨 **Personnalisation UI** - Thème, menu démarrer, fond d'écran
 5. **Générer** le script PowerShell
-6. **Télécharger** et exécuter sur la machine cible
+6. **Télécharger** `PostBootSetup_Generated.ps1`
+7. **Exécuter** sur la machine cible
 
 ### API REST
 
@@ -229,30 +194,18 @@ Voir [STRUCTURE.md](STRUCTURE.md) pour une description détaillée.
 # Générer un script via l'API
 curl -X POST http://localhost:5000/api/generate \
   -H "Content-Type: application/json" \
-  -d @config/profiles/tenor.json \
+  -d '{
+    "profile": "SI",
+    "apps": {
+      "master": true,
+      "profile": ["git", "python", "docker"]
+    },
+    "modules": ["debloat", "performance", "ui_customization"]
+  }' \
   --output PostBootSetup_Generated.ps1
-
-# Valider le script généré
-powershell -ExecutionPolicy Bypass -File ValidateScript.ps1 -ScriptPath "PostBootSetup_Generated.ps1"
 ```
 
 ### Exécution du Script
-
-#### 🖥️ **Méthode 1 : Interface Graphique WPF (Recommandée)**
-
-```batch
-# Double-cliquer sur le fichier ou exécuter en tant qu'Administrateur
-Lancer PostBoot.bat
-```
-
-**Fonctionnalités de l'interface WPF :**
-- ✅ Sélection visuelle du script à exécuter
-- 📊 Suivi en temps réel de la progression (0-100%)
-- 📝 Logs colorés en direct
-- 💾 Sauvegarde des logs au format TXT
-- ⚡ Exécution asynchrone sans blocage
-
-#### 💻 **Méthode 2 : Ligne de Commande**
 
 ```powershell
 # Sur la machine cible Windows
@@ -273,11 +226,27 @@ Lancer PostBoot.bat
 
 | Profil | Description | Applications clés | Use Case |
 |--------|-------------|-------------------|----------|
-| **💻 DEV .NET** | Développeur .NET | Visual Studio, SQL Server, Git, Postman, Python | Développement .NET/C# |
-| **🎯 DEV WinDev** | Développeur WinDev | WinDev, SQL Server, Git, Apps métier | Développement WinDev |
-| **🏢 TENOR** | Projet & Support | eCarAdmin, EDI, Gestion Temps | Postes TENOR |
-| **🔧 SI** | Admin Système | Git, SSMS, DBeaver, Wireshark, Nmap | Administration système |
-| **⚙️ Personnalisé** | Sur mesure | Sélection manuelle | Configuration spécifique |
+| **💻 DEV .NET** | Développeur .NET | Visual Studio Code, Git, Python, DBeaver, Postman | Développement .NET/C# |
+| **🎯 DEV WinDev** | Développeur WinDev | eCarAdmin, EDI Translator, SQL Server, WinSCP | Développement WinDev |
+| **🏢 TENOR** | Projet & Support | eCarAdmin, EDI, Gestion Temps, Cegid PMI | Postes TENOR |
+| **🔧 SI** | Admin Système | Wireshark, Nmap, Advanced IP Scanner, Terraform, AWS CLI | Administration système |
+| **⚙️ Personnalisé** | Sur mesure | Sélection manuelle 40+ apps | Configuration spécifique |
+
+### 🌟 Applications Master (obligatoires)
+
+- Microsoft Office 365
+- Microsoft Teams
+- Notepad++
+- Visual Studio Code
+- Flameshot (capture d'écran)
+- VPN Stormshield (2 VPN: Lyon + Paris)
+- Microsoft PowerToys
+- PDF Gear
+- Winget
+- Microsoft OneDrive
+- 7-Zip
+- **VAULT** (PWA Tenor Password Manager)
+- **DOCS** (PWA Tenor Documentation)
 
 Voir [PROFILS_ET_OPTIMISATIONS.md](PROFILS_ET_OPTIMISATIONS.md) pour le catalogue complet.
 
@@ -286,12 +255,6 @@ Voir [PROFILS_ET_OPTIMISATIONS.md](PROFILS_ET_OPTIMISATIONS.md) pour le catalogu
 ## 🔧 Configuration
 
 ### Variables d'environnement
-
-#### Développement Local
-```bash
-# Aucune configuration requise
-# L'API est accessible sur http://localhost:5000
-```
 
 #### Production
 ```bash
@@ -307,62 +270,28 @@ VITE_API_URL=https://postboot.tenorsolutions.com/api
 
 ```json
 {
-  "name": "MonApp",
-  "category": "dev",
-  "command": "winget install --id MonApp.ID -e --accept-package-agreements --accept-source-agreements",
-  "description": "Description de l'application"
-}
-```
-
-#### Ajouter un Profil
-
-Créer `config/profiles/mon-profil.json`:
-
-```json
-{
-  "profile_name": "Mon Profil",
-  "description": "Description du profil",
-  "apps": {
-    "master": [...],
-    "profile": [...]
+  "common_apps": {
+    "monapp": {
+      "name": "Mon Application",
+      "winget": "Publisher.MonApp",
+      "size": "50 MB",
+      "category": "Développement",
+      "description": "Description de mon application"
+    }
   }
 }
 ```
 
----
+#### Ajouter un MSI personnalisé
 
-## 🧪 Tests & Validation
-
-### Validation des Scripts
-
-```powershell
-# Valider la syntaxe PowerShell
-.\ValidateScript.ps1 -ScriptPath ".\generated\script.ps1"
-```
-
-### Tests Unitaires
-
-```bash
-# Backend (Python)
-cd generator
-pytest tests/
-
-# Frontend (React)
-cd web
-npm run test
-```
-
-### Tests d'Intégration
-
-```bash
-# Tester la génération complète
-curl -X POST http://localhost:5000/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{"profile":"tenor","modules":["debloat","performance"]}' \
-  --output test.ps1
-
-# Valider
-powershell -File ValidateScript.ps1 -ScriptPath "test.ps1"
+```json
+{
+  "name": "Mon App MSI",
+  "url": "http://server.com/app.msi",
+  "installArgs": "/qn /norestart REBOOT=ReallySuppress",
+  "size": "100 MB",
+  "category": "Custom"
+}
 ```
 
 ---
@@ -396,8 +325,6 @@ git push origin feature/ma-fonctionnalite
 - `chore:` Tâches maintenance
 - `test:` Tests
 
-Voir [CONTRIBUTING.md](docs/CONTRIBUTING.md) pour plus de détails.
-
 ---
 
 ## 📞 Support
@@ -406,12 +333,11 @@ Voir [CONTRIBUTING.md](docs/CONTRIBUTING.md) pour plus de détails.
 
 - **Email Support** : [si@tenorsolutions.com](mailto:si@tenorsolutions.com)
 - **Documentation Interne** : `\\tenor.local\data\Déploiement\SI\PostBootSetup\`
-- **GitHub Issues** : [Créer un ticket](https://github.com/BluuArtiis-FR/PostBoot/issues)
+- **GitHub Issues** : [Créer un ticket](https://github.com/TenorDataSolutions/PostBoot/issues)
 
 ### Liens Utiles
 
 - [🆘 FAQ & Dépannage](AIDE.md)
-- [🔧 Guide de Dépannage](docs/TROUBLESHOOTING.md)
 - [📖 Documentation Complète](docs/)
 - [📝 Changelog](CHANGELOG.md)
 - [🏗️ Architecture](ARCHITECTURE.md)
@@ -428,10 +354,10 @@ Usage interne uniquement. Tous droits réservés.
 
 <div align="center">
 
-**PostBootSetup v5.0** - *Simplifiez vos installations Windows*
+**PostBootSetup v5.2** - *Simplifiez vos installations Windows*
 
 Made with ❤️ by Tenor Data Solutions SI Team
 
-[⬆ Retour en haut](#-postbootsetup-v50)
+[⬆ Retour en haut](#-postbootsetup-v52)
 
 </div>

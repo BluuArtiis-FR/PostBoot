@@ -298,7 +298,7 @@ Avant de demander de l'aide, préparer:
 ### Contacts
 
 - **Email Support**: [si@tenorsolutions.com](mailto:si@tenorsolutions.com)
-- **GitHub Issues**: [Créer un ticket](https://github.com/BluuArtiis-FR/PostBoot/issues)
+- **GitHub Issues**: [Créer un ticket](https://github.com/TenorDataSolutions/PostBoot/issues)
 - **Documentation**: `\\tenor.local\data\Déploiement\SI\PostBootSetup\`
 
 ---

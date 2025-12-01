@@ -32,7 +32,7 @@
 
 #### 🐛 Signaler un bug
 
-1. Vérifier que le bug n'est pas déjà signalé dans [Issues](https://github.com/BluuArtiis-FR/PostBoot/issues)
+1. Vérifier que le bug n'est pas déjà signalé dans [Issues](https://github.com/TenorDataSolutions/PostBoot/issues)
 2. Créer une nouvelle issue avec le template "Bug Report"
 3. Fournir:
    - Description claire du problème
@@ -70,7 +70,7 @@ git clone https://github.com/VOTRE-USERNAME/PostBoot.git
 cd PostBoot
 
 # Ajouter l'upstream
-git remote add upstream https://github.com/BluuArtiis-FR/PostBoot.git
+git remote add upstream https://github.com/TenorDataSolutions/PostBoot.git
 ```
 
 ### 2. Créer une branche
@@ -466,7 +466,7 @@ Avant de soumettre une PR, vérifier:
 ## Questions?
 
 - **Email**: si@tenorsolutions.com
-- **GitHub Issues**: [Poser une question](https://github.com/BluuArtiis-FR/PostBoot/issues/new)
+- **GitHub Issues**: [Poser une question](https://github.com/TenorDataSolutions/PostBoot/issues/new)
 - **Documentation**: [docs/](.)
 
 ---

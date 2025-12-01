@@ -356,22 +356,6 @@ const Optimizations = () => {
               </label>
               </div>
             </div>
-
-            {/* Résumé performances - Pleine largeur */}
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <Zap className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">⚡ Gains de performance attendus</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
-                    <span>• Temps de boot : <strong>-30-50%</strong></span>
-                    <span>• Espace disque libéré : <strong>4-8 GB</strong></span>
-                    <span>• Latence réseau : <strong>-5-15ms</strong></span>
-                    <span>• Réactivité interface : <strong>+20-40%</strong></span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>

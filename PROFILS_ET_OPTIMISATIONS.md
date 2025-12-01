@@ -1,4 +1,4 @@
-# PostBootSetup v5.0 - Profils et Optimisations
+# PostBootSetup v5.2 - Profils et Optimisations
 
 ## 📋 Vue d'ensemble
 
@@ -8,7 +8,7 @@ Ce document détaille **exactement** ce qui est proposé par chaque profil et to
 
 ## 📦 Applications Master (Obligatoires pour tous)
 
-Ces 10 applications sont **précochées automatiquement** dans tous les profils (sauf Custom) :
+Ces 13 applications sont **précochées automatiquement** dans tous les profils (sauf Custom) :
 
 | Application | Taille | Catégorie | Description |
 |-------------|--------|-----------|-------------|
@@ -16,12 +16,15 @@ Ces 10 applications sont **précochées automatiquement** dans tous les profils 
 | **Microsoft Teams** | 150 MB | Communication | Plateforme collaboration et visioconférence |
 | **Notepad++** | 8 MB | Éditeur | Éditeur de texte avancé avec coloration syntaxique |
 | **Visual Studio Code** | 85 MB | Éditeur | Éditeur de code Microsoft, extensible via plugins |
-| **Greenshot** | 3 MB | Capture | Outil de capture d'écran et annotation |
-| **VPN Stormshield** | 40 MB | VPN | Client VPN pour connexion sécurisée réseau Tenor |
+| **Flameshot** | 5 MB | Capture | Outil de capture d'écran et annotation |
+| **VPN Stormshield** | 40 MB | VPN | Client VPN connexion sécurisée (2 VPN: Lyon + Paris) |
 | **Microsoft PowerToys** | 25 MB | Utilitaires | Ensemble d'outils système (FancyZones, PowerRename, etc.) |
 | **PDF Gear** | 150 MB | PDF | Lecteur et éditeur PDF gratuit |
 | **Winget** | 5 MB | Gestionnaire | Gestionnaire de paquets Windows (App Installer) |
-| **Microsoft OneDrive Entreprise** | 100 MB | Cloud | Stockage cloud synchronisé entreprise |
+| **Microsoft OneDrive** | 100 MB | Cloud | Stockage cloud synchronisé entreprise |
+| **7-Zip** | 2 MB | Compression | Logiciel de compression/décompression archives |
+| **VAULT** | <1 MB | PWA | Progressive Web App - Tenor Password Manager |
+| **DOCS** | <1 MB | PWA | Progressive Web App - Tenor Documentation |
 
 **Total Master** : ~3.6 GB
 
@@ -58,14 +61,14 @@ Ces 10 applications sont **précochées automatiquement** dans tous les profils 
 | **SQL Server Management Studio** | 600 MB | Outil d'administration bases de données SQL Server |
 | **DBeaver** | 110 MB | Client SQL universel (MySQL, PostgreSQL, Oracle, etc.) |
 | **Postman** | 180 MB | Plateforme tests API REST |
-| **FileZilla** | 15 MB | Client FTP/SFTP pour transfert fichiers |
+| **WinSCP** | 10 MB | Client SFTP/FTP/SCP pour transfert fichiers sécurisé |
 
-**Total DEV WinDev** : ~950 MB
+**Total DEV WinDev** : ~945 MB
 
 ### Cas d'usage
 - Développement d'applications WinDev/WebDev/WinDev Mobile
 - Administration bases de données HFSQL et SQL Server
-- Transfert FTP vers serveurs de production
+- Transfert SFTP/FTP sécurisé vers serveurs de production
 - Tests d'APIs et webservices
 
 ---
@@ -131,7 +134,6 @@ Ces applications peuvent être ajoutées à **n'importe quel profil** :
 
 | Application | Taille | Description |
 |-------------|--------|-------------|
-| **7-Zip** | 2 MB | Logiciel de compression/décompression archives |
 | **VLC Media Player** | 40 MB | Lecteur multimédia universel |
 | **Firefox** | 60 MB | Navigateur web alternatif à Edge |
 | **Google Chrome** | 80 MB | Navigateur web Google |
@@ -529,4 +531,4 @@ R : "SUPPORT" a été renommé en "TENOR" pour refléter les équipes Projet, Su
 
 ---
 
-© 2025 Tenor Data Solutions - Configuration PostBootSetup v5.0
+© 2025 Tenor Data Solutions - Configuration PostBootSetup v5.2

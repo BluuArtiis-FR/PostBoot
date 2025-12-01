@@ -30,7 +30,10 @@
       "category": "Editeur",
       "required": true,
       "preselected": true,
-      "plugins": ["XML Tools", "Compare"]
+      "plugins": [
+        "XML Tools",
+        "Compare"
+      ]
     },
     {
       "name": "Visual Studio Code",
@@ -51,13 +54,14 @@
     },
     {
       "name": "VPN Stormshield",
-      "url": "http://85.90.48.117/vpnssl/",
-      "filePattern": "*.msi",
-      "size": "45 MB",
+      "url": "http://85.90.48.117/vpnssl/vpnstormshield.msi",
+      "size": "60 MB",
       "category": "VPN",
       "required": true,
       "preselected": true,
-      "installArgs": "/qn /norestart REBOOT=ReallySuppress"
+      "installArgs": "/qn /norestart REBOOT=ReallySuppress",
+      "customInstall": true,
+      "installScript": "# Installation VPN Stormshield avec import AddressBook (2 VPN)\nWrite-Host \"Installation de VPN Stormshield...\" -ForegroundColor Cyan\n\n$tempPath = Join-Path $env:TEMP 'vpnstormshield.msi'\ntry {\n    # Télécharger et installer le MSI\n    Invoke-WebRequest -Uri 'http://85.90.48.117/vpnssl/vpnstormshield.msi' -OutFile $tempPath -UseBasicParsing\n    $proc = Start-Process 'msiexec.exe' -ArgumentList \"/i `\"$tempPath`\" /qn /norestart REBOOT=ReallySuppress\" -Wait -PassThru\n    \n    if ($proc.ExitCode -ne 0) {\n        throw \"L'installation MSI a échoué avec le code $($proc.ExitCode)\"\n    }\n    \n    Write-Host \"  [OK] VPN Stormshield installé\" -ForegroundColor Green\n    \n    # Créer le fichier AddressBook.book avec les 2 VPN (Lyon + Paris)\n    Write-Host \"Configuration des connexions VPN (Lyon + Paris)...\" -ForegroundColor Cyan\n    \n    $bookContent = @'\n{\"Entries\":[{\"Id\":0,\"Name\":\"VPN TENOR LYON\",\"Description\":null,\"AutoMount\":false,\"Login\":\"\",\"Password\":\"Sw==\",\"Address\":\"vpn.tenorsolutions.com\",\"Port\":443,\"Otp\":false,\"FallbackAddress\":null,\"FallbackPort\":443,\"IsFavorite\":true,\"IsLastConnection\":true,\"CertHash\":\"46B78E9E4138B72D70359131A27485090C372637B2FF5CE603CAEAB774B744E8\"},{\"Id\":1,\"Name\":\"VPN TENOR PARIS\",\"Description\":\"VPN de secours \",\"AutoMount\":false,\"Login\":null,\"Password\":null,\"Address\":\"vpn-backup.tenorsolutions.com\",\"Port\":443,\"Otp\":false,\"FallbackAddress\":null,\"FallbackPort\":443,\"IsFavorite\":false,\"IsLastConnection\":false,\"CertHash\":null}],\"EncryptedPassword\":true,\"EncryptedPasswordSalt\":15343168359289697346}\n'@\n    \n    $bookPath = Join-Path $env:TEMP 'AddressBook.book'\n    [System.IO.File]::WriteAllText($bookPath, $bookContent, [System.Text.Encoding]::UTF8)\n    \n    # Localiser sslvpn-cli.exe\n    $cliPath = \"$env:ProgramFiles\\Stormshield\\SSL VPN Client\\Modules\\ssl-vpn\\Services\\sslvpn-cli.exe\"\n    if (!(Test-Path $cliPath)) {\n        $cliPath = \"${env:ProgramFiles(x86)}\\Stormshield\\SSL VPN Client\\Modules\\ssl-vpn\\Services\\sslvpn-cli.exe\"\n    }\n    \n    if (Test-Path $cliPath) {\n        # Importer l'AddressBook via CLI officielle (SNS v5+)\n        Write-Host \"  Import des connexions VPN via sslvpn-cli...\" -ForegroundColor Cyan\n        $importProc = Start-Process -FilePath $cliPath -ArgumentList \"import-addressbook --file `\"$bookPath`\"\" -Wait -NoNewWindow -PassThru\n        \n        if ($importProc.ExitCode -eq 0) {\n            Write-Host \"  [OK] Connexions VPN importées (Lyon + Paris)\" -ForegroundColor Green\n        } else {\n            Write-Host \"  [ATTENTION] Import CLI échoué (code $($importProc.ExitCode))\" -ForegroundColor Yellow\n        }\n    } else {\n        Write-Host \"  [ATTENTION] sslvpn-cli.exe non trouvé\" -ForegroundColor Yellow\n    }\n    \n    Write-Host \"VPN Stormshield installé avec succès\" -ForegroundColor Green\n    \n} catch {\n    throw \"Erreur installation VPN Stormshield: $_\"\n} finally {\n    if (Test-Path $tempPath) { Remove-Item $tempPath -Force -ErrorAction SilentlyContinue }\n    if (Test-Path $bookPath) { Remove-Item $bookPath -Force -ErrorAction SilentlyContinue }\n}"
     },
     {
       "name": "Microsoft PowerToys",
@@ -98,6 +102,26 @@
       "category": "Compression",
       "required": true,
       "preselected": true
+    },
+    {
+      "name": "VAULT",
+      "webApp": true,
+      "url": "https://password.tenorsolutions.com/#!/",
+      "size": "1 MB",
+      "category": "Web App",
+      "required": true,
+      "preselected": true,
+      "description": "Gestionnaire de mots de passe Tenor (PWA Edge)"
+    },
+    {
+      "name": "DOCS",
+      "webApp": true,
+      "url": "https://docs.tenorsolutions.com/",
+      "size": "1 MB",
+      "category": "Web App",
+      "required": true,
+      "preselected": true,
+      "description": "Documentation Tenor Data Solutions (PWA Edge)"
     }
   ],
   "common_apps": {
@@ -150,13 +174,12 @@
       "category": "Conteneurisation",
       "description": "Plateforme de conteneurisation"
     },
-    "filezilla": {
-      "name": "FileZilla",
-      "winget": "FileZilla.FileZilla",
-      "fallbackUrl": "https://download.filezilla-project.org/client/FileZilla_3.69.5_win64_sponsored2-setup.exe",
-      "size": "15 MB",
+    "winscp": {
+      "name": "WinSCP",
+      "winget": "WinSCP.WinSCP",
+      "size": "12 MB",
       "category": "FTP",
-      "description": "Client FTP/SFTP"
+      "description": "Client FTP/SFTP/SCP open-source"
     },
     "python": {
       "name": "Python",
@@ -181,11 +204,36 @@
     },
     "avastbusinessantivirus": {
       "name": "Avast Business Antivirus",
-      "url": "https://businesshub.avast.com/installer/ZHRhJTNETWdzWjhYcXQxeFRFdEw5UHUtQnVvMjBDVVk5a1NKbzE4OW5VaTlBdHNpRTRkZEZOVnQ5QmRyWldJZmZXMU82UVptellCdjFWaFVtSG9hZlh5WE1UOUlUMEFjTE02alMxTjkzdE4tNXRLUDFrZVhFeU5VZ0ctTEhQYVJPVUI4ejdRWW4tX3JEcnBDZkRaNlFyWnNyalk4S3ZLSzJQaHZYbi16X3BnM0FWcVdHNlJESExOT21scmQxZDFyaEpkLUJJTzY2bllsLXBfRTUtMkg4RzVJX3RRdyUyOCUyOCUyNm5jbiUzRFBjZTJFV3luRjA4ME5yd19DSkdWb0lPdWM5RSUyOA==/b2f277db-98d5-4b12-8df0-f2c9f5b51d09?encodedDataCenter=aHR0cHM6Ly9idXNpbmVzc2h1Yi1wcm9kLWZyYS5mZi5hdmFzdC5jb20=",
-      "size": "250 MB",
+      "url": "https://stapler-server.ff.avast.com/v2/europe-west1/download/installers/customized/794c9632f4c5a472b1684e836cd0d7e0/b2bcb54218b3c42847e85a67163e889721211d58/avast_business_agent_setup_online.msi",
+      "size": "15 MB",
       "category": "Sécurité",
-      "description": "Antivirus professionnel Avast Business",
-      "installArgs": "/silent /qn /norestart REBOOT=ReallySuppress"
+      "description": "Antivirus professionnel Avast Business - DEV",
+      "installArgs": "/qn /norestart REBOOT=ReallySuppress"
+    },
+    "avastbusinessantivirus_tenor": {
+      "name": "Avast Business Antivirus",
+      "url": "https://stapler-server.ff.avast.com/v2/europe-west1/download/installers/customized/794c9632f4c5a472b1684e836cd0d7e0/675aad701b840d6d032a0be86f25f5fe22f9f1d0/avast_business_agent_setup_online.msi",
+      "size": "15 MB",
+      "category": "Sécurité",
+      "description": "Antivirus professionnel Avast Business - Profil TENOR",
+      "installArgs": "/qn /norestart REBOOT=ReallySuppress"
+    },
+    "avastbusinessantivirus_si": {
+      "name": "Avast Business Antivirus",
+      "url": "https://stapler-server.ff.avast.com/v2/europe-west1/download/installers/customized/794c9632f4c5a472b1684e836cd0d7e0/ea61b0440f2e79eab80bc4fe5c657396360942f0/avast_business_agent_setup_online.msi",
+      "size": "15 MB",
+      "category": "Sécurité",
+      "description": "Antivirus professionnel Avast Business - Profil SI",
+      "installArgs": "/qn /norestart REBOOT=ReallySuppress"
+    },
+    "cegidmanufacturingpmi": {
+      "name": "Cegid Manufacturing PMI",
+      "networkPath": "\\\\SRVLY3\\ManufacturingPmi",
+      "size": "200 MB",
+      "category": "Métier TENOR",
+      "description": "Solution de gestion de production industrielle Cegid",
+      "customInstall": true,
+      "installScript": "# Vérification de l'accès au partage réseau\nif (!(Test-Path '\\\\SRVLY3\\ManufacturingPmi')) {\n    throw \"Impossible d'accéder au partage réseau \\\\SRVLY3\\ManufacturingPmi\"\n}\n\n# Copie locale du répertoire d'installation\n$localDir = Join-Path $env:TEMP 'CegidSetup'\nif (Test-Path $localDir) {\n    Remove-Item $localDir -Recurse -Force\n}\n\nWrite-Host \"Copie des fichiers d'installation depuis le partage réseau...\" -ForegroundColor Cyan\nCopy-Item '\\\\SRVLY3\\ManufacturingPmi' $localDir -Recurse -Force\n\n# Recherche du fichier MSI\n$msiFile = Get-ChildItem -Path $localDir -Filter '*.msi' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1\n\nif (!$msiFile) {\n    throw \"Aucun fichier MSI trouvé dans le répertoire d'installation\"\n}\n\nWrite-Host \"Installation de Cegid Manufacturing PMI...\" -ForegroundColor Cyan\n$proc = Start-Process 'msiexec.exe' -ArgumentList \"/i `\"$($msiFile.FullName)`\" /qn /norestart REBOOT=ReallySuppress\" -Wait -PassThru\n\nif ($proc.ExitCode -ne 0) {\n    Remove-Item $localDir -Recurse -Force -ErrorAction SilentlyContinue\n    throw \"L'installation a échoué avec le code $($proc.ExitCode)\"\n}\n\n# Copie des fichiers de configuration\nWrite-Host \"Configuration de Cegid Manufacturing PMI...\" -ForegroundColor Cyan\n$configPath = 'C:\\Program Files (x86)\\Cegid\\ManufacturingPMI\\Config'\nif (!(Test-Path $configPath)) {\n    New-Item -Path $configPath -ItemType Directory -Force | Out-Null\n}\n\nCopy-Item '\\\\SRVLY3\\ManufacturingPmi\\Deploiement V16\\Config\\*' $configPath -Force -Recurse -ErrorAction SilentlyContinue\nCopy-Item '\\\\SRVLY3\\ManufacturingPmi\\Deploiement V16\\PG1LIFE.wdl' 'C:\\Program Files (x86)\\Cegid\\ManufacturingPMI\\PG1LIFE.wdl' -Force -ErrorAction SilentlyContinue\n\n# Nettoyer le répertoire temporaire\nRemove-Item $localDir -Recurse -Force -ErrorAction SilentlyContinue\n\nWrite-Host \"Cegid Manufacturing PMI installé avec succès\" -ForegroundColor Green"
     }
   },
   "profiles": {
@@ -193,47 +241,146 @@
       "name": "Développeur .NET",
       "description": "Environnement complet pour développement .NET/C#",
       "apps": [
-        {"ref": "git", "preselected": true},
-        {"ref": "python", "preselected": true},
-        {"ref": "dbeaver", "preselected": true},
-        {"ref": "postman", "preselected": true},
-        {"ref": "dockerdesktop", "preselected": true},
-        {"ref": "sqlservermanagementstudio", "preselected": false},
-        {"ref": "ecaradmin", "preselected": false},
-        {"ref": "editranslator", "preselected": false},
-        {"ref": "gestiontemps", "preselected": false},
-        {"ref": "nodejs", "preselected": false},
-        {"ref": "avastbusinessantivirus", "preselected": true}
+        {
+          "ref": "git",
+          "preselected": true
+        },
+        {
+          "ref": "python",
+          "preselected": true
+        },
+        {
+          "ref": "dbeaver",
+          "preselected": true
+        },
+        {
+          "ref": "postman",
+          "preselected": true
+        },
+        {
+          "ref": "dockerdesktop",
+          "preselected": true
+        },
+        {
+          "ref": "sqlservermanagementstudio",
+          "preselected": false
+        },
+        {
+          "ref": "ecaradmin",
+          "preselected": false
+        },
+        {
+          "ref": "editranslator",
+          "preselected": false
+        },
+        {
+          "ref": "gestiontemps",
+          "preselected": false
+        },
+        {
+          "ref": "nodejs",
+          "preselected": false
+        },
+        {
+          "ref": "avastbusinessantivirus",
+          "preselected": true
+        }
       ]
     },
     "DEV_WINDEV": {
       "name": "Développeur WinDev",
       "description": "Outils de développement WinDev et applications métier",
       "apps": [
-        {"ref": "ecaradmin", "preselected": true},
-        {"ref": "editranslator", "preselected": true},
-        {"ref": "filezilla", "preselected": true},
-        {"ref": "sqlservermanagementstudio", "preselected": true},
-        {"ref": "gestiontemps", "preselected": true},
-        {"ref": "postman", "preselected": false},
-        {"ref": "python", "preselected": false},
-        {"ref": "git", "preselected": false},
-        {"ref": "dbeaver", "preselected": false},
-        {"ref": "nodejs", "preselected": false},
-        {"ref": "dockerdesktop", "preselected": false},
-        {"ref": "avastbusinessantivirus", "preselected": true}
+        {
+          "ref": "ecaradmin",
+          "preselected": true
+        },
+        {
+          "ref": "editranslator",
+          "preselected": true
+        },
+        {
+          "ref": "winscp",
+          "preselected": true
+        },
+        {
+          "ref": "sqlservermanagementstudio",
+          "preselected": true
+        },
+        {
+          "ref": "gestiontemps",
+          "preselected": true
+        },
+        {
+          "ref": "cegidmanufacturingpmi",
+          "preselected": false
+        },
+        {
+          "ref": "postman",
+          "preselected": false
+        },
+        {
+          "ref": "python",
+          "preselected": false
+        },
+        {
+          "ref": "git",
+          "preselected": false
+        },
+        {
+          "ref": "dbeaver",
+          "preselected": false
+        },
+        {
+          "ref": "nodejs",
+          "preselected": false
+        },
+        {
+          "ref": "dockerdesktop",
+          "preselected": false
+        },
+        {
+          "ref": "avastbusinessantivirus",
+          "preselected": true
+        }
       ]
     },
     "TENOR": {
       "name": "TENOR",
       "description": "Outils métier Tenor - Support et Projet",
       "apps": [
-        {"ref": "ecaradmin", "preselected": true},
-        {"ref": "editranslator", "preselected": true},
-        {"ref": "gestiontemps", "preselected": true},
-        {"ref": "postman", "preselected": false},
-        {"ref": "git", "preselected": false},
-        {"ref": "filezilla", "preselected": true}
+        {
+          "ref": "ecaradmin",
+          "preselected": true
+        },
+        {
+          "ref": "editranslator",
+          "preselected": true
+        },
+        {
+          "ref": "gestiontemps",
+          "preselected": true
+        },
+        {
+          "ref": "cegidmanufacturingpmi",
+          "preselected": true
+        },
+        {
+          "ref": "postman",
+          "preselected": false
+        },
+        {
+          "ref": "git",
+          "preselected": false
+        },
+        {
+          "ref": "winscp",
+          "preselected": true
+        },
+        {
+          "ref": "avastbusinessantivirus_tenor",
+          "preselected": true
+        }
       ]
     },
     "SI": {
@@ -264,7 +411,10 @@
           "description": "Scanner d'adresses IP rapide",
           "preselected": true
         },
-        {"ref": "dockerdesktop", "preselected": true},
+        {
+          "ref": "dockerdesktop",
+          "preselected": true
+        },
         {
           "name": "PowerShell Core",
           "winget": "Microsoft.PowerShell",
@@ -340,11 +490,29 @@
           "description": "Test de sécurité des applications web",
           "preselected": true
         },
-        {"ref": "dbeaver", "preselected": true},
-        {"ref": "ecaradmin", "preselected": true},
-        {"ref": "git", "preselected": true, "category": "DevOps", "description": "Gestion de versions distribuée"},
-        {"ref": "postman", "preselected": true, "description": "Test et documentation d'APIs"},
-        {"ref": "sqlservermanagementstudio", "preselected": true},
+        {
+          "ref": "dbeaver",
+          "preselected": true
+        },
+        {
+          "ref": "ecaradmin",
+          "preselected": true
+        },
+        {
+          "ref": "git",
+          "preselected": true,
+          "category": "DevOps",
+          "description": "Gestion de versions distribuée"
+        },
+        {
+          "ref": "postman",
+          "preselected": true,
+          "description": "Test et documentation d'APIs"
+        },
+        {
+          "ref": "sqlservermanagementstudio",
+          "preselected": true
+        },
         {
           "name": "Draw.io",
           "winget": "JGraph.Draw",
@@ -353,12 +521,35 @@
           "description": "Création de diagrammes et schémas",
           "preselected": true
         },
-        {"ref": "python", "preselected": false, "category": "Développement"},
-        {"ref": "nodejs", "preselected": false},
-        {"ref": "editranslator", "preselected": false},
-        {"ref": "gestiontemps", "preselected": false},
-        {"ref": "filezilla", "preselected": false},
-        {"ref": "avastbusinessantivirus", "preselected": true, "url": "https://businesshub.avast.com/installer/ZHRhJTNETHFEaFlPV25QU2Y4bXpva1hCV29tMDdNVmtpTnl2QVF0di1JcnN4a0hKSExfZGpTbEs1c0t6VFIxd1RMSTVtY3JBcFFoZDVWYUZKZWp1LXFsaV9LMWhhZE1IeXRNR2FTSDFCaVMzLWxxNGs2T2JPMklOTUI1UXpWZ0NpU2VxVkNuRjF4X3RQX3ZOVlQ0Zm9mZWhXbE5pZUtvdHB6b2pjN1BsSDhOMkF0cU56TGZ1Qm9pRlF3MmFab1dEZm90SVJBS2Nrd1J6Qm1oSWxNTC04WW10LWVpUSUyOCUyOCUyNm5jbiUzRDBOVHpZWDgwcjdQeW1iWUFWRUF1a0xGOUZtNCUyOA==/b2f277db-98d5-4b12-8df0-f2c9f5b51d09?encodedDataCenter=aHR0cHM6Ly9idXNpbmVzc2h1Yi1wcm9kLWZyYS5mZi5hdmFzdC5jb20="}
+        {
+          "ref": "python",
+          "preselected": false,
+          "category": "Développement"
+        },
+        {
+          "ref": "nodejs",
+          "preselected": false
+        },
+        {
+          "ref": "editranslator",
+          "preselected": false
+        },
+        {
+          "ref": "gestiontemps",
+          "preselected": false
+        },
+        {
+          "ref": "cegidmanufacturingpmi",
+          "preselected": false
+        },
+        {
+          "ref": "winscp",
+          "preselected": false
+        },
+        {
+          "ref": "avastbusinessantivirus_si",
+          "preselected": true
+        }
       ]
     },
     "CUSTOM": {

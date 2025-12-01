@@ -432,7 +432,7 @@ PostBootSetup_WPF.ps1
 
 **Contact**: si@tenorsolutions.com
 **Documentation complete**: [README.md](../README.md)
-**GitHub**: [PostBoot Issues](https://github.com/BluuArtiis-FR/PostBoot/issues)
+**GitHub**: [PostBoot Issues](https://github.com/TenorDataSolutions/PostBoot/issues)
 
 ---
 

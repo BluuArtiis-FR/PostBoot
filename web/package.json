@@ -1,6 +1,6 @@
 {
   "name": "postboot-web",
-  "version": "5.0.0",
+  "version": "5.2.0",
   "description": "PostBootSetup v5.0 - Interface web React",
   "type": "module",
   "scripts": {

@@ -338,7 +338,7 @@ C:\Users\[User]\AppData\Local\Temp\PostBootSetup_YYYYMMDD_HHMMSS.log
 
 - **Email**: si@tenorsolutions.com
 - **Documentation**: `\\tenor.local\data\Déploiement\SI\PostBootSetup\`
-- **GitHub**: https://github.com/BluuArtiis-FR/PostBoot/issues
+- **GitHub**: https://github.com/TenorDataSolutions/PostBoot/issues
 
 ---
 

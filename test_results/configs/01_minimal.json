@@ -1,9 +1,0 @@
-{
-  "computerName": "TEST-MINIMAL",
-  "profile_name": "Test Minimal",
-  "apps": {
-    "master": ["Chrome", "7zip", "Adobe Acrobat Reader", "VLC", "Teams", "Outlook", "Word", "Excel", "PowerPoint", "OneNote", "OneDrive"],
-    "profile": []
-  },
-  "modules": ["debloat"]
-}
