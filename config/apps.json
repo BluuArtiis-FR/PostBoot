@@ -27,15 +27,12 @@
     },
     {
       "name": "Notepad++",
-      "winget": "Notepad++.Notepad++",
       "size": "8 MB",
       "category": "Editeur",
       "required": true,
       "preselected": true,
-      "plugins": [
-        "XML Tools",
-        "Compare"
-      ]
+      "customInstall": true,
+      "installScript": "# Installation Notepad++ via GitHub\n$nppVersion = '8.8.8'\n$nppUrl = \"https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v$nppVersion/npp.$nppVersion.Installer.x64.exe\"\n$nppInstaller = \"$env:TEMP\\npp-installer.exe\"\n\nWrite-Host \"  Téléchargement Notepad++ v$nppVersion...\" -ForegroundColor Gray\ntry {\n    Invoke-WebRequest -Uri $nppUrl -OutFile $nppInstaller -UseBasicParsing -ErrorAction Stop\n    \n    Write-Host \"  Installation Notepad++ (mode silencieux)...\" -ForegroundColor Gray\n    $installProc = Start-Process -FilePath $nppInstaller -ArgumentList '/S' -Wait -NoNewWindow -PassThru\n    \n    if ($installProc.ExitCode -eq 0) {\n        Write-Host \"    [OK] Notepad++ installé\" -ForegroundColor Green\n    } else {\n        Write-Host \"    [ERREUR] Échec installation Notepad++ (Exit Code: $($installProc.ExitCode))\" -ForegroundColor Red\n    }\n    \n    # Nettoyage\n    Remove-Item -Path $nppInstaller -Force -ErrorAction SilentlyContinue\n} catch {\n    Write-Host \"    [ERREUR] Impossible de télécharger Notepad++: $_\" -ForegroundColor Red\n}\n"
     },
     {
       "name": "Visual Studio Code",

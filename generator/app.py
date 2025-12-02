@@ -474,6 +474,11 @@ function Test-AppInstalled {
             $searchPatterns += @("Microsoft Teams", "Teams Machine-Wide Installer")
         }
 
+        # Notepad++ a plusieurs noms possibles dans le registre
+        if ($AppName -like "*Notepad++*") {
+            $searchPatterns += @("Notepad++", "Notepad++ (64-bit x64)")
+        }
+
         foreach ($path in $registryPaths) {
             foreach ($pattern in $searchPatterns) {
                 $installed = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue |
