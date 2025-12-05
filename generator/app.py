@@ -1515,9 +1515,29 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
     # Construire la liste des apps master (avec déduplication)
     master_apps_dict = {}
     if 'installation' in script_types:
+        # Déterminer si on doit inclure automatiquement les apps master
+        # 1. Si un profil standard est sélectionné (ex: TENOR, DEV_DOTNET) -> inclure master
+        # 2. Si profil personnalisé avec 'preselect_master': true -> inclure master
+        # 3. Si profil personnalisé sans config -> inclure master par défaut
+        # 4. Sinon, respecter la sélection manuelle
+
+        profile_name = user_config.get('profile')
+        preselect_master = user_config.get('preselect_master', True)  # True par défaut
+        has_manual_selection = len(user_config.get('master_apps', [])) > 0
+
+        # Si profil standard (non Custom/Personnalisé), toujours inclure master
+        is_standard_profile = profile_name and profile_name not in ['Custom', 'Personnalisé', 'custom', 'personnalisé']
+
+        # Inclure master si: profil standard OU (personnalisé avec preselect ET pas de sélection manuelle)
+        auto_include_master = is_standard_profile or (preselect_master and not has_manual_selection)
+
         for app in apps_data.get('master', []):
-            app_id = app.get('winget') or app.get('url')
-            if app_id in user_config.get('master_apps', []) or user_config.get('profile'):
+            app_id = app.get('winget') or app.get('url') or app.get('name')
+
+            # Inclure l'app si:
+            # - Elle est dans master_apps (sélection manuelle)
+            # - OU inclusion automatique activée
+            if app_id in user_config.get('master_apps', []) or auto_include_master:
                 # Dédupliquer (au cas où il y aurait des doublons dans la config)
                 if app_id not in master_apps_dict:
                     master_apps_dict[app_id] = {
@@ -1531,7 +1551,8 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
                         'customInstall': app.get('customInstall'),
                         'installScript': app.get('installScript'),
                         'filePattern': app.get('filePattern'),
-                        'networkPath': app.get('networkPath')
+                        'networkPath': app.get('networkPath'),
+                        'plugins': app.get('plugins')
                     }
 
     master_apps = list(master_apps_dict.values())
@@ -1540,10 +1561,33 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
     # IMPORTANT: Utiliser un dictionnaire pour dédupliquer par app_id
     profile_apps_dict = {}
     if 'installation' in script_types:
-        # Apps de profil
+        # Si un profil de base est spécifié (ex: "base_profile": "DEV_DOTNET"),
+        # inclure automatiquement toutes ses apps
+        base_profile_name = user_config.get('base_profile')
+        if base_profile_name and base_profile_name in apps_data.get('profiles', {}):
+            base_profile_data = apps_data['profiles'][base_profile_name]
+            for app in base_profile_data.get('apps', []):
+                app_id = app.get('winget') or app.get('url') or app.get('name')
+                if app_id not in profile_apps_dict:
+                    profile_apps_dict[app_id] = {
+                        'name': app.get('name'),
+                        'winget': app.get('winget'),
+                        'url': app.get('url'),
+                        'size': app.get('size'),
+                        'category': app.get('category'),
+                        'installArgs': app.get('installArgs'),
+                        'webApp': app.get('webApp'),
+                        'customInstall': app.get('customInstall'),
+                        'installScript': app.get('installScript'),
+                        'filePattern': app.get('filePattern'),
+                        'networkPath': app.get('networkPath'),
+                        'plugins': app.get('plugins')
+                    }
+
+        # Apps de profil sélectionnées manuellement
         for profile_id, profile_data in apps_data.get('profiles', {}).items():
             for app in profile_data.get('apps', []):
-                app_id = app.get('winget') or app.get('url')
+                app_id = app.get('winget') or app.get('url') or app.get('name')
                 if app_id in user_config.get('profile_apps', []):
                     # Ne garder que la première occurrence de chaque app
                     if app_id not in profile_apps_dict:
@@ -1558,18 +1602,20 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
                             'customInstall': app.get('customInstall'),
                             'installScript': app.get('installScript'),
                             'filePattern': app.get('filePattern'),
-                            'networkPath': app.get('networkPath')
+                            'networkPath': app.get('networkPath'),
+                            'plugins': app.get('plugins')
                         }
 
         # Apps optionnelles
         for app in apps_data.get('optional', []):
-            app_id = app.get('winget')
+            app_id = app.get('winget') or app.get('url') or app.get('name')
             if app_id in user_config.get('optional_apps', []):
                 # Ne garder que la première occurrence
                 if app_id not in profile_apps_dict:
                     profile_apps_dict[app_id] = {
                         'name': app.get('name'),
                         'winget': app.get('winget'),
+                        'url': app.get('url'),
                         'size': app.get('size'),
                         'category': app.get('category'),
                         'installArgs': app.get('installArgs'),
@@ -1577,7 +1623,8 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
                         'customInstall': app.get('customInstall'),
                         'installScript': app.get('installScript'),
                         'filePattern': app.get('filePattern'),
-                        'networkPath': app.get('networkPath')
+                        'networkPath': app.get('networkPath'),
+                        'plugins': app.get('plugins')
                     }
 
     # Convertir le dictionnaire en liste
