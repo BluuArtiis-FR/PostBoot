@@ -111,8 +111,10 @@ class ScriptGenerator:
 
                         resolved_apps.append(resolved_app)
                     else:
-                        logger.warning(f"Référence non trouvée dans common_apps: {ref_id}")
-                        resolved_apps.append(app)  # Garder tel quel
+                        # Référence invalide - lever une exception
+                        logger.error(f"ERREUR: Référence invalide '{ref_id}' dans le profil '{profile_name}'")
+                        logger.error(f"Références valides disponibles: {', '.join(sorted(common_apps.keys()))}")
+                        raise ValueError(f"Référence invalide '{ref_id}' dans le profil '{profile_name}'. Cette application n'existe pas dans common_apps.")
                 else:
                     # App complète, garder telle quelle
                     resolved_apps.append(app)
@@ -466,17 +468,17 @@ function Test-AppInstalled {
 
         # Office 365 a plusieurs noms possibles dans le registre
         if ($AppName -like "*Office*365*" -or $AppName -like "*Microsoft*Office*") {
-            $searchPatterns += @("Microsoft 365 Apps", "Office 365", "Microsoft Office")
+            $searchPatterns += @("Microsoft 365 Apps", "Office 365", "Microsoft Office", "Microsoft Office Professional Plus", "Office 16", "Office 21", "Office LTSC")
         }
 
         # Teams a plusieurs noms possibles dans le registre
         if ($AppName -like "*Teams*") {
-            $searchPatterns += @("Microsoft Teams", "Teams Machine-Wide Installer")
+            $searchPatterns += @("Microsoft Teams", "Teams Machine-Wide Installer", "Microsoft Teams classic")
         }
 
         # Notepad++ a plusieurs noms possibles dans le registre
         if ($AppName -like "*Notepad++*") {
-            $searchPatterns += @("Notepad++", "Notepad++ (64-bit x64)")
+            $searchPatterns += @("Notepad++", "Notepad++ (64-bit x64)", "Notepad++ (32-bit x86)")
         }
 
         foreach ($path in $registryPaths) {
@@ -778,7 +780,7 @@ function Install-CustomApp {
         if ($App.filePattern -and $downloadUrl.EndsWith('/')) {
             try {
                 $dirContent = Invoke-WebRequest -Uri $downloadUrl -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
-                $pattern = $App.filePattern -replace '\*', '.*'
+                $pattern = $App.filePattern -replace '\\*', '.*'
                 $matches = [regex]::Matches($dirContent.Content, 'href="([^"]+)"')
                 $foundFile = $null
 
@@ -1026,6 +1028,11 @@ function Install-CustomScriptApp {
         # Exécuter le script d'installation fourni
         $scriptBlock = [ScriptBlock]::Create($App.installScript)
         & $scriptBlock
+
+        # Installer les plugins si c'est Notepad++ et qu'ils sont spécifiés
+        if ($App.name -eq "Notepad++" -and $App.plugins) {
+            Install-NotepadPlusPlusPlugins -Plugins $App.plugins
+        }
 
         Write-ScriptLog "[OK] $($App.name) installé avec succès" -Level SUCCESS
         return $true
