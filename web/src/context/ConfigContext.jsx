@@ -97,16 +97,30 @@ export const ConfigProvider = ({ children }) => {
     fetchData();
   }, []);
 
+  // Résoudre une référence d'app
+  const resolveApp = (appRef) => {
+    if (appRef.ref && apps?.common_apps?.[appRef.ref]) {
+      return { ...apps.common_apps[appRef.ref], ...appRef, ref: undefined };
+    }
+    return appRef;
+  };
+
+  // Obtenir l'ID d'une app (winget, url ou name)
+  const getAppId = (app) => {
+    const resolved = resolveApp(app);
+    return resolved.winget || resolved.url || resolved.name;
+  };
+
   // Sélectionner un profil
   const selectProfile = (profileId) => {
     if (!apps) return;
 
-    // Mode Custom (profileId = null)
-    if (profileId === null) {
+    // Mode Custom (profileId = null ou 'CUSTOM')
+    if (profileId === null || profileId === 'CUSTOM') {
       setUserConfig({
-        profile: null,
+        profile: profileId,
         custom_name: 'Configuration personnalisée',
-        master_apps: [],
+        master_apps: apps.master?.map(app => getAppId(app)) || [],
         profile_apps: [],
         optional_apps: [],
         modules: {
@@ -151,14 +165,15 @@ export const ConfigProvider = ({ children }) => {
     // Déterminer si le profil permet l'édition des apps master
     const allowMasterEdit = apps.profiles[profileId]?.allowMasterEdit || false;
 
-    // Pré-sélectionner uniquement les apps avec preselected: true
+    // Pré-sélectionner les apps master (toutes dans un profil prédéfini)
     const preselectedMasterApps = allowMasterEdit
-      ? apps.master.filter(app => app.preselected).map(app => app.winget || app.url)
-      : apps.master.map(app => app.winget || app.url); // Dans un profil normal, toutes les master apps sont incluses
+      ? apps.master?.filter(app => app.preselected).map(app => getAppId(app)) || []
+      : apps.master?.map(app => getAppId(app)) || [];
 
+    // Pré-sélectionner les apps du profil avec preselected: true
     const preselectedProfileApps = profileApps
       .filter(app => app.preselected)
-      .map(app => app.winget || app.url);
+      .map(app => getAppId(app));
 
     setUserConfig((prev) => ({
       ...prev,
@@ -242,6 +257,8 @@ export const ConfigProvider = ({ children }) => {
     resetConfig,
     updateConfig,
     updateModule,
+    resolveApp,
+    getAppId,
   };
 
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;

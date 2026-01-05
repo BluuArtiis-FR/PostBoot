@@ -1,13 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from './context/ConfigContext';
-import Header from './components/Header';
 import Footer from './components/Footer';
-import Home from './pages/Home';
-import Installation from './pages/Installation';
-import Optimizations from './pages/Optimizations';
-import Diagnostic from './pages/Diagnostic';
-import Generate from './pages/Generate';
+import ConfigurationPage from './pages/ConfigurationPage';
 import Success from './pages/Success';
 
 function App() {
@@ -15,17 +10,17 @@ function App() {
     <Router>
       <ConfigProvider>
         <div className="min-h-screen flex flex-col bg-gray-50">
-          <Header />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/installation" element={<Installation />} />
-              <Route path="/optimizations" element={<Optimizations />} />
-              <Route path="/diagnostic" element={<Diagnostic />} />
-              <Route path="/generate" element={<Generate />} />
+              <Route path="/" element={<ConfigurationPage />} />
               <Route path="/success" element={<Success />} />
-              {/* Legacy route for compatibility */}
-              <Route path="/customize" element={<Installation />} />
+              {/* Redirection des anciennes routes vers la page principale */}
+              <Route path="/home" element={<Navigate to="/" replace />} />
+              <Route path="/installation" element={<Navigate to="/" replace />} />
+              <Route path="/optimizations" element={<Navigate to="/" replace />} />
+              <Route path="/diagnostic" element={<Navigate to="/" replace />} />
+              <Route path="/generate" element={<Navigate to="/" replace />} />
+              <Route path="/customize" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
           <Footer />

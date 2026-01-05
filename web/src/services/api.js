@@ -71,8 +71,10 @@ export const apiService = {
 
   // Generate script
   async generateScript(config) {
-    const response = await api.post('/api/generate/script', config);
-    return response.data;
+    const response = await api.post('/api/generate', config, {
+      responseType: 'blob',
+    });
+    return response;
   },
 
   // Generate executable (désactivé sur Linux Docker)

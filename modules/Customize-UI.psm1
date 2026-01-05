@@ -56,7 +56,7 @@ function Set-RegistryForAllUsers {
     # 2. Appliquer au profil par défaut (HKU\.DEFAULT) pour les futurs utilisateurs
     try {
         # Convertir le chemin HKCU en HKU\.DEFAULT
-        $defaultPath = $Path -replace '^HKCU:\\', 'Registry::HKU\.DEFAULT\'
+        $defaultPath = $Path -replace '^HKCU:\\', 'Registry::HKU\.DEFAULT\\'
 
         if (-not (Test-Path $defaultPath)) {
             New-Item -Path $defaultPath -Force -ErrorAction SilentlyContinue | Out-Null
@@ -73,7 +73,7 @@ function Set-RegistryForAllUsers {
 
             if ($LASTEXITCODE -eq 0 -or $regLoadResult -match "already in use") {
                 # Convertir le chemin HKCU en chemin pour la ruche chargée
-                $templatePath = $Path -replace '^HKCU:\\', 'Registry::HKU\DefaultUserTemplate\'
+                $templatePath = $Path -replace '^HKCU:\\', 'Registry::HKU\DefaultUserTemplate\\'
 
                 if (-not (Test-Path $templatePath)) {
                     New-Item -Path $templatePath -Force -ErrorAction SilentlyContinue | Out-Null

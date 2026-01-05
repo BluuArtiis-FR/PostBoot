@@ -226,15 +226,18 @@
       "networkPath": "\\\\SRVLY3\\ManufacturingPmi",
       "size": "200 MB",
       "category": "Métier TENOR",
-      "description": "Solution de gestion de production industrielle Cegid",
+      "description": "Solution de gestion de production industrielle Cegid (inclut VCredist 2010 et 2015-2022)",
       "customInstall": true,
-      "installScript": "# Vérification de la connectivité réseau au serveur\nWrite-Host \"Vérification de l'accès au serveur SRVLY3...\" -ForegroundColor Cyan\n$pingResult = Test-Connection -ComputerName 'SRVLY3' -Count 2 -Quiet -ErrorAction SilentlyContinue\nif (!$pingResult) {\n    throw \"Serveur SRVLY3 injoignable. Vérifiez la connexion réseau.\"\n}\n\n# Vérification de l'accès au partage réseau avec timeout\n$networkPath = '\\\\SRVLY3\\ManufacturingPmi'\n$testJob = Start-Job -ScriptBlock { param($path) Test-Path $path } -ArgumentList $networkPath\n$testResult = $testJob | Wait-Job -Timeout 30\n\nif (!$testResult) {\n    $testJob | Stop-Job -ErrorAction SilentlyContinue\n    $testJob | Remove-Job -Force -ErrorAction SilentlyContinue\n    throw \"Timeout lors de l'accès au partage $networkPath (30 sec)\"\n}\n\n$pathExists = Receive-Job -Job $testJob\n$testJob | Remove-Job -Force\n\nif (!$pathExists) {\n    throw \"Impossible d'accéder au partage réseau $networkPath\"\n}\n\n# Copie locale du répertoire d'installation\n$localDir = Join-Path $env:TEMP 'CegidSetup'\nif (Test-Path $localDir) {\n    Remove-Item $localDir -Recurse -Force\n}\n\nWrite-Host \"Copie des fichiers d'installation depuis le partage réseau...\" -ForegroundColor Cyan\ntry {\n    Copy-Item $networkPath $localDir -Recurse -Force -ErrorAction Stop\n} catch {\n    throw \"Erreur lors de la copie depuis $networkPath : $_\"\n}\n\n# Recherche du fichier MSI\n$msiFile = Get-ChildItem -Path $localDir -Filter '*.msi' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1\n\nif (!$msiFile) {\n    throw \"Aucun fichier MSI trouvé dans le répertoire d'installation\"\n}\n\nWrite-Host \"Installation de Cegid Manufacturing PMI...\" -ForegroundColor Cyan\n$proc = Start-Process 'msiexec.exe' -ArgumentList \"/i `\"$($msiFile.FullName)`\" /qn /norestart REBOOT=ReallySuppress\" -Wait -PassThru\n\nif ($proc.ExitCode -ne 0) {\n    Remove-Item $localDir -Recurse -Force -ErrorAction SilentlyContinue\n    throw \"L'installation a échoué avec le code $($proc.ExitCode)\"\n}\n\n# Copie des fichiers de configuration\nWrite-Host \"Configuration de Cegid Manufacturing PMI...\" -ForegroundColor Cyan\n$configPath = 'C:\\Program Files (x86)\\Cegid\\ManufacturingPMI\\Config'\nif (!(Test-Path $configPath)) {\n    New-Item -Path $configPath -ItemType Directory -Force | Out-Null\n}\n\nCopy-Item '\\\\SRVLY3\\ManufacturingPmi\\Deploiement V16\\Config\\*' $configPath -Force -Recurse -ErrorAction SilentlyContinue\nCopy-Item '\\\\SRVLY3\\ManufacturingPmi\\Deploiement V16\\PG1LIFE.wdl' 'C:\\Program Files (x86)\\Cegid\\ManufacturingPMI\\PG1LIFE.wdl' -Force -ErrorAction SilentlyContinue\n\n# Nettoyer le répertoire temporaire\nRemove-Item $localDir -Recurse -Force -ErrorAction SilentlyContinue\n\nWrite-Host \"Cegid Manufacturing PMI installé avec succès\" -ForegroundColor Green"
+      "installScript": "# ============================================\n# Installation des prérequis Visual C++ Redistributable\n# ============================================\nWrite-Host \"Installation des prerequis Visual C++ Redistributable...\" -ForegroundColor Cyan\n\n# Fonction pour installer via winget\nfunction Install-VCRedist {\n    param([string]$PackageId, [string]$Name)\n    Write-Host \"  Installation $Name...\" -ForegroundColor Gray\n    try {\n        $result = winget install --id $PackageId --silent --accept-package-agreements --accept-source-agreements 2>&1\n        if ($LASTEXITCODE -eq 0 -or $result -match 'already installed') {\n            Write-Host \"    [OK] $Name\" -ForegroundColor Green\n        } else {\n            Write-Host \"    [ATTENTION] $Name - Code: $LASTEXITCODE\" -ForegroundColor Yellow\n        }\n    } catch {\n        Write-Host \"    [ATTENTION] $Name - Erreur: $_\" -ForegroundColor Yellow\n    }\n}\n\n# VCredist 2010 x86 et x64\nInstall-VCRedist -PackageId 'Microsoft.VCRedist.2010.x86' -Name 'VC++ 2010 x86'\nInstall-VCRedist -PackageId 'Microsoft.VCRedist.2010.x64' -Name 'VC++ 2010 x64'\n\n# VCredist 2015-2022 x86 et x64\nInstall-VCRedist -PackageId 'Microsoft.VCRedist.2015+.x86' -Name 'VC++ 2015-2022 x86'\nInstall-VCRedist -PackageId 'Microsoft.VCRedist.2015+.x64' -Name 'VC++ 2015-2022 x64'\n\nWrite-Host \"Prerequis Visual C++ installes\" -ForegroundColor Green\n\n# ============================================\n# Installation Cegid Manufacturing PMI\n# ============================================\n\n# Vérification de la connectivité réseau au serveur\nWrite-Host \"Verification de l'acces au serveur SRVLY3...\" -ForegroundColor Cyan\n$pingResult = Test-Connection -ComputerName 'SRVLY3' -Count 2 -Quiet -ErrorAction SilentlyContinue\nif (!$pingResult) {\n    throw \"Serveur SRVLY3 injoignable. Verifiez la connexion reseau.\"\n}\n\n# Vérification de l'accès au partage réseau avec timeout\n$networkPath = '\\\\SRVLY3\\ManufacturingPmi'\n$testJob = Start-Job -ScriptBlock { param($path) Test-Path $path } -ArgumentList $networkPath\n$testResult = $testJob | Wait-Job -Timeout 30\n\nif (!$testResult) {\n    $testJob | Stop-Job -ErrorAction SilentlyContinue\n    $testJob | Remove-Job -Force -ErrorAction SilentlyContinue\n    throw \"Timeout lors de l'acces au partage $networkPath (30 sec)\"\n}\n\n$pathExists = Receive-Job -Job $testJob\n$testJob | Remove-Job -Force\n\nif (!$pathExists) {\n    throw \"Impossible d'acceder au partage reseau $networkPath\"\n}\n\n# Copie locale du répertoire d'installation\n$localDir = Join-Path $env:TEMP 'CegidSetup'\nif (Test-Path $localDir) {\n    Remove-Item $localDir -Recurse -Force\n}\n\nWrite-Host \"Copie des fichiers d'installation depuis le partage reseau...\" -ForegroundColor Cyan\ntry {\n    Copy-Item $networkPath $localDir -Recurse -Force -ErrorAction Stop\n} catch {\n    throw \"Erreur lors de la copie depuis $networkPath : $_\"\n}\n\n# Recherche du fichier MSI\n$msiFile = Get-ChildItem -Path $localDir -Filter '*.msi' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1\n\nif (!$msiFile) {\n    throw \"Aucun fichier MSI trouve dans le repertoire d'installation\"\n}\n\nWrite-Host \"Installation de Cegid Manufacturing PMI...\" -ForegroundColor Cyan\n$proc = Start-Process 'msiexec.exe' -ArgumentList \"/i `\"$($msiFile.FullName)`\" /qn /norestart REBOOT=ReallySuppress\" -Wait -PassThru\n\nif ($proc.ExitCode -ne 0) {\n    Remove-Item $localDir -Recurse -Force -ErrorAction SilentlyContinue\n    throw \"L'installation a echoue avec le code $($proc.ExitCode)\"\n}\n\n# Copie des fichiers de configuration\nWrite-Host \"Configuration de Cegid Manufacturing PMI...\" -ForegroundColor Cyan\n$configPath = 'C:\\Program Files (x86)\\Cegid\\ManufacturingPMI\\Config'\nif (!(Test-Path $configPath)) {\n    New-Item -Path $configPath -ItemType Directory -Force | Out-Null\n}\n\nCopy-Item '\\\\SRVLY3\\ManufacturingPmi\\Deploiement V16\\Config\\*' $configPath -Force -Recurse -ErrorAction SilentlyContinue\nCopy-Item '\\\\SRVLY3\\ManufacturingPmi\\Deploiement V16\\PG1LIFE.wdl' 'C:\\Program Files (x86)\\Cegid\\ManufacturingPMI\\PG1LIFE.wdl' -Force -ErrorAction SilentlyContinue\n\n# Nettoyer le répertoire temporaire\nRemove-Item $localDir -Recurse -Force -ErrorAction SilentlyContinue\n\nWrite-Host \"Cegid Manufacturing PMI installe avec succes\" -ForegroundColor Green"
     }
   },
   "profiles": {
     "DEV_DOTNET": {
       "name": "Développeur .NET",
       "description": "Environnement complet pour développement .NET/C#",
+      "icon": "code",
+      "color": "blue",
+      "suggestions": ["winscp", "cegidmanufacturingpmi", "Oracle.JDK.22", "VideoLAN.VLC"],
       "apps": [
         {
           "ref": "git",
@@ -285,6 +288,9 @@
     "DEV_WINDEV": {
       "name": "Développeur WinDev",
       "description": "Outils de développement WinDev et applications métier",
+      "icon": "terminal",
+      "color": "purple",
+      "suggestions": ["Oracle.JDK.22", "VideoLAN.VLC", "Mozilla.Firefox"],
       "apps": [
         {
           "ref": "ecaradmin",
@@ -341,8 +347,11 @@
       ]
     },
     "TENOR": {
-      "name": "TENOR",
+      "name": "Projet & Support TENOR",
       "description": "Outils métier Tenor - Support et Projet",
+      "icon": "briefcase",
+      "color": "orange",
+      "suggestions": ["git", "python", "dbeaver", "VideoLAN.VLC", "Mozilla.Firefox"],
       "apps": [
         {
           "ref": "ecaradmin",
@@ -381,6 +390,9 @@
     "SI": {
       "name": "Système d'Information",
       "description": "Outils d'administration système et infrastructure",
+      "icon": "server",
+      "color": "green",
+      "suggestions": ["Oracle.JDK.22", "wsl2", "VideoLAN.VLC", "Mozilla.Firefox", "OBSProject.OBSStudio"],
       "apps": [
         {
           "name": "Wireshark",
@@ -550,11 +562,30 @@
     "CUSTOM": {
       "name": "Personnalisé",
       "description": "Configuration entièrement personnalisable - toutes applications disponibles",
+      "icon": "settings",
+      "color": "gray",
       "allowMasterEdit": true,
       "apps": []
     }
   },
   "optional": [
+    {
+      "name": "Java JDK",
+      "winget": "Oracle.JDK.22",
+      "size": "160 MB",
+      "category": "Développement",
+      "description": "Java Development Kit (JDK) - Oracle",
+      "preselected": false
+    },
+    {
+      "name": "WSL 2",
+      "customInstall": true,
+      "size": "Variable",
+      "category": "Système",
+      "description": "Windows Subsystem for Linux 2",
+      "preselected": false,
+      "installScript": "# Installation WSL 2\nWrite-Host \"  Installation WSL 2...\" -ForegroundColor Cyan\n\ntry {\n    # Activer les fonctionnalités nécessaires\n    Write-Host \"    Activation fonctionnalité WSL...\" -ForegroundColor Gray\n    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart\n    \n    Write-Host \"    Activation fonctionnalité Machine Virtuelle...\" -ForegroundColor Gray\n    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart\n    \n    # Télécharger et installer le package de mise à jour du noyau\n    Write-Host \"    Téléchargement mise à jour noyau WSL2...\" -ForegroundColor Gray\n    $wslUpdateUrl = 'https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi'\n    $wslUpdatePath = \"$env:TEMP\\wsl_update_x64.msi\"\n    \n    Invoke-WebRequest -Uri $wslUpdateUrl -OutFile $wslUpdatePath -UseBasicParsing -TimeoutSec 300 -ErrorAction Stop\n    \n    Write-Host \"    Installation mise à jour noyau WSL2...\" -ForegroundColor Gray\n    Start-Process msiexec.exe -ArgumentList \"/i\",\"`\"$wslUpdatePath`\"\",\"/qn\",\"/norestart\" -Wait -NoNewWindow\n    \n    # Définir WSL 2 comme version par défaut\n    Write-Host \"    Configuration WSL 2 par défaut...\" -ForegroundColor Gray\n    wsl --set-default-version 2\n    \n    Write-Host \"    [OK] WSL 2 installé\" -ForegroundColor Green\n    Write-Host \"    [INFO] Redémarrage requis pour activer WSL\" -ForegroundColor Yellow\n    Write-Host \"    [INFO] Après redémarrage, installez une distribution Linux depuis le Microsoft Store\" -ForegroundColor Yellow\n    \n    # Nettoyage\n    Remove-Item -Path $wslUpdatePath -Force -ErrorAction SilentlyContinue\n    \n} catch {\n    Write-Host \"    [ERREUR] Impossible d'installer WSL 2: $_\" -ForegroundColor Red\n    throw\n}\n"
+    },
     {
       "name": "VLC Media Player",
       "winget": "VideoLAN.VLC",

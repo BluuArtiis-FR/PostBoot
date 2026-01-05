@@ -38,7 +38,7 @@ function Set-RegistryForAllUsersPerf {
 
     # 2. Appliquer au profil par défaut (HKU\.DEFAULT)
     try {
-        $defaultPath = $Path -replace '^HKCU:\\', 'Registry::HKU\.DEFAULT\'
+        $defaultPath = $Path -replace '^HKCU:\\', 'Registry::HKU\.DEFAULT\\'
         if (-not (Test-Path $defaultPath)) {
             New-Item -Path $defaultPath -Force -ErrorAction SilentlyContinue | Out-Null
         }
@@ -51,7 +51,7 @@ function Set-RegistryForAllUsersPerf {
         if (Test-Path $defaultNtUser) {
             $regLoadResult = reg load "HKU\DefaultUserPerfTemplate" $defaultNtUser 2>&1
             if ($LASTEXITCODE -eq 0 -or $regLoadResult -match "already in use") {
-                $templatePath = $Path -replace '^HKCU:\\', 'Registry::HKU\DefaultUserPerfTemplate\'
+                $templatePath = $Path -replace '^HKCU:\\', 'Registry::HKU\DefaultUserPerfTemplate\\'
                 if (-not (Test-Path $templatePath)) {
                     New-Item -Path $templatePath -Force -ErrorAction SilentlyContinue | Out-Null
                 }

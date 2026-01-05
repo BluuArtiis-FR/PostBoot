@@ -112,9 +112,9 @@ class ScriptGenerator:
                         resolved_apps.append(resolved_app)
                     else:
                         # Référence invalide - lever une exception
-                        logger.error(f"ERREUR: Référence invalide '{ref_id}' dans le profil '{profile_name}'")
+                        logger.error(f"ERREUR: Référence invalide '{ref_id}' dans le profil '{profile_key}'")
                         logger.error(f"Références valides disponibles: {', '.join(sorted(common_apps.keys()))}")
-                        raise ValueError(f"Référence invalide '{ref_id}' dans le profil '{profile_name}'. Cette application n'existe pas dans common_apps.")
+                        raise ValueError(f"Référence invalide '{ref_id}' dans le profil '{profile_key}'. Cette application n'existe pas dans common_apps.")
                 else:
                     # App complète, garder telle quelle
                     resolved_apps.append(app)
@@ -137,44 +137,44 @@ class ScriptGenerator:
             # Validation apps.json si jsonschema disponible
             if HAS_JSONSCHEMA and filepath.name == "apps.json":
                 # Schéma basique pour apps.json
-                schema = {{
+                schema = {
                     "type": "object",
                     "required": ["version", "master"],
-                    "properties": {{
-                        "version": {{"type": "string"}},
-                        "master": {{
+                    "properties": {
+                        "version": {"type": "string"},
+                        "master": {
                             "type": "array",
-                            "items": {{
+                            "items": {
                                 "type": "object",
                                 "required": ["name"],
-                                "properties": {{
-                                    "name": {{"type": "string"}},
-                                    "winget": {{"type": "string"}},
-                                    "url": {{"type": "string"}},
-                                    "plugins": {{
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "winget": {"type": "string"},
+                                    "url": {"type": "string"},
+                                    "plugins": {
                                         "type": "array",
-                                        "items": {{"type": "string"}},
+                                        "items": {"type": "string"},
                                         "description": "Liste des plugins (Notepad++ uniquement: XML Tools, Compare)"
-                                    }}
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 try:
                     jsonschema.validate(data, schema)
-                    logger.info(f"[OK] Validation JSON Schema réussie: {{filepath.name}}")
+                    logger.info(f"[OK] Validation JSON Schema réussie: {filepath.name}")
                 except jsonschema.ValidationError as e:
-                    logger.warning(f"[ATTENTION] Validation JSON Schema échouée pour {{filepath.name}}: {{e.message}}")
+                    logger.warning(f"[ATTENTION] Validation JSON Schema échouée pour {filepath.name}: {e.message}")
 
             return data
         except json.JSONDecodeError as e:
-            logger.error(f"Erreur parsing JSON {{filepath}}: {{e}}")
-            return {{}}
+            logger.error(f"Erreur parsing JSON {filepath}: {e}")
+            return {}
         except Exception as e:
-            logger.error(f"Erreur chargement JSON {{filepath}}: {{e}}")
-            return {{}}
+            logger.error(f"Erreur chargement JSON {filepath}: {e}")
+            return {}
 
     @staticmethod
     def _load_template(filename: str) -> str:
@@ -786,7 +786,7 @@ function Install-CustomApp {
 
                 foreach ($match in $matches) {
                     $href = $match.Groups[1].Value
-                    if ($href -match $pattern -and $href -notmatch '^\.\.' -and $href -notmatch '^/') {
+                    if ($href -match $pattern -and $href -notmatch '^\\.\\.' -and $href -notmatch '^/') {
                         $foundFile = $href
                         break
                     }
@@ -1493,6 +1493,64 @@ def get_modules():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/apps/all-with-categories', methods=['GET'])
+def get_all_apps_with_categories():
+    """
+    Retourne toutes les applications disponibles (master + common_apps + optional)
+    regroupées par catégories pour faciliter l'affichage dans le profil personnalisé.
+    """
+    try:
+        resolved_config = generator.get_resolved_apps_config()
+
+        # Collecter toutes les apps de toutes les sources
+        all_apps = []
+
+        # Apps master
+        for app in resolved_config.get('master', []):
+            all_apps.append({
+                **app,
+                'source': 'master',
+                'id': app.get('winget') or app.get('url') or app.get('name')
+            })
+
+        # Apps common_apps (transformer le dict en liste)
+        for app_key, app in resolved_config.get('common_apps', {}).items():
+            all_apps.append({
+                **app,
+                'source': 'common',
+                'id': app.get('winget') or app.get('url') or app.get('name')
+            })
+
+        # Apps optional
+        for app in resolved_config.get('optional', []):
+            all_apps.append({
+                **app,
+                'source': 'optional',
+                'id': app.get('winget') or app.get('url') or app.get('name')
+            })
+
+        # Regrouper par catégories
+        apps_by_category = {}
+        for app in all_apps:
+            category = app.get('category', 'Autre')
+            if category not in apps_by_category:
+                apps_by_category[category] = []
+            apps_by_category[category].append(app)
+
+        # Trier les apps dans chaque catégorie par nom
+        for category in apps_by_category:
+            apps_by_category[category].sort(key=lambda x: x.get('name', ''))
+
+        return jsonify({
+            'success': True,
+            'categories': apps_by_category,
+            'total_apps': len(all_apps)
+        })
+    except Exception as e:
+        logger.error(f"Erreur récupération apps avec catégories: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 def transform_user_config_to_api_config(user_config: dict, script_types: list) -> dict:
     """
     Transforme la config utilisateur (avec IDs) en config API (avec objets complets).
@@ -1561,12 +1619,9 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
     # IMPORTANT: Utiliser un dictionnaire pour dédupliquer par app_id
     profile_apps_dict = {}
     if 'installation' in script_types:
-        # Si un profil de base est spécifié (ex: "base_profile": "DEV_DOTNET"),
-        # inclure automatiquement toutes ses apps
-        base_profile_name = user_config.get('base_profile')
-        if base_profile_name and base_profile_name in apps_data.get('profiles', {}):
-            base_profile_data = apps_data['profiles'][base_profile_name]
-            for app in base_profile_data.get('apps', []):
+        # Fonction helper pour ajouter des apps au dictionnaire
+        def add_apps_to_dict(apps_list):
+            for app in apps_list:
                 app_id = app.get('winget') or app.get('url') or app.get('name')
                 if app_id not in profile_apps_dict:
                     profile_apps_dict[app_id] = {
@@ -1584,7 +1639,23 @@ def transform_user_config_to_api_config(user_config: dict, script_types: list) -
                         'plugins': app.get('plugins')
                     }
 
-        # Apps de profil sélectionnées manuellement
+        # 1. Si un profil standard est sélectionné (ex: "profile": "DEV_DOTNET"),
+        # inclure automatiquement toutes ses apps
+        selected_profile = user_config.get('profile')
+        is_standard_profile = selected_profile and selected_profile not in ['Custom', 'Personnalisé', 'custom', 'personnalisé', None]
+
+        if is_standard_profile and selected_profile in apps_data.get('profiles', {}):
+            profile_data = apps_data['profiles'][selected_profile]
+            add_apps_to_dict(profile_data.get('apps', []))
+
+        # 2. Si un profil de base est spécifié (ex: "base_profile": "DEV_DOTNET"),
+        # inclure automatiquement toutes ses apps (pour profil personnalisé basé sur un autre)
+        base_profile_name = user_config.get('base_profile')
+        if base_profile_name and base_profile_name in apps_data.get('profiles', {}):
+            base_profile_data = apps_data['profiles'][base_profile_name]
+            add_apps_to_dict(base_profile_data.get('apps', []))
+
+        # 3. Apps de profil sélectionnées manuellement
         for profile_id, profile_data in apps_data.get('profiles', {}).items():
             for app in profile_data.get('apps', []):
                 app_id = app.get('winget') or app.get('url') or app.get('name')
@@ -1720,7 +1791,8 @@ def generate():
         script_types = request_data.get('scriptTypes', ['installation', 'optimizations'])
 
         # Récupérer le nom du profil (priorité : profile > custom_name > 'Custom')
-        profile_name = user_config.get('profile', user_config.get('custom_name', 'Custom'))
+        # Note: user_config.get('profile') peut retourner None (JSON null), donc on utilise 'or'
+        profile_name = user_config.get('profile') or user_config.get('custom_name') or 'Custom'
 
         logger.info(f"Requête génération - Profil: {profile_name} - Types: {script_types} - IP: {request.remote_addr}")
         logger.debug(f"User config reçue: master_apps={len(user_config.get('master_apps', []))}, profile_apps={len(user_config.get('profile_apps', []))}, optional_apps={len(user_config.get('optional_apps', []))}")
@@ -1745,13 +1817,16 @@ def generate():
 
         # Si diagnostic demandé, ajouter le module de diagnostic
         if include_diagnostic:
-            diagnostic_module = self._load_template("diagnostic_module.ps1") if hasattr(generator, '_load_template') else "# Diagnostic module à implémenter"
+            diagnostic_module = generator._load_template("diagnostic_module.ps1") if hasattr(generator, '_load_template') else "# Diagnostic module à implémenter"
             script_content += f"\n\n# === MODULE DIAGNOSTIC ===\n{diagnostic_module}"
 
         # Nom de fichier basé sur le profil (ex: PostBootSetup-TENOR.ps1)
         # Nettoyer le nom du profil (retirer espaces, caractères spéciaux)
-        safe_profile_name = profile_name.replace(' ', '-').replace('_', '-')
-        script_filename = f"PostBootSetup-{safe_profile_name}.ps1"
+        if profile_name:
+            safe_profile_name = profile_name.replace(' ', '-').replace('_', '-')
+            script_filename = f"PostBootSetup-{safe_profile_name}.ps1"
+        else:
+            script_filename = "PostBootSetup-Custom.ps1"
         script_path = GENERATED_DIR / script_filename
 
         # Sauvegarder le script
